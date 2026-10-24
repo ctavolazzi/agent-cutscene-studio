@@ -358,7 +358,7 @@ function drawSources(d, v, g, L, cues, w, { label, detail, span = null, pred }) 
       const str = labelOf(gq);
       const west = gq.person === 'A';
       const cands = gq.family === 'feet' ? ring(R).filter(([, , s]) => s === (west ? 'w' : 'e')).concat(ring(R).filter(([, , s]) => s !== (west ? 'w' : 'e'))) : null;
-      L.place(x, y, str, { size: fs, fill: col }, { r: R, cands });
+      L.place(x, y, str, { size: fs, fill: col, cues: gq.cs.map((c) => c.id) }, { r: R, cands }); // the ids it names, for the tests
     }
   } else {
     labelGroups(d, v, g, L, placed, fs, R, pred);

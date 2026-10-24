@@ -120,7 +120,8 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     if (it.k === 'text') { const b = textBox(it); d.rect(b.x0 - 1.5, b.y0 - 1, b.x1 - b.x0 + 3, b.y1 - b.y0 + 2, { fill: '#0b1020', fillOp: 0.7 }); }
     d.add(it);
   }
-  L.fixed(4, FH + 17, `Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); dashed, offered and off; diamond at the edge, out of frame.`, { size: 11, fill: '#c9d4ee' });
+  const capLines = wrapText(`Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); dashed, offered and off; diamond at the edge, out of frame.`, FW - 8, 11);
+  capLines.forEach((line, i) => L.fixed(4, FH + 17 + i * 14, line, { size: 11, fill: '#c9d4ee' }));
 
   // ---- the stereo field over the whole shot
   L.fixed(RIGHT.x + 10, 22, 'STEREO FIELD OVER THE SHOT', { size: 13, weight: 700, fill: '#c9d4ee' });
@@ -169,7 +170,7 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
   const miniDropped = miniMap(d, shot, fr.t, list, points, w, num);
 
   // ---- caption and the cue list
-  const y0 = FH + 52;
+  const y0 = FH + 17 + capLines.length * 14 + 24;
   L.fixed(4, y0, `SHOT ${shot.n}  ${shot.title}`, { size: 22, weight: 700, fill: '#fff' });
   const loc = pred.locAt(fr.t).name;
   wrapText(`${fmtT(shot.start)} to ${fmtT(shot.end)} s (${(shot.end - shot.start).toFixed(0)} s), ${shot.lens} mm, the ${loc} (background ${fmtDb(pred.bg[loc])} dB). ${list.length} cues sound in this shot. In the list, each placed cue's level (dB against the background), pan and place are at the moment it is marked on the frame. Glyph size in the stereo field: ${DB.lo} to ${fmtDb(DB.hi)} dB; a cross is behind the camera.`, FW - 10, 12)

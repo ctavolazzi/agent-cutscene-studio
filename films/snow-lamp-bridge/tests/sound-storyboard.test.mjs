@@ -78,6 +78,28 @@ test('map: every placed cue\'s glyph sits at its place, and moves when the place
   assert.ok(glyphProblems(main, cues2).length >= 2, 'control: glyphs left where the places were');
 });
 
+// Every glyph on a detail map has a label naming its cue, and every step is labelled with its contact time on one of
+// the detail maps.
+function detailLabelProblems(maps, cues) {
+  const p = [], named = new Map();
+  for (const m of maps) {
+    const texts = m.d.items.filter((it) => it.k === 'text' && it.cues);
+    for (const it of texts) for (const id of it.cues) named.set(id, [...(named.get(id) ?? []), it.str]);
+    for (const g of m.d.items.filter((it) => it.role === 'glyph')) if (!texts.some((it) => it.cues.includes(g.cue))) p.push(`${g.cue}: a glyph with no label`);
+  }
+  for (const c of cues.filter((x) => x.enabled && x.family === 'feet')) if (!(named.get(c.id) ?? []).includes(c.sync.toFixed(2))) p.push(`${c.id}: its contact time ${c.sync.toFixed(2)} is on no detail map`);
+  return p;
+}
+
+test('detail maps: every glyph is labelled, every step with its contact time', () => {
+  assert.deepEqual(detailLabelProblems(details, CUES), []);
+  // controls: the bridge's map left out (its steps lose their times); a label taken off a glyph
+  assert.ok(detailLabelProblems(details.filter((_, i) => i !== 2), CUES).length > 0, 'control: no bridge map');
+  const m = buildSoundDetail(soundDetails()[3]);
+  m.d.items.find((it) => it.k === 'text' && it.cues).cues = [];
+  assert.ok(detailLabelProblems([m], []).length > 0, 'control: an unlabelled glyph');
+});
+
 // ---------- the panels: the points and the frames ----------
 // Each placed cue sounding in the shot has a point: its place at a time inside its span and the shot, projected through
 // the shot's camera at the panel's frame time; a mark is drawn on it when it is in frame.
