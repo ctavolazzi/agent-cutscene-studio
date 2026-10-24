@@ -9,11 +9,16 @@ import * as ambience from './layers/ambience.js';
 import * as car from './layers/car.js';
 import * as foley from './layers/foley.js';
 import * as score from './layers/score.js';
+import * as bg from './layers/blockout/bg.js';
+import * as hard from './layers/blockout/hard.js';
+import * as blockoutFoley from './layers/blockout/foley.js';
 
 // The layers of each stage (config.audio.stage, SOUND-PLAN 4.4), in mix order and keyed by the name each one's build
 // returns, so a stage minus its parked layers is known before anything is built. Each is a module with build(ctx); see
-// src/audio/mix.js for the contract. 'design' is the first pass, reachable by the switch and never deleted.
+// src/audio/mix.js for the contract. 'blockout' is the placeholders, which read only cues.js; 'design' is the first
+// pass, reachable by the switch and never deleted.
 export const STAGES = Object.freeze({
+  blockout: Object.freeze({ bg, hard, foley: blockoutFoley }),
   design: Object.freeze({ ambience, car, foley, score }),
 });
 

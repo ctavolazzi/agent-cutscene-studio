@@ -55,7 +55,7 @@ export const CONFIG = {
     // The sound's stage (SOUND-PLAN 4.4), as `stage` is the picture's: 'blockout' (placeholders at the cue times,
     // src/audio/layers/blockout/, Sound 2 and 3) or 'design' (the first-pass layers below, kept as they are until
     // Sound 4). `parked` names layers kept in the code and out of every render: the score, until its own plan (3.1).
-    stage: 'design',
+    stage: 'blockout',
     parked: ['score'],
     sr: 48000,
     targetLufs: -16,

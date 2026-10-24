@@ -1,7 +1,8 @@
 // Measurements on rendered audio, shared by the audio tests and scripts: stems, levels, onsets, stereo balance.
 // Everything takes Float32Arrays at a sample rate, times in seconds.
 import { CONFIG } from '../../src/config.js';
-import { renderSoundtrack } from '../../src/audio/index.js';
+import { atStage, renderSoundtrack } from '../../src/audio/index.js';
+import { CUES } from '../../src/audio/cues.js';
 import { integratedLufs } from '../../src/audio/loudness.js';
 
 const cache = new Map();
@@ -81,6 +82,91 @@ export function onsets(left, right, sr, { ratioDb = 12, floorDb = -60, minGap = 
     if (env[j] > floor && env[j] > ratio * Math.max(med, 1e-9)) { out.push(t); last = t; }
   }
   return out;
+}
+
+// The blockout with only some voice groups sounding (a cue's `source` is its voice group): the cues whose source is
+// named, plus the modifiers (no voice of their own), from `cues` (cues.js's by default, or a changed catalogue). No
+// reverb, no normalization. Cached per run for cues.js's own catalogue.
+export function groupStem(sources, { cues = CUES, config = atStage(CONFIG, { stage: 'blockout' }) } = {}) {
+  const names = [].concat(sources), key = JSON.stringify(['groups', ...stageKey(config), names]);
+  const make = () => renderSoundtrack(config, { cues: cues.filter((c) => c.voices === 0 || names.includes(c.source)), reverb: false, normalize: false });
+  if (cues !== CUES) return make();
+  if (!cache.has(key)) cache.set(key, make());
+  return cache.get(key);
+}
+
+// Expected and detected onsets matched one to one, within `tol` seconds: the closest pairs first, so two expected
+// times can never claim one detection (a nearest-match rule would hand both to it). Returns the pairs (detected minus
+// expected), the expected times left unmatched and the detections left over.
+export function matchOneToOne(expected, detected, tol) {
+  const cand = [];
+  expected.forEach((e, i) => detected.forEach((d, j) => { if (Math.abs(d - e) <= tol) cand.push({ i, j, diff: d - e }); }));
+  cand.sort((a, b) => Math.abs(a.diff) - Math.abs(b.diff) || a.i - b.i || a.j - b.j);
+  const ue = new Set(), ud = new Set(), pairs = [];
+  for (const c of cand) if (!ue.has(c.i) && !ud.has(c.j)) { ue.add(c.i); ud.add(c.j); pairs.push({ expected: expected[c.i], detected: detected[c.j], diff: c.diff }); }
+  pairs.sort((a, b) => a.expected - b.expected);
+  return { pairs, missed: expected.filter((_, i) => !ue.has(i)), extra: detected.filter((_, j) => !ud.has(j)) };
+}
+
+// The balance (right over left, dB) that a placement predicts over [t0, t1), weighted by the energy the stem actually
+// has in each millisecond: the pan says where a voice sits, the stem says when it is loud. panAt(t) is the pan, -1 to
+// 1, the spatializer's equal-power law turns into the channel gains.
+export function predictedBalanceDb(s, t0, t1, panAt) {
+  const hop = Math.round(s.sr / 1000);
+  let l = 0, r = 0;
+  for (let a = idx(t0, s.sr), b = Math.min(s.left.length, idx(t1, s.sr)); a < b; a += hop) {
+    let e = 0;
+    for (let i = a; i < Math.min(b, a + hop); i++) e += s.left[i] * s.left[i] + s.right[i] * s.right[i];
+    const p = panAt((a + hop / 2) / s.sr), g = (p + 1) * Math.PI / 4;
+    l += e * Math.cos(g) ** 2; r += e * Math.sin(g) ** 2;
+  }
+  return 10 * Math.log10((r + 1e-20) / (l + 1e-20));
+}
+
+// An in-place radix-2 FFT of re and im (length a power of two)
+export function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < len / 2; k++) {
+        const a = i + k, b = a + len / 2, xr = re[b] * cr - im[b] * ci, xi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - xr; im[b] = im[a] - xi; re[a] += xr; im[a] += xi;
+        const t = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = t;
+      }
+    }
+  }
+}
+
+// The power spectrum of the mono sum, averaged over Hann frames of `size` samples hopping half a frame through each
+// [t0, t1) window (at least one frame from each window's start): { hz: bin width, power: Float64Array(size / 2) }
+export function averageSpectrum(s, windows, size = 4096) {
+  const power = new Float64Array(size / 2), re = new Float64Array(size), im = new Float64Array(size);
+  const hann = Float64Array.from({ length: size }, (_, i) => 0.5 - 0.5 * Math.cos(2 * Math.PI * i / size));
+  let frames = 0;
+  for (const [t0, t1] of windows) {
+    const a = idx(t0, s.sr), b = idx(t1, s.sr);
+    for (let f = a; (f === a || f + size <= b) && f + size <= s.left.length; f += size / 2) {
+      for (let i = 0; i < size; i++) { re[i] = 0.5 * (s.left[f + i] + s.right[f + i]) * hann[i]; im[i] = 0; }
+      fft(re, im);
+      for (let k = 0; k < size / 2; k++) power[k] += re[k] * re[k] + im[k] * im[k];
+      frames++;
+    }
+  }
+  return { hz: s.sr / size, power, frames };
+}
+// The spectral centroid in Hz of an average spectrum, from `lo` Hz up (the master highpass sits at 35 Hz)
+export function centroidHz({ hz, power }, lo = 20) {
+  let a = 0, b = 0;
+  for (let k = Math.ceil(lo / hz); k < power.length; k++) { a += k * hz * power[k]; b += power[k]; }
+  return b > 0 ? a / b : NaN;
 }
 
 // for each expected time, the nearest detected onset and the difference (detected minus expected)

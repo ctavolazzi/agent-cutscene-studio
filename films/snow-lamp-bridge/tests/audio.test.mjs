@@ -10,7 +10,8 @@ import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONFIG } from '../src/config.js';
-import { SHOTS } from '../src/shots.js';
+import { SHOTS, cameraAt } from '../src/shots.js';
+import { makeCamera, add, mul } from '../scripts/lib/math.js';
 import { T_TOTAL } from '../src/world.js';
 import { mulberry32 } from '../src/prng.js';
 import { STAGES, atStage, buildLayers, layerNames, renderSoundtrack } from '../src/audio/index.js';
@@ -98,6 +99,35 @@ test('placement: a source to the camera\'s right pans right, behind is quieter a
   assert.ok(far.gain < front.gain / 5 && far.hz < front.hz, 'far');
 });
 
+// Screen direction and pan width (SOUND-PLAN 4.0): the pan follows the frame. A point at screen x (0 left, 1 right,
+// at mid height, d metres deep) is the picture's own camera (scripts/lib/math.js makeCamera, with its roll) at
+// pos + f d + r (2x - 1) th d. The spatializer pans by the horizontal right, so it hears that point at
+// k / sqrt(1 + k * k), k = (2x - 1) th cos(roll): right of centre pans right, and the frame's edge pans to
+// sin(atan(th cos(roll))), 0.24 to 0.66 by lens. Checked at three times in every shot (shot 5 opens rolled 3 degrees).
+function framePanProblems(panOf) {
+  const p = [], { w, h } = CONFIG.res;
+  for (const s of SHOTS) for (const u of [0, 0.5, 0.9]) {
+    const t = s.start + (s.end - s.start) * u, c = cameraAt(s, t), cam = makeCamera(c, w, h), cr = Math.cos(c.roll * Math.PI / 180);
+    for (const d of [2, 8, 30]) for (const x of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
+      const k = (2 * x - 1) * cam.th * cr, want = k / Math.sqrt(1 + k * k);
+      const pan = panOf(add(add(cam.pos, mul(cam.f, d)), mul(cam.r, (2 * x - 1) * cam.th * d)), t);
+      if (Math.sign(pan) !== Math.sign(2 * x - 1)) p.push(`shot ${s.n} t ${t.toFixed(2)}: screen x ${x} pans ${pan.toFixed(3)}`);
+      else if (!(Math.abs(pan - want) <= 1e-9)) p.push(`shot ${s.n} t ${t.toFixed(2)}: screen x ${x} pans ${pan.toFixed(4)}, the frame says ${want.toFixed(4)}`);
+    }
+  }
+  return p;
+}
+
+test('screen direction and pan width: right of frame pans right, the frame edge pans to sin(atan(th cos roll)), every shot', () => {
+  assert.deepEqual(framePanProblems((q, t) => placeAt(q, t).pan), []);
+  // the lenses' frame edges, 5 m deep at each shot's start: 0.24 to 0.66 (SOUND-PLAN 3.4)
+  const edges = SHOTS.map((s) => { const c = cameraAt(s, s.start), cam = makeCamera(c, CONFIG.res.w, CONFIG.res.h); return placeAt(add(add(c.pos, mul(cam.f, 5)), mul(cam.r, cam.th * 5)), s.start).pan; });
+  assert.deepEqual([Math.min(...edges), Math.max(...edges)].map((v) => +v.toFixed(2)), [0.24, 0.66]);
+  // controls: a mirrored spatializer, and one panning twice as wide
+  assert.ok(framePanProblems((q, t) => -placeAt(q, t).pan).length > 0, 'control: mirrored');
+  assert.ok(framePanProblems((q, t) => Math.max(-1, Math.min(1, 2 * placeAt(q, t).pan))).length > 0, 'control: doubled');
+});
+
 test('the fade in follows the picture: near silence at the first frame, full level after 3 s', () => {
   const m = master();
   assert.ok(db(rms(m.left, m.right, SR, 0, 0.05)) < db(rms(m.left, m.right, SR, 5, 6)) - 30);
@@ -138,12 +168,16 @@ test('the WAV: 16-bit PCM stereo at 48 kHz, the right length, readable by ffprob
 // ---------- the stage switch and the parking (SOUND-PLAN 3.1, 4.4) ----------
 test('stages: each builds its own layers in mix order, minus the parked ones; an unknown stage or layer is refused', () => {
   const names = (stage, parked) => layerNames(atStage(CONFIG, { stage, parked }));
+  assert.equal(CONFIG.audio.stage, 'blockout', 'the default from Sound 2 (SOUND-PLAN 4.4)');
+  assert.deepEqual(buildLayers(CONFIG).map((l) => l.name), ['bg', 'hard', 'foley'], 'the blockout builds only its own layers');
+  assert.deepEqual(names('blockout', []), ['bg', 'hard', 'foley'], 'and has no score to park');
   assert.deepEqual(names('design', ['score']), ['ambience', 'car', 'foley']);
   assert.deepEqual(names('design', []), ['ambience', 'car', 'foley', 'score'], 'the score comes back when unparked');
   assert.deepEqual(buildLayers(atStage(CONFIG, { stage: 'design' }), ['car', 'foley']).map((l) => l.name), ['car', 'foley']);
   for (const [stage, mods] of Object.entries(STAGES)) for (const name of Object.keys(mods)) assert.equal(typeof mods[name].build, 'function', `${stage} ${name}`);
   // controls: a stage that does not exist, and a stem naming another stage's layer
   assert.throws(() => names('look', []), /audio stage 'look'/);
+  assert.throws(() => layerNames(CONFIG, ['car']), /no layer 'car' in the blockout stage/);
   assert.throws(() => layerNames(atStage(CONFIG, { stage: 'design' }), ['nope']), /no layer 'nope' in the design stage/);
 });
 
