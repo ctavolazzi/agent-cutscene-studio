@@ -15,8 +15,10 @@
 //   camera(t)                  the picture's camera at t: { pos, W, H, project(p) -> [x, y, depth] | null }
 //   hear(cue, t, model)        the predicted { db, pan } of a sounding cue under a listener model (null when silent);
 //   models                     the models' names, the camera's first ('camera', then 'characters' in SOUND-PLAN 3.6)
-//   blockers(cue, t)           what can hide a cue's point: [{ name, box: { c, ax: [3 unit axes], h: [3 halves] } }]
-//   trace, orders, sync, stereo, approach, flams, density, silence, safeBand, rendered: per check, below
+//   blockers(cue, t)           what can hide a cue's point: [{ name, box: { c, ax: [3 unit axes], h: [3 halves] }, own }];
+//                              an `own` box is the cue's own body: it hides the point like any box, unless the point
+//                              lies inside it (a sound from within a body heard through its own surface, by convention)
+//   trace, orders, sync, stereo, steady, approach, flams, density, silence, safeBand, rendered: per check, below
 //   thresholds                 { name: { v, starting, why } }: every bar's number, labelled
 const EPS = 1e-9;
 
@@ -66,6 +68,11 @@ export function segmentHitsBox(a, b, box, eps = 0.01) {
   }
   return u0 < 1 - eps / len;
 }
+// A point inside an oriented box by more than `eps` on every axis (a point on a face is not inside it).
+export function insideBox(p, box, eps = 0.01) {
+  const o = sub(p, box.c);
+  return box.ax.every((a, k) => Math.abs(dot(o, a)) < box.h[k] - eps);
+}
 
 // Where a point is in the picture at t: 'on', 'hidden' (by a named blocker), 'off' (with the frame side it is past),
 // 'behind' (the camera), or 'unplaced'. x and y are fractions of the frame from its top left.
@@ -79,7 +86,7 @@ export function screenState(input, cue, p, t) {
     const side = Object.keys(out).reduce((a, b) => (out[b] > out[a] ? b : a));
     return { state: 'off', side, x, y };
   }
-  for (const b of input.blockers(cue, t)) if (segmentHitsBox(cam.pos, p, b.box)) return { state: 'hidden', blocker: b.name, x, y };
+  for (const b of input.blockers(cue, t)) if (!(b.own && insideBox(p, b.box)) && segmentHitsBox(cam.pos, p, b.box)) return { state: 'hidden', blocker: b.name, x, y };
   return { state: 'on', x, y };
 }
 // every placed enabled cue's state on every frame it covers: { [id]: [{ f, t, shot, ...state, pan }] }
@@ -222,14 +229,15 @@ export function storyOrder(input) {
     for (const b of breach) rows.push({ order: o.name, cue: b.c.id, t: r(b.c.t0), detail: b.detail });
   }
   const n = rows.filter((x) => x.cue).length;
-  return entry(input, 'storyOrder', 3, 'Story order', 'The three orders of SOUND-PLAN 1.3: no car sound before the first frame that shows its light; the steps through the shots before the people are seen land on feet in frame; no onset while the moon rises', 'Any breach fails', [], n ? 'fail' : 'pass', `${input.orders.length} orders, ${n} breaches${n ? `: ${[...new Set(rows.filter((x) => x.cue).map((x) => x.order))].join('; ')}` : ''}`, ['order', 'cue', 't', 'detail'], rows);
+  return entry(input, 'storyOrder', 3, 'Story order', `The story's orders, each judged on the enabled cues it selects: ${input.orders.map((o) => o.name).join('; ')}`, 'Any breach fails', [], n ? 'fail' : 'pass', `${input.orders.length} orders, ${n} breaches${n ? `: ${[...new Set(rows.filter((x) => x.cue).map((x) => x.order))].join('; ')}` : ''}`, ['order', 'cue', 't', 'detail'], rows);
 }
 
 // ---------- 4 sync ----------
-// input.sync.rule(cue) -> { event, state(t), change } (judged), { reason } (not judged, and why) or null (not a sync cue).
-// The picture shows the event on a frame where state(t), sampled at frame times, changes: from false to true
+// input.sync.rule(cue) -> { event, state(t), change, note } (judged), { reason } (not judged, and why) or null (not a
+// sync cue). The picture shows the event on a frame where state(t), sampled at frame times, changes: from false to true
 // (change 'rise', the default) or to any other value ('any'). The showing frame is the change nearest the cue's onset
-// within syncSearch s of it, and the onset must lead that frame by 0 to syncAhead s, past its named lead.
+// within syncSearch s of it, and the onset must lead that frame by 0 to syncAhead s, past its named lead. A rule's
+// `note` goes on its row when the cue meets the bar (what the measure cannot tell apart).
 export function showingFrame(rule, around, fps, W) {
   const f0 = Math.floor((around - W) * fps), f1 = Math.ceil((around + W) * fps);
   let prev = rule.state(f0 / fps), best = null;
@@ -252,7 +260,7 @@ export function sync(input) {
     const frame = showingFrame(rule, c.t0, input.fps, W);
     const ahead = frame === null ? null : frame / input.fps - c.t0, past = ahead === null ? null : ahead - c.lead;
     const ok = past !== null && past >= -EPS && past <= A + EPS;
-    let note = null;
+    let note = rule.note ?? null;
     if (!ok) { bad++; note = frame === null ? `not shown within ${W} s of its onset` : past < 0 ? `${r(-past * 1000, 2)} ms after its frame` : `${r((past - A) * 1000, 2)} ms too early`; }
     rows.push({ cue: c.id, family: c.family, event: rule.event, t0: r(c.t0), frame: frame === null ? null : r(frame / input.fps), aheadMs: ahead === null ? null : r(ahead * 1000, 2), leadMs: r(c.lead * 1000, 2), ok, note });
   }
@@ -260,11 +268,13 @@ export function sync(input) {
 }
 
 // ---------- 5 stereoOrder ----------
-// input.stereo: { shots: [n], left, right, point(id, t), sounding(id, t) }. On every frame of those shots: the right
-// one's pan minus the left one's at their points. While both sound, a margin under 0 is an inversion (fails) and one
-// under stereoSep is reported "not separated".
+// input.stereo: { shots: [n], left, right, point(id, t), pointLabel }. On every frame of those shots: the right one's pan
+// minus the left one's at their points. A person sounds while any enabled voiced cue of theirs in input.cues sounds.
+// While both sound, a margin under 0 is an inversion (fails) and one under stereoSep is reported "not separated".
 export function stereoOrder(input) {
   const S = input.stereo, sep = th(input, 'stereoSep'), rows = [];
+  const own = Object.fromEntries([S.left, S.right].map((id) => [id, input.cues.filter((c) => voiced(c) && c.person === id)]));
+  const heard = (id, t) => own[id].some((c) => sounding(c, t));
   let inverted = 0, close = 0;
   for (const n of S.shots) {
     const s = input.shots.find((x) => x.n === n);
@@ -275,54 +285,63 @@ export function stereoOrder(input) {
       frames++;
       const m = input.place(b, t, L).pan - input.place(a, t, L).pan;
       all = Math.min(all, m);
-      if (S.sounding(S.left, t) && S.sounding(S.right, t)) { bothFrames++; if (m < both) { both = m; at = t; } }
+      if (heard(S.left, t) && heard(S.right, t)) { bothFrames++; if (m < both) { both = m; at = t; } }
     }
     const verdict = !bothFrames ? 'not both sounding' : both < 0 ? 'inverted' : both < sep ? 'not separated' : 'holds';
     if (verdict === 'inverted') inverted++; else if (verdict === 'not separated') close++;
     rows.push({ shot: n, frames, bothFrames, margin: r(all === Infinity ? null : all, 3), marginBoth: r(both === Infinity ? null : both, 3), at: r(at), verdict });
   }
   const status = inverted ? 'fail' : close ? 'report' : 'pass';
-  return entry(input, 'stereoOrder', 5, 'Stereo order', `Shots ${S.shots[0]} to ${S.shots[S.shots.length - 1]}: whenever both people sound, ${S.left} pans left of ${S.right}, at the cloth points`, `A margin of ${label(input, 'stereoSep')} in pan; below it "not separated", under 0 an inversion, which fails`, ['stereoSep'], status, `${rows.filter((x) => x.bothFrames).length} shots with both sounding: ${inverted} inverted, ${close} not separated; margins over all frames ${r(Math.min(...rows.map((x) => x.margin ?? Infinity)), 3)} to ${r(Math.max(...rows.map((x) => x.margin ?? -Infinity)), 3)}`, ['shot', 'frames', 'bothFrames', 'margin', 'marginBoth', 'at', 'verdict'], rows);
+  return entry(input, 'stereoOrder', 5, 'Stereo order', `Shots ${S.shots[0]} to ${S.shots[S.shots.length - 1]}: whenever both sound (a cue of theirs sounding), ${S.left} pans left of ${S.right}, at ${S.pointLabel ?? 'their points'}`, `A margin of ${label(input, 'stereoSep')} in pan; below it "not separated", under 0 an inversion, which fails`, ['stereoSep'], status, `${rows.filter((x) => x.bothFrames).length} shots with both sounding: ${inverted} inverted, ${close} not separated; margins over all frames ${r(Math.min(...rows.map((x) => x.margin ?? Infinity)), 3)} to ${r(Math.max(...rows.map((x) => x.margin ?? -Infinity)), 3)}`, ['shot', 'frames', 'bothFrames', 'margin', 'marginBoth', 'at', 'verdict'], rows);
 }
 
 // ---------- 6 cutPerspective ----------
 // Every voiced source sounding across every cut: the change in level and pan under each listener model. A 'location'
-// source must not change inside a place. A steady 'camera' source follows the hold rule: what is rendered
-// (input.rendered(cue) -> rendered(t), the hold rule by default) must not change where the rule holds, and must apply
-// the change where it does not. One-shots are reported, with jumps of jumpDb or more listed. A one-shot source sounds
-// across a cut as a stream when its voice group starts a cue within cutStream s on each side of it (no single step of
-// a walk straddles a cut): its last cue before the cut, heard at its own place from both cameras, is the jump the next
-// one takes. A one-shot that itself sounds across the cut counts too.
+// source must not change inside a place. A steady source (input.steady.select(cue), the caller's, SOUND-PLAN 3.6's hum
+// and idle) follows the hold rule: what is rendered (input.rendered(cue) -> rendered(t)) must not change where the rule
+// holds, and must apply the change where it does not; with no renderer passed the rendered levels are the hold rule's
+// own, so those verdicts guard the renderer to come and pass by construction until it does. Everything else follows the
+// camera and is reported, with jumps of jumpDb or more listed: a moving continuous source, a one-shot sounding across the
+// cut, and a one-shot source's stream. A one-shot source sounds across a cut as a stream when the gap between its last
+// onset before the cut and its first after it is at most cutStream times the shorter of its neighbouring gaps (its own
+// rhythm carries on across the cut, whatever that rhythm is); a source with no neighbouring gap is not a stream. Its
+// last cue before the cut, heard at its own place from both cameras, is the jump the next one takes.
 function streamsAcross(input, tc) {
-  const W = th(input, 'cutStream'), out = [];
+  const R = th(input, 'cutStream'), out = [];
   const one = input.cues.filter((c) => voiced(c) && c.shape === 'oneshot' && c.perspective !== 'location');
   for (const src of [...new Set(one.map((c) => c.source))]) {
-    const own = one.filter((c) => c.source === src).sort((a, b) => a.t0 - b.t0);
-    const before = own.filter((c) => c.t0 < tc), last = before[before.length - 1], next = own.find((c) => c.t0 >= tc);
+    const own = one.filter((c) => c.source === src).sort((a, b) => a.t0 - b.t0), i = own.findIndex((c) => c.t0 >= tc);
+    const k = (i < 0 ? own.length : i) - 1, last = own[k], next = i < 0 ? null : own[i];
     if (!last) continue;
-    if (last.t1 > tc || (last.t0 >= tc - W && next && next.t0 < tc + W)) out.push({ c: last, next: next ?? null });
+    if (last.t1 > tc) { out.push({ c: last, next, ratio: null }); continue; }
+    if (!next) continue;
+    const gaps = [k > 0 ? last.t0 - own[k - 1].t0 : null, own[i + 1] ? own[i + 1].t0 - next.t0 : null].filter((g) => g !== null);
+    const ratio = gaps.length ? (next.t0 - last.t0) / Math.min(...gaps) : null;
+    if (ratio !== null && ratio <= R) out.push({ c: last, next, ratio });
   }
   return out;
 }
 export function cutPerspective(input) {
-  const rows = [], models = input.models, e = 1e-6;
-  let fails = 0, jumps = 0, held = 0, streams = 0;
+  const rows = [], models = input.models, e = 1e-6, steady = (c) => c.shape === 'continuous' && input.steady.select(c);
+  let fails = 0, jumps = 0, held = 0, follow = 0;
+  const steadyIds = new Set();
   for (const tc of cuts(input)) {
     const inside = placeOf(input, tc - e).name === placeOf(input, tc).name;
-    const across = [...input.cues.filter((c) => voiced(c) && c.shape !== 'oneshot' && c.t0 < tc && tc < c.t1).map((c) => ({ c, next: null })), ...streamsAcross(input, tc)];
-    for (const { c, next } of across) {
+    const across = [...input.cues.filter((c) => voiced(c) && c.shape !== 'oneshot' && c.t0 < tc && tc < c.t1).map((c) => ({ c, next: null, ratio: null })), ...streamsAcross(input, tc)];
+    for (const { c, next, ratio } of across) {
       const d = models.map((m) => { const a = input.hear(c, tc - e, m), b = input.hear(c, tc, m); return a && b ? { db: b.db - a.db, pan: a.pan === null || b.pan === null ? null : b.pan - a.pan } : null; });
-      const row = { cut: r(tc, 3), cue: c.id, next: next?.id ?? null, kind: null, dDb: r(d[0]?.db ?? null, 2), dPan: r(d[0]?.pan ?? null, 3) };
+      const row = { cut: r(tc, 3), cue: c.id, next: next?.id ?? null, gapRatio: r(ratio, 2), kind: null, dDb: r(d[0]?.db ?? null, 2), dPan: r(d[0]?.pan ?? null, 3) };
       models.slice(1).forEach((m, i) => { row[`dDb_${m}`] = r(d[i + 1]?.db ?? null, 2); });
       let verdict = null, dRendered = null, hold = null;
       if (c.perspective === 'location') {
         row.kind = 'location';
         verdict = !inside ? 'place change' : Math.abs(d[0]?.db ?? 0) > EPS ? 'changed inside a place' : 'steady';
         if (verdict === 'changed inside a place') fails++;
-      } else if (c.shape === 'continuous') {
+      } else if (steady(c)) {
         // the change heard is the raw level after the cut against what was rendered before it: under the threshold it
         // must be held (rendered continuous), over it applied (rendered back on the raw value)
         row.kind = 'steady';
+        steadyIds.add(c.id);
         const rend = (input.rendered ?? ((x) => holdRule(input, x)))(c), a = rend(tc - e), b = rend(tc), raw = input.hear(c, tc, models[0]);
         dRendered = b.db - a.db;
         hold = Math.abs(raw.db - a.db) < th(input, 'holdDb');
@@ -334,15 +353,16 @@ export function cutPerspective(input) {
         if (leak || stuck) fails++;
         if (hold) held++;
       } else {
-        row.kind = c.t1 > tc ? 'one-shot' : 'one-shot stream';
-        streams++;
+        row.kind = c.shape === 'continuous' ? 'moving' : c.t1 > tc ? 'one-shot' : 'one-shot stream';
+        follow++;
         verdict = Math.abs(d[0]?.db ?? 0) >= th(input, 'jumpDb') ? 'jump' : 'follows the camera';
         if (verdict === 'jump') jumps++;
       }
       rows.push({ ...row, held: hold, dRendered: r(dRendered, 2), verdict });
     }
   }
-  return entry(input, 'cutPerspective', 6, 'Perspective at cuts', `Every source sounding across every cut: the change in dB and pan under each listener model (${models.join(', ')}), keyed on perspective. A 'location' source must not change inside a place; a steady 'camera' source follows the hold rule (under ${input.thresholds.holdDb.v} dB and ${input.thresholds.holdPan.v} in pan held as an offset, larger changes applied); one-shots are reported, a one-shot source counting when it sounds across the cut or starts a cue within ${input.thresholds.cutStream.v} s on each side of it (its last cue before the cut heard from both cameras)`, `A 'location' change inside a place fails; a change under the hold threshold (${label(input, 'holdDb')} dB, ${label(input, 'holdPan')} pan) that leaks through fails; one-shot jumps of ${label(input, 'jumpDb')} dB or more listed (a stream within ${label(input, 'cutStream')} s)`, ['holdDb', 'holdPan', 'jumpDb', 'cutStream'], fails ? 'fail' : 'pass', `${cuts(input).length} cuts, ${rows.length} sources across them: ${fails} failures, ${held} steady changes held, ${streams} one-shot sources, ${jumps} jumps of ${input.thresholds.jumpDb.v} dB or more`, ['cut', 'cue', 'next', 'kind', 'dDb', 'dPan', ...models.slice(1).map((m) => `dDb_${m}`), 'held', 'dRendered', 'verdict'], rows);
+  const guard = input.rendered ? 'judged on the levels the renderer passes' : 'no renderer passed: the rendered levels are the hold rule\'s own, so these verdicts guard the renderer to come (Sound 2) and pass by construction until it is passed';
+  return entry(input, 'cutPerspective', 6, 'Perspective at cuts', `Every source sounding across every cut: the change in dB and pan under each listener model (${models.join(', ')}), keyed on perspective. A 'location' source must not change inside a place. A steady source (${input.steady.label}) follows the hold rule, under ${input.thresholds.holdDb.v} dB and ${input.thresholds.holdPan.v} in pan held as an offset and larger changes applied (${guard}). Everything else follows the camera and is reported: a moving continuous source, a one-shot sounding across the cut, and a one-shot source whose gap across the cut is at most ${input.thresholds.cutStream.v} times the shorter of its neighbouring gaps (its rhythm carries on; its last cue before the cut heard from both cameras)`, `A 'location' change inside a place fails; a steady change under the hold threshold (${label(input, 'holdDb')} dB, ${label(input, 'holdPan')} pan) that leaks through, or one over it that is held, fails; jumps of ${label(input, 'jumpDb')} dB or more listed (a stream's gap at most ${label(input, 'cutStream')} times its rhythm)`, ['holdDb', 'holdPan', 'jumpDb', 'cutStream'], fails ? 'fail' : 'pass', `${cuts(input).length} cuts, ${rows.length} sources across them: ${fails} failures; steady ${[...steadyIds].join(', ') || 'none'}: ${held} changes held${input.rendered ? '' : ' (the hold rule\'s own levels, no renderer yet)'}; ${follow} following the camera, ${jumps} jumps of ${input.thresholds.jumpDb.v} dB or more`, ['cut', 'cue', 'next', 'gapRatio', 'kind', 'dDb', 'dPan', ...models.slice(1).map((m) => `dDb_${m}`), 'held', 'dRendered', 'verdict'], rows);
 }
 
 // ---------- 7 approachRises ----------

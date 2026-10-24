@@ -83,9 +83,11 @@ function carBoxes(t) {
     { name: 'car cabin', box: { c: at(-C.back, (C.y0 + C.y1) / 2), ax: [rt, [0, 1, 0], fw], h: [C.width / 2, (C.y1 - C.y0) / 2, C.length / 2] } },
   ];
 }
-// the car's own outside sounds are made by the body that would hide them; what sounds inside it (the cabin, getting out) is hidden by it
+// The car's own sounds are judged against its body and cabin like any point (a far door, the exhaust, the tyres under
+// it), except a point inside one of them (the engine bay, the springs, the brake at the axle), which by convention
+// sounds through its own surface. What sounds inside the car for a person (the cabin, getting out) is hidden by it.
 const ownCar = (c) => c.source.startsWith('car') && !['cabin', 'unload'].includes(c.family);
-const blockers = (c, t) => (ownCar(c) ? SET_BLOCKERS : [...SET_BLOCKERS, ...carBoxes(t)]);
+const blockers = (c, t) => [...SET_BLOCKERS, ...(ownCar(c) ? carBoxes(t).map((b) => ({ ...b, own: true })) : carBoxes(t))];
 
 // ---------- the story orders (SOUND-PLAN 1.3) ----------
 const firstLight = firstFrame((t) => headlights(t) > 0 && carAt(t).present);
@@ -96,7 +98,7 @@ const pseudo = { id: 'head', source: 'person', family: 'body' };
 const bodiesSeen = firstFrame((t) => IDS.some((id) => screenState({ camera, blockers }, pseudo, headAt(id, t), t).state === 'on'));
 const ORDERS = [
   { name: 'Light before the car: no car sound before the first frame that shows its light', kind: 'notBefore', t: firstLight, select: (c) => c.source.startsWith('car') },
-  { name: 'Feet before the people: until the first frame showing a head, every step lands on feet in frame', kind: 'onScreen', t0: 0, t1: bodiesSeen, select: (c) => c.family === 'feet' },
+  { name: 'Feet before the people: until the first frame showing a head, every step and scuff lands on feet in frame', kind: 'onScreen', t0: 0, t1: bodiesSeen, select: (c) => c.family === 'feet' || c.family === 'scuff' },
   { name: 'Anticipation before the moon: no onset while the moonlight rises', kind: 'noOnset', t0: moonRise, t1: moonFull, select: (c) => c.category !== 'bg' },
 ];
 
@@ -109,7 +111,19 @@ const ankleAt = (id, foot, t) => { const p = posers[id](t); return bodyToWorld(p
 const snapOf = (cam, p) => { const s = cam.project(p); return s && [Math.floor((s[0] / cam.W * 2 - 1) * cam.W / 2 + 0.5), Math.floor((1 - s[1] / cam.H * 2) * cam.H / 2 + 0.5)]; };
 const handsAt = (id, t) => { const p = posers[id](t); return p.arms.map((a) => bodyToWorld(p, a.hand)); };
 const keyAfter = (id, t) => PEOPLE_KEYS[id].find((k) => k.t > t);
-const keysPassed = (id) => (t) => PEOPLE_KEYS[id].filter((k) => k.t <= t).length;
+// A move made from a key (getting out, walks, turns, the lean, a shift) starts at that key in the data; the picture
+// shows it on the first frame after the key that draws the person moving: a drawn point (head, hip, hands, ankles), on
+// screen and unhidden, on another internal pixel than on the frame before, both through this frame's camera (so the
+// camera's own motion does not count). Not judged when no point of the person is in view at the key.
+const PERSON = { id: 'person', source: 'person', family: 'body' };
+const drawnAt = (id, t) => { const p = posers[id](t); return p.visible ? [p.head, p.hip, ...p.arms.map((a) => a.hand), ...p.legs.map((l) => l.ankle)].map((v) => bodyToWorld(p, v)) : []; };
+const inView = (id, t) => drawnAt(id, t).some((q) => screenState({ camera, blockers }, PERSON, q, t).state === 'on');
+const drawnMoving = (id, t) => { const cam = camera(t), a = drawnAt(id, t), b = drawnAt(id, t - 1 / FPS); return a.length === b.length && a.some((q, i) => screenState({ camera, blockers }, PERSON, q, t).state === 'on' && String(snapOf(cam, q)) !== String(snapOf(cam, b[i]))); };
+function fromKey(c, what) {
+  const at = Math.floor(c.sync * FPS + 1e-9) / FPS; // the last frame at or before the key
+  if (!inView(c.person, at)) return { reason: `${c.person} is off screen or hidden at the key: the start is not shown` };
+  return { event: `${what}: ${c.person} drawn moving after the key (a drawn point on another pixel)`, state: (t) => t > c.sync + 1e-9 && drawnMoving(c.person, t), note: drawnMoving(c.person, at) ? 'carries on from a motion drawn before its key' : null };
+}
 const lit = (t) => headlights(t) > 0 && carAt(t).present;
 const frontSeen = (t) => {
   const k = carAt(t), h = k.heading * D2R;
@@ -145,7 +159,7 @@ function syncRule(c) {
     case 'stop': return { event: 'the lights fading (headlights under 1)', state: (t) => t >= carTimes.lightsOff0 && headlights(t) < 1 };
     case 'tick': return { reason: 'rule-made: hot metal, nothing the picture shows' };
     case 'cabin': return { reason: 'inside the car, off screen: nothing the picture shows' };
-    case 'unload': return { event: 'the next key of the getting out (PEOPLE_KEYS)', state: keysPassed(c.person), change: 'any' };
+    case 'unload': return fromKey(c, 'getting out from its key (PEOPLE_KEYS)');
     case 'scuff': {
       // the planted ankle drawn on another pixel than on the frame before (the vertex snap)
       const foot = c.meta.first[0];
@@ -164,7 +178,7 @@ function syncRule(c) {
         const cupAt = (t) => { const p = posers[c.person](t); return bodyToWorld(p, p.cup); };
         return { event: 'the hands drawn closed round the lighter (their spacing within half a pixel of the cup\'s)', state: (t) => { const cam = camera(t); return Math.abs(gap(t) - width) * cam.scaleAt(cam.toCam(cupAt(t))[2]) <= 0.5; } };
       }
-      return { event: 'the key the move starts from (PEOPLE_KEYS)', state: keysPassed(c.person), change: 'any' };
+      return fromKey(c, `the ${c.meta.kind} from its key (PEOPLE_KEYS)`);
     }
     case 'lighter':
       if (part === 'release') return { event: 'the flame out (lighterOn false)', state: (t) => t >= LIGHTER.t0 && !lighterOn(t) };
@@ -176,7 +190,8 @@ function syncRule(c) {
 }
 
 // ---------- the other per-check inputs ----------
-const soundingPerson = (id, t) => CUES.some((c) => c.enabled && c.voices > 0 && c.person === id && c.t0 <= t && t < c.t1);
+// SOUND-PLAN 3.6's steady placed sources, which hold at a cut: the lamp's hum and the engine at rest from carTimes.stop
+const STEADY = { select: (c) => c.family === 'hum' || (c.family === 'engine' && c.sync === carTimes.stop), label: 'SOUND-PLAN 3.6: the lamp\'s hum and the engine idling at rest from carTimes.stop' };
 const carCentre = (t) => { const k = carAt(t); return k.present ? [k.x, (SHAPE.body.y0 + SHAPE.body.y1) / 2, k.z] : null; };
 const carDb = (t) => { const dbs = CUES.filter((c) => c.enabled && c.voices > 0 && ['engine', 'tyres'].includes(c.family) && c.t0 <= t && t < c.t1).map((c) => hear(c, t)?.db).filter((x) => x !== undefined && x !== null); return dbs.length ? powerSum(dbs) : null; };
 const shot = (n) => SHOTS.find((s) => s.n === n);
@@ -192,9 +207,6 @@ const BANDS = {
   lighter: { ...PHONE, from: 'SOUND-PLAN 4.4: a click and held noise' },
   breath: { ...PHONE, from: 'SOUND-PLAN 4.4: a filtered noise swell' },
 };
-// the median gap between one person's successive steps, the measure the cut stream's window is set against
-const stepGaps = IDS.flatMap((id) => { const ts = CUES.filter((c) => c.enabled && c.family === 'feet' && c.person === id).map((c) => c.t0); return ts.slice(1).map((t, i) => t - ts[i]); }).sort((a, b) => a - b);
-const stepGap = stepGaps[Math.floor(stepGaps.length / 2)];
 const THRESHOLDS = {
   syncAhead: { v: 0.045, starting: true, why: 'ITU-R BT.1359, SOUND-PLAN 3.3' },
   syncSearch: { v: 0.5, starting: false, why: 'how far round its instant a cue\'s first showing frame is looked for' },
@@ -202,7 +214,7 @@ const THRESHOLDS = {
   holdDb: { v: 3, starting: true, why: 'SOUND-PLAN 3.6' },
   holdPan: { v: 0.25, starting: true, why: 'SOUND-PLAN 3.6' },
   jumpDb: { v: 6, starting: true, why: 'SOUND-PLAN 4.3' },
-  cutStream: { v: 1, starting: true, why: `about one step: the median gap between one person's steps is ${Math.round(stepGap * 1000) / 1000} s` },
+  cutStream: { v: 2, starting: true, why: 'a source\'s gap across a cut against the shorter of its neighbouring gaps: each stream\'s measured ratio is in its row' },
   approachFall: { v: 1, starting: true, why: 'SOUND-PLAN 3.10' },
   maskBefore: { v: 0.2, starting: true, why: 'forward masking, SOUND-PLAN 4.3' },
   maskAfter: { v: 0.02, starting: true, why: 'backward masking, SOUND-PLAN 4.3' },
@@ -225,7 +237,8 @@ export function buildInput({ trace = null } = {}) {
     cues: CUES, fps: FPS, total: T_TOTAL, shots: SHOTS.map(({ n, start, end, lens }) => ({ n, start, end, lens })), locations: LOCATIONS,
     listener: listenerAt, place: placeAt, camera, hear, models: ['camera', 'characters'], blockers,
     trace, orders: ORDERS, sync: { rule: syncRule },
-    stereo: { shots: SHOTS.filter((s) => s.n >= 9).map((s) => s.n), left: 'A', right: 'B', point: clothAt, sounding: soundingPerson },
+    stereo: { shots: SHOTS.filter((s) => s.n >= 9).map((s) => s.n), left: 'A', right: 'B', point: clothAt, pointLabel: 'the cloth points (the poser\'s root + DESIGN.CLOTH.up)' },
+    steady: STEADY,
     approach: [{ name: 'the car', point: carCentre, level: carDb, blockers: () => SET_BLOCKERS }],
     flams: { isContact: (c) => c.family === 'feet' || (c.family === 'moves' && ['rest', 'cup'].includes(c.meta.kind)) },
     density: { select: (c) => c.category !== 'bg', body: (c) => c.person ?? c.source.split(':')[0] },

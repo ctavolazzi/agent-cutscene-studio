@@ -9,7 +9,7 @@ import * as SC from '../scripts/lib/sound-checks.js';
 import { buildInput } from '../scripts/sound-report.js';
 import { CUES } from '../src/audio/cues.js';
 import { SHOTS, cameraAt, shotAt } from '../src/shots.js';
-import { carAt, FPS } from '../src/world.js';
+import { carAt, FPS, PEOPLE_KEYS } from '../src/world.js';
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { engineAt, carPoint, CAR_LAW } from '../src/audio/layers/car.js';
 import { RUSTLES } from '../src/audio/layers/foley.js';
@@ -84,6 +84,19 @@ test('2 onScreen: on, hidden by a named blocker, off with its side, behind; a po
   assert.ok(o.rows.filter((x) => x.shot === 9 && x.cue.startsWith('foley.feet')).every((x) => x.state === 'off' && x.side === 'bottom'));
   assert.deepEqual(['hard.tick.car.09', 'hard.tick.car.10'].map((id) => row(id).state), ['behind', 'behind']);
   assert.ok(['hard.cabin.A.belt', 'hard.cabin.B.belt'].every((id) => row(id).blocker === 'car body'));
+  // the passenger door, on the car's far side from shot 5's camera, is behind the body (its points sit 2 cm outside the
+  // body's side); the driver's, on the near side, is not; the car's points inside its body (the engine bay, the
+  // springs, the brake at the axle) are not hidden by it, by convention
+  const passenger = CUES.filter((c) => c.family === 'door' && c.meta.door === 'passenger').map((c) => c.id);
+  assert.deepEqual(passenger.map((id) => [row(id).state, row(id).blocker]), passenger.map(() => ['hidden', 'car body']));
+  assert.deepEqual(['hard.door.driver.swing-shut', 'hard.door.driver.latch'].map((id) => row(id).state), ['on', 'on']);
+  assert.ok(['hard.settle.car.dip', 'hard.stop.car.rundown', 'hard.brake.car.pads1', 'hard.tick.car.03'].every((id) => row(id).state === 'on'));
+  // control: the passenger hinge from shot 5's camera at 32.0 is hidden by the car body; with the car's own sounds
+  // exempt from its boxes (the first run's blockers) it read on
+  const hinge = byId.get('hard.door.passenger.swing-open'), p32 = hinge.place(32);
+  assert.deepEqual([SC.screenState(REAL, hinge, p32, 32).state, SC.screenState(REAL, hinge, p32, 32).blocker], ['hidden', 'car body'], 'control: the far hinge');
+  const exempt = { ...REAL, blockers: (c, t) => REAL.blockers(c, t).filter((b) => !b.own) };
+  assert.equal(SC.screenState(exempt, hinge, p32, 32).state, 'on', 'control: the first run\'s exemption');
   // controls: a point 2 m behind shot 3's camera at 15.0, a step-like cue where the car is at 15.0 (behind SE), and a
   // point far off the frame's left edge
   const L = listenerAt(15), car = carAt(15), cam = cameraAt(shotAt(15), 15);
@@ -101,24 +114,50 @@ test('3 storyOrder: light before the car and anticipation before the moon hold; 
   assert.equal(s.status, 'fail');
   // finding: the four steps B takes round the car, off screen right in shot 5 (kept on purpose, SOUND-PLAN 3.7), break
   // "through shot 5 the boots are heard on feet in frame"; the bodies are first seen at shot 6's start
+  // (the three scuffs before the bodies are seen, A's first and B's first two, are on screen)
   assert.deepEqual(ids(s), ['foley.feet.B.04', 'foley.feet.B.05', 'foley.feet.B.06', 'foley.feet.B.07']);
   assert.ok(s.rows.filter((x) => x.cue).every((x) => /^Feet before/.test(x.order) && x.detail === 'off (right)'));
+  const early = CUES.filter((c) => c.enabled && c.family === 'scuff' && c.t0 < REAL.orders[1].t1).map((c) => c.id);
+  assert.deepEqual(early, ['foley.scuff.A.1', 'foley.scuff.B.1', 'foley.scuff.B.2']);
+  assert.ok(early.every((id) => !ids(s).includes(id)));
   assert.equal(REAL.orders[1].t1, shot(6).start, 'the first frame showing a head is shot 6\'s first');
   // control: an engine onset planted at 13.5
-  const early = moved('hard.engine.car.intake', 13.5, { id: 'hard.engine.car.early' });
-  assert.ok(ids(SC.storyOrder(withCues([early]))).includes(early.id), 'control: an engine onset at 13.5');
+  const engine = moved('hard.engine.car.intake', 13.5, { id: 'hard.engine.car.early' });
+  assert.ok(ids(SC.storyOrder(withCues([engine]))).includes(engine.id), 'control: an engine onset at 13.5');
+  // control: a scuff (boots too) planted where B's fourth step lands, off screen right in shot 5
+  const b4 = byId.get('foley.feet.B.04'), scuff = moved('foley.scuff.B.1', b4.t0, { id: 'planted.scuff', place: b4.place });
+  const s2 = SC.storyOrder(withCues([scuff]));
+  assert.ok(s2.rows.some((x) => x.cue === scuff.id && x.detail === 'off (right)'), 'control: an off-screen scuff');
+  // and the definition is the input's: renamed orders print their own names, nothing of this film's
+  const named = SC.storyOrder({ ...REAL, orders: [{ name: 'A planted order', kind: 'noOnset', t0: 0, t1: 0, select: () => false }] });
+  assert.ok(named.definition.includes('A planted order') && !/moon|car|feet/.test(named.definition), named.definition);
 });
 
 // ---------- 4 sync ----------
-test('4 sync: onsets 0 to 45 ms ahead of their first showing frame; the scuffs miss it; one frame late and 60 ms early fail', () => {
+test('4 sync: onsets 0 to 45 ms ahead of their first showing frame; the scuffs and six moves miss it; one frame late and 60 ms early fail', () => {
   const s = run('sync');
   assert.equal(s.status, 'fail');
-  // finding: the scuff rule (a designed ankle speed, cues.js SCUFF) against the frame that first draws the planted
+  // findings: the scuff rule (a designed ankle speed, cues.js SCUFF) against the frame that first draws the planted
   // ankle on another pixel: from 110 ms late (B's first) to 43 ms too early (B's last); A's first has no visible start,
-  // its slide carries straight on from the walk. Every other judged cue meets the bar.
-  assert.deepEqual(ids(s, (x) => x.ok === false).sort(), ['foley.scuff.A.1', 'foley.scuff.A.2', 'foley.scuff.A.4', 'foley.scuff.B.1', 'foley.scuff.B.2', 'foley.scuff.B.3']);
+  // its slide carries straight on from the walk. And six moves made from a key, whose sound starts at the key while the
+  // first frame drawing the person moving comes later as the move eases in: the lean 83 ms (both), A's turn out of the
+  // lee 83 ms, A's shift closer 133 ms and B's 50 ms, and B's turn behind the car in shot 5, 125 ms (only B's ankles in
+  // view). Every other judged cue meets the bar.
+  const MOVES = ['foley.moves.A.lean', 'foley.moves.A.shift1', 'foley.moves.A.turn4', 'foley.moves.B.lean', 'foley.moves.B.shift1', 'foley.moves.B.turn2'];
+  assert.deepEqual(ids(s, (x) => x.ok === false).sort(), [...MOVES, 'foley.scuff.A.1', 'foley.scuff.A.2', 'foley.scuff.A.4', 'foley.scuff.B.1', 'foley.scuff.B.2', 'foley.scuff.B.3']);
   const row = (id) => s.rows.find((x) => x.cue === id);
+  assert.deepEqual(MOVES.map((id) => row(id).aheadMs), [83.33, 133.33, 83.33, 83.33, 50, 125]);
+  // the moves whose person is out of view at the key are not judged: getting out inside the car, B behind it
+  assert.deepEqual(ids(s, (x) => x.ok === null && /start is not shown/.test(x.note)), ['hard.unload.A.slide', 'hard.unload.B.slide', 'foley.moves.B.walk2']);
   assert.deepEqual([row('foley.scuff.A.1').frame, row('foley.scuff.A.1').aheadMs], [null, null], 'no frame, no lead measured');
+  // control: a key-made move judged by the key alone (the first run's rule) could not fail: A's turn out of the lee
+  // met it at 0 ms
+  const turn4 = byId.get('foley.moves.A.turn4');
+  const keyRule = { event: 'the key', state: (t) => PEOPLE_KEYS.A.filter((k) => k.t <= t).length, change: 'any' };
+  assert.equal(SC.sync({ ...REAL, cues: [turn4], sync: { rule: () => keyRule } }).rows[0].ok, true, 'control: the key rule passes it');
+  // control: A's walk onto the bridge planted 100 ms late, after the first frame drawing A walking
+  const walk = byId.get('foley.moves.A.walk3'), late100 = like(walk.id, { id: 'foley.moves.A.late', t0: walk.t0 + 0.1 });
+  assert.match(SC.sync({ ...REAL, cues: [late100] }).rows[0].note ?? '', /after its frame/, 'control: a move 100 ms late');
   assert.ok(Math.abs(row('foley.moves.A.cup').aheadMs - 14.06) < 0.01, 'the cup leads its frame by 14.1 ms, as cues.js says');
   assert.ok(row('foley.lighter.A.strike').ok && row('foley.lighter.A.strike').leadMs > 0, 'the strike leads the flame by its named lead');
   assert.ok(s.rows.filter((x) => x.ok === null).every((x) => /^not judged/.test(x.note)));
@@ -138,25 +177,54 @@ test('5 stereoOrder: A pans left of B whenever both sound in shots 9 to 15; swap
   // the margins SOUND-PLAN 4.3 quotes, measured on every frame: 0.04 (shot 14) to 0.27 (shot 11)
   assert.deepEqual([Math.min(...s.rows.map((x) => x.margin)), Math.max(...s.rows.map((x) => x.margin))], [0.041, 0.267]);
   assert.equal(SC.stereoOrder({ ...REAL, stereo: { ...REAL.stereo, left: 'B', right: 'A' } }).status, 'fail', 'control: A and B swapped');
+  // control: who sounds is read from the cues passed in: a B cue planted at 97.0 to 97.8 in shot 14, where the margin
+  // is 0.04, makes both sound there, under the 0.1 separation
+  const b = like('foley.moves.B.shift1', { id: 'planted.B', sync: 97, t0: 97, t1: 97.8 });
+  const r14 = SC.stereoOrder(withCues([b])).rows.find((x) => x.shot === 14);
+  assert.deepEqual([r14.bothFrames > 0, r14.marginBoth, r14.verdict], [true, 0.041, 'not separated'], 'control: a planted B cue');
+  assert.ok(SC.stereoOrder({ ...REAL, stereo: { ...REAL.stereo, pointLabel: 'the planted points' } }).definition.endsWith('at the planted points'), 'the point label is the input\'s');
 });
 
 // ---------- 6 cutPerspective ----------
-test('6 cutPerspective: places steady inside a place, the hum held under 3 dB and applied over, the walks\' jumps listed; a +12 dB bed and an unheld hum fail', () => {
+test('6 cutPerspective: places steady inside a place, the hum held under 3 dB and applied over, everything else following the camera with its jumps listed; a +12 dB bed and an unheld hum fail', () => {
   const c = run('cutPerspective'), hum = (cut) => c.rows.find((x) => x.cue === 'bg.hum.lamp.bed' && x.cut === cut);
   assert.equal(c.status, 'pass');
   // SOUND-PLAN 3.6: the hum's -21.5 and +18.3 dB jumps apply (into shots 2 and 4), its 1 to 3 dB wobbles are held
   assert.deepEqual([hum(7).dDb, hum(7).verdict, hum(22).dDb, hum(22).held], [-21.53, 'applied', 18.34, false]);
   assert.ok([40, 46, 89, 96, 100].every((t) => hum(t).held && hum(t).dRendered === 0), 'the small changes held');
   assert.ok(c.rows.filter((x) => x.kind === 'location').every((x) => x.verdict === 'steady' || x.verdict === 'place change'));
+  // the steady sources are the caller's (the hum and the idle; the idle starts on the cut into shot 5, so crosses none);
+  // with no renderer passed the definition says those verdicts pass by construction
+  assert.deepEqual([...new Set(c.rows.filter((x) => x.kind === 'steady').map((x) => x.cue))], ['bg.hum.lamp.bed']);
+  assert.match(c.definition, /pass by construction until it is passed/);
+  // the moving car at 22 and the walking cloth follow the camera like the steps: at 40 A's cloth -2.02 dB beside A's
+  // step -2.13 dB, one walker in one perspective
+  assert.deepEqual(c.rows.filter((x) => x.kind === 'moving').map((x) => `${x.cut} ${x.cue}`).slice(0, 6), ['22 hard.engine.car.exhaust', '22 hard.engine.car.intake', '22 hard.tyres.car.front', '22 hard.tyres.car.rear', '22 hard.brake.car.pads2', '40 foley.moves.A.walk2']);
+  assert.ok(c.rows.filter((x) => x.kind === 'moving').every((x) => x.held === null && x.verdict !== 'held'));
   // the step jumps SOUND-PLAN 3.6 keeps: no step straddles 54 or 60, but both walks carry on across them, -7 to -9 dB
   // into shot 8 and +7 to +10 dB into shot 9 under the camera model; the characters model holds every one at 0
-  const walk = (cut) => c.rows.filter((x) => x.cut === cut && x.kind === 'one-shot stream').map((x) => [x.cue.split('.')[2], x.dDb, x.verdict]);
+  const walk = (cut) => c.rows.filter((x) => x.cut === cut && x.kind === 'one-shot stream' && x.cue.startsWith('foley.feet')).map((x) => [x.cue.split('.')[2], x.dDb, x.verdict]);
   assert.deepEqual(walk(54), [['A', -7.27, 'jump'], ['B', -8.54, 'jump']]);
   assert.deepEqual(walk(60), [['A', 7.17, 'jump'], ['B', 10.02, 'jump']]);
-  assert.ok(c.rows.filter((x) => x.kind.startsWith('one-shot')).every((x) => x.dDb_characters === 0));
-  // control: a window shorter than any step gap at a cut sees no stream, only the step that rings across 40
-  const short = SC.cutPerspective({ ...REAL, thresholds: { ...REAL.thresholds, cutStream: { ...REAL.thresholds.cutStream, v: 0.1 } } });
-  assert.deepEqual(short.rows.filter((x) => x.kind.startsWith('one-shot')).map((x) => x.cue), ['foley.feet.A.14'], 'control: no stream inside 0.1 s');
+  // the ticks, a second apart and growing to five, carry on across the four walking cuts by their own rhythm (gap
+  // ratios 1.44, 1.63, 1.04 and 1.42), -6.05 dB at 54 (SOUND-PLAN A.1's car column)
+  const ticks = c.rows.filter((x) => x.cue.startsWith('hard.tick'));
+  assert.deepEqual(ticks.map((x) => [x.cut, x.gapRatio, x.dDb, x.verdict]), [[40, 1.44, -3.62, 'follows the camera'], [46, 1.63, 4.52, 'follows the camera'], [54, 1.04, -6.05, 'jump'], [60, 1.42, 2.48, 'follows the camera']]);
+  // the characters model holds every follower at 0 once the people are there; at 22, before anyone is, it is the camera's
+  const followers = c.rows.filter((x) => x.kind !== 'location' && x.kind !== 'steady');
+  assert.ok(followers.every((x) => (x.cut === 22 ? x.dDb_characters === x.dDb : x.dDb_characters === 0)));
+  // B stops before 40 and walks on after 44.5: a gap of 20.8 times its last, no stream
+  assert.ok(!c.rows.some((x) => x.cut === 40 && x.cue.startsWith('foley.feet.B')));
+  // control: a sparse one-shot source, 3 s apart across the cut into shot 13, is a stream; the first run's one-second
+  // window missed it
+  const sparse = [83.5, 86.5, 89.5, 92.5].map((t, i) => moved('hard.tick.car.03', t, { id: `planted.sparse.${i + 1}`, source: 'planted:sparse' }));
+  assert.ok(SC.cutPerspective(withCues(sparse)).rows.some((x) => x.cut === 89 && x.cue === 'planted.sparse.2' && x.gapRatio === 1), 'control: a sparse stream');
+  // control: a ratio under any stream's sees none, only the step that rings across 40
+  const short = SC.cutPerspective({ ...REAL, thresholds: { ...REAL.thresholds, cutStream: { ...REAL.thresholds.cutStream, v: 0.5 } } });
+  assert.deepEqual(short.rows.filter((x) => x.kind.startsWith('one-shot')).map((x) => x.cue), ['foley.feet.A.14'], 'control: no stream under 0.5');
+  // control: every continuous source declared steady (the first run's reading) holds A's walking cloth at 40
+  const all = SC.cutPerspective({ ...REAL, steady: { select: () => true, label: 'every continuous source' } });
+  assert.ok(all.rows.some((x) => x.cut === 40 && x.cue === 'foley.moves.A.walk2' && x.held), 'control: the cloth held as steady');
   // controls: +12 dB on the street's wind after the cut into shot 4, inside the street; the hum rendered raw
   const loud = { ...REAL, hear: (q, t, m) => { const h = REAL.hear(q, t, m); return q.id === 'bg.wind.street.bed' && t >= shot(4).start ? { ...h, db: h.db + 12 } : h; } };
   assert.ok(SC.cutPerspective(loud).rows.some((x) => x.cue === 'bg.wind.street.bed' && x.verdict === 'changed inside a place'), 'control: +12 dB on a bed inside a place');
