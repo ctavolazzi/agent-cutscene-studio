@@ -150,12 +150,16 @@ function labelProblems(d) {
   return p;
 }
 
-test('labels: none overlaps another, none is too small or outside, on the maps and the timeline', () => {
+test('labels: none overlaps another, none is too small, outside or dropped, on the maps, the timeline and the panels', () => {
   for (const [name, b] of [['map', main], ...details.map((x, i) => [`detail ${i}`, x]), ['timeline', tl]]) {
     assert.deepEqual(labelProblems(b.d), [], name);
     assert.equal(b.labeler.dropped.length, 0, `${name}: labels dropped ${b.labeler.dropped}`);
   }
-  for (const s of SHOTS) assert.deepEqual(textOverlaps(buildSoundPanel(s).d).map(([a, c]) => `${a.str} / ${c.str}`), [], `panel ${s.n}`);
+  for (const s of SHOTS) {
+    const p = buildSoundPanel(s);
+    assert.deepEqual(labelProblems(p.d), [], `panel ${s.n}`);
+    assert.equal(p.labeler.dropped.length, 0, `panel ${s.n}: labels dropped ${p.labeler.dropped}`);
+  }
   // controls: a step's label moved onto another's; a label at 6 px
   const m = buildSoundDetail(soundDetails()[1]), ts = m.d.items.filter((it) => it.k === 'text' && /^[0-9]+\.[0-9]{2}$/.test(it.str));
   Object.assign(ts[1], { x: ts[0].x + 3, y: ts[0].y + 2, anchor: ts[0].anchor });

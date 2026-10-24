@@ -216,21 +216,28 @@ function labelBase(d, v, w, g, L, detail) {
 // The unplaced backgrounds. The main map names each place's beds and their sum beside the place boundary, right-aligned
 // at the map's east edge; a detail map labels the boundary only (its header names the beds). The wind's bearing is drawn
 // as arrows over the river, toward where it blows (set WIND.fromDeg).
+// The arrows are drawn now; the labels are returned, to be placed after the sources so they keep clear of the glyphs.
 function drawUnplaced(d, v, w, g, L, pred, detail) {
   const { BRIDGE, WIND } = w;
-  const fs = 12, inView = BRIDGE.z0 > v.z0 && BRIDGE.z0 < v.z1;
-  if (!detail) {
-    for (const loc of pred.locations) {
-      const beds = pred.beds(loc.name).map((c) => `${c.family} ${fmtDb(c.level)}`).join(', ');
-      const str = `${loc.name.toUpperCase()}: shots ${loc.shots[0]} to ${loc.shots[loc.shots.length - 1]}, ${fmtT(loc.t0)} to ${fmtT(loc.t1)} s\nbackground, unplaced: ${beds} dB, sum ${fmtDb(pred.bg[loc.name])} dB`;
-      const north = loc.name === 'bridge';
-      L.place(v.rect.x1 - 6, v.Y(BRIDGE.z0) + (north ? -10 : 10), str, { size: fs, fill: C.unplaced, weight: 700 }, { cands: [[0, north ? -20 : 20, 'w'], [0, north ? -44 : 44, 'w'], [0, north ? -68 : 68, 'w']], leader: false });
+  const fs = 12, inView = BRIDGE.z0 > v.z0 && BRIDGE.z0 < v.z1, span = (BRIDGE.z0 - BRIDGE.z1);
+  const labels = () => {
+    if (!detail) {
+      for (const loc of pred.locations) {
+        const beds = pred.beds(loc.name).map((c) => `${c.family} ${fmtDb(c.level)}`).join(', ');
+        const str = `${loc.name.toUpperCase()}: shots ${loc.shots[0]} to ${loc.shots[loc.shots.length - 1]}, ${fmtT(loc.t0)} to ${fmtT(loc.t1)} s\nbackground, unplaced: ${beds} dB, sum ${fmtDb(pred.bg[loc.name])} dB`;
+        const north = loc.name === 'bridge';
+        L.place(v.rect.x1 - 6, v.Y(BRIDGE.z0) + (north ? -10 : 10), str, { size: fs, fill: C.unplaced, weight: 700 }, { cands: [[0, north ? -20 : 20, 'w'], [0, north ? -44 : 44, 'w'], [0, north ? -68 : 68, 'w']], leader: false });
+      }
+    } else if (inView) {
+      // on the boundary line, at its east end, else its west end, just above or below it
+      const br = pred.locations.find((l) => l.name !== pred.locations[0].name), y = v.Y(BRIDGE.z0), x0 = v.rect.x0, x1 = v.rect.x1;
+      const at = [-12, 14, -30, 32].flatMap((dy) => [[x1 - 6, y + dy, 'w'], [x0 + 6, y + dy, 'e']]);
+      if (br) L.place(0, 0, `${pred.locations[0].name} | ${br.name}: the place changes at ${fmtT(br.t0)} s (shot ${br.shots[0]})`, { size: fs, fill: C.unplaced }, { cands: at, leader: false });
     }
-  } else if (inView) {
-    const br = pred.locations.find((l) => l.name !== pred.locations[0].name);
-    if (br) L.place(v.rect.x1 - 6, v.Y(BRIDGE.z0), `${pred.locations[0].name} | ${br.name}: the place changes at ${fmtT(br.t0)} s (shot ${br.shots[0]})`, { size: fs, fill: C.unplaced }, { cands: [[0, -12, 'w'], [0, 14, 'w'], [0, -36, 'w'], [0, 38, 'w']], leader: false });
-  }
-  const to = dirOf(WIND.fromDeg + 180), span = (BRIDGE.z0 - BRIDGE.z1);
+    const wx = v.x0 + (v.x1 - v.x0) * 0.55, wz = BRIDGE.z1 + span * 0.5;
+    if (g.inside(wx, wz)) L.place(v.X(wx), v.Y(wz), `wind from ${WIND.fromDeg} deg, and the water: unplaced, bridge only`, { size: fs - 1, fill: C.unplaced }, { r: 6 });
+  };
+  const to = dirOf(WIND.fromDeg + 180);
   for (const fx of [0.2, 0.55, 0.85]) for (const fz of [0.3, 0.7]) {
     const x = v.x0 + (v.x1 - v.x0) * fx, z = BRIDGE.z1 + span * fz, l = Math.min(4, span * 0.25);
     if (!g.inside(x, z)) continue;
@@ -239,8 +246,7 @@ function drawUnplaced(d, v, w, g, L, pred, detail) {
     const p = g.P(...b), q = g.P(...a), ux = (p[0] - q[0]) / Math.hypot(p[0] - q[0], p[1] - q[1]), uy = (p[1] - q[1]) / Math.hypot(p[0] - q[0], p[1] - q[1]);
     d.poly([p, [p[0] - ux * 7 - uy * 3.5, p[1] - uy * 7 + ux * 3.5], [p[0] - ux * 7 + uy * 3.5, p[1] - uy * 7 - ux * 3.5]], { fill: C.unplaced, op: 0.7 });
   }
-  const wx = v.x0 + (v.x1 - v.x0) * 0.55, wz = BRIDGE.z1 + span * 0.5;
-  if (g.inside(wx, wz)) L.place(v.X(wx), v.Y(wz), `wind from ${WIND.fromDeg} deg, and the water: unplaced, bridge only`, { size: fs - 1, fill: C.unplaced }, { r: 6 });
+  return labels;
 }
 
 // One camera as a listener: the half-plane behind it shaded (quieter and darker there, spatial.SPATIAL), its level rings
@@ -445,9 +451,10 @@ export function buildSoundMap({ cues = CUES, w = WORLD } = {}, d = null, offset 
   L.fixed(40 + offset[0], 48 + offset[1], 'Snow, Lamp, Bridge: sound map, top-down', { size: 26, weight: 700, fill: '#fff' });
   L.fixed(40 + offset[0], 76 + offset[1], `Generated from src/audio/cues.js (${cues.length} cues), SHOTS and spatial.js. Sound 1 storyboard, for your markup. North is up.`, { size: 14, fill: C.dim });
   drawBase(d, v, w, g);
-  drawUnplaced(d, v, w, g, L, pred, false);
+  const unplaced = drawUnplaced(d, v, w, g, L, pred, false);
   const marks = cameraMarks(d, L, w.SHOTS.map((s) => listenerGlyph(d, v, g, L, s, { cues, w, wedgeLen: 9, ringsOpacity: 0.45, maxRing: MAIN_RING })));
   const placed = drawSources(d, v, g, L, cues, w, { label: 'groups', detail: false, pred });
+  unplaced();
   marks();
   labelBase(d, v, w, g, L, false);
   drawLegend(d, v.rect.x1 + 30, v.rect.y0 + 10, L, { cues, wFor: LEGEND_W - 20 });
@@ -456,7 +463,7 @@ export function buildSoundMap({ cues = CUES, w = WORLD } = {}, d = null, offset 
 
 // The four detail groups (SOUND-PLAN 4.3). Each view is fitted to its cameras (where they start and end) and the sources
 // it shows, with a margin, at up to DETAIL.px pixels on the long side and DETAIL.maxScale px per meter.
-const DETAIL = { margin: 1.5, px: 1000, maxScale: 70 };
+const DETAIL = { margin: 1.5, px: 1300, maxScale: 70 };
 export function soundDetails(w = WORLD, cues = CUES) {
   const groups = [
     // the car's sounds up to its stop; what follows the stop is on the arrival's map, closer in
@@ -501,8 +508,9 @@ export function buildSoundDetail(group, { cues = CUES, w = WORLD } = {}, d = nul
     const len = Math.min(34, Math.max(4, Math.hypot(subj[0] - c0.pos[0], subj[2] - c0.pos[2]) + 1.5));
     return listenerGlyph(d, v, g, L, s, { cues, w, detail: true, wedgeLen: len, wedgeOp: 0.05 });
   }));
-  drawUnplaced(d, v, w, g, L, pred, true);
+  const unplaced = drawUnplaced(d, v, w, g, L, pred, true);
   const placed = drawSources(d, v, g, L, cues.filter((c) => group.keep(c)), w, { label: 'all', detail: true, span: group.span, pred });
+  unplaced();
   marks();
   labelBase(d, v, w, g, L, true);
   return { d, v, placed, labeler: L, pred };

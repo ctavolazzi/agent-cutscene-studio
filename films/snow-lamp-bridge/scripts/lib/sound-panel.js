@@ -9,7 +9,7 @@ import { shotColor, makeView, wedge } from './map.js';
 import { makeCamera, bearingOf, dirOf, clipPolyRect, clipLineRect, D2R } from './math.js';
 import { CUES, LAWS, WORLD } from '../../src/audio/cues.js';
 import { CONFIG } from '../../src/config.js';
-import { makePredictor, makeLabeler, colorOf, voiced, sounding, fmtT, fmtDb, glyph, wrapText, FAMILY, LAW_COLOR, RING_DB, ringRadius } from './sound-map.js';
+import { makePredictor, makeLabeler, colorOf, voiced, sounding, fmtT, fmtDb, glyph, wrapText, textBox, FAMILY, LAW_COLOR, RING_DB, ringRadius } from './sound-map.js';
 import { DB, inFrame, frameSize } from './sound-timeline.js';
 
 export const FW = 960, FH = 540; // the frame as drawn: the export's 480x270 internal pixels at 2x
@@ -73,6 +73,7 @@ export function framePoint(c, shot, tf, w = WORLD) {
   const q = makeCamera(w.cameraAt(shot, tf), FW, FH).project(p);
   return { id: c.id, t, p, x: q ? q[0] : null, y: q ? q[1] : null, depth: q ? q[2] : null, sounding: c.t0 <= tf && tf < c.t1 };
 }
+const FIELD_STEPS = 20; // glyphs down the stereo field for a cue that sounds through the whole shot
 const levelR = (db) => 2.5 + Math.min(1, Math.max(0, (db - DB.lo) / (DB.hi - DB.lo))) * 10;
 
 // frame: { n, t, png (a Buffer of the decoded frame) } or null (drawn as a placeholder note)
@@ -102,18 +103,24 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     if (q.x === null) continue; // behind the camera: in the list and the stereo field, not on the frame
     const inside = q.x >= 0 && q.x <= FW && q.y >= 0 && q.y <= FH, ccol = colorOf(c);
     const x = Math.min(FW - 7, Math.max(7, q.x)), y = Math.min(FH - 7, Math.max(7, q.y));
-    if (inside) d.circle(q.x, q.y, 6, { fill: q.sounding ? ccol : '#0b1020', fillOp: q.sounding ? 0.9 : 0.6, stroke: q.sounding ? '#0b1020' : ccol, sw: 2, cue: c.id, role: 'frame' });
+    // an offered cue (default out) is dashed, never filled
+    const lit = q.sounding && c.enabled;
+    if (inside) d.circle(q.x, q.y, 6, { fill: lit ? ccol : '#0b1020', fillOp: lit ? 0.9 : 0.6, stroke: lit ? '#0b1020' : ccol, sw: 2, cue: c.id, role: 'frame', ...(c.enabled ? {} : { dash: [2, 2] }) });
     else d.poly([[x, y - 6], [x + 6, y], [x, y + 6], [x - 6, y]], { fill: 'none', stroke: ccol, sw: 1.5, cue: c.id, role: 'frame-edge', cx: x, cy: y });
     L.block({ x0: x - 6, x1: x + 6, y0: y - 6, y1: y + 6 });
   }
-  // numbers: the in-frame ones first, each beside its point and kept inside the frame
-  const Lf = makeLabeler(d, { pad: 1, bounds: inner });
+  // numbers: each beside its point and kept inside the frame, on a dark chip so a bright frame cannot hide it
+  const Lf = makeLabeler(d, { pad: 1, bounds: inner }), chips = [];
   Lf.boxes.push(...L.boxes);
   for (const q of points.filter((p) => p.x !== null)) {
     const c = list.find((x) => x.id === q.id), x = Math.min(FW - 7, Math.max(7, q.x)), y = Math.min(FH - 7, Math.max(7, q.y));
-    Lf.place(x, y, String(num.get(c.id)), { size: 12, weight: 700, fill: colorOf(c) }, { r: 6 });
+    Lf.place(x, y, String(num.get(c.id)), { size: 12, weight: 700, fill: colorOf(c) }, { r: 6, later: chips });
   }
-  L.fixed(4, FH + 17, `Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); diamond at the edge, out of frame.`, { size: 11, fill: '#c9d4ee' });
+  for (const it of chips) {
+    if (it.k === 'text') { const b = textBox(it); d.rect(b.x0 - 1.5, b.y0 - 1, b.x1 - b.x0 + 3, b.y1 - b.y0 + 2, { fill: '#0b1020', fillOp: 0.7 }); }
+    d.add(it);
+  }
+  L.fixed(4, FH + 17, `Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); dashed, offered and off; diamond at the edge, out of frame.`, { size: 11, fill: '#c9d4ee' });
 
   // ---- the stereo field over the whole shot
   L.fixed(RIGHT.x + 10, 22, 'STEREO FIELD OVER THE SHOT', { size: 13, weight: 700, fill: '#c9d4ee' });
@@ -136,7 +143,9 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
   const field = [];
   for (const c of list.filter((x) => voiced(x) && x.place)) {
     const a = Math.max(c.t0, shot.start), b = Math.min(c.t1, shot.end), ts = [a];
-    if (c.shape === 'continuous') for (let t = Math.ceil(a * 4) / 4; t < b; t += 0.25) if (t > a + 1e-9) ts.push(t);
+    // a continuous cue every FIELD_STEP of the shot, so its glyphs stay apart down the field
+    const step = Math.max(0.25, (shot.end - shot.start) / FIELD_STEPS);
+    if (c.shape === 'continuous') for (let t = Math.ceil(a / step) * step; t < b; t += step) if (t > a + 1e-9) ts.push(t);
     const ccol = colorOf(c), pts = [];
     for (const t of ts) {
       const q = pred.at(c, t);
@@ -157,7 +166,7 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
 
   // ---- the listener: a mini map at the frame's time
   L.fixed(RIGHT.x + 10, MM.y - 10, `THE LISTENER AT ${fmtT(fr.t)} s, from above, north up`, { size: 13, weight: 700, fill: '#c9d4ee' });
-  miniMap(d, shot, fr.t, list, points, w, num);
+  const miniDropped = miniMap(d, shot, fr.t, list, points, w, num);
 
   // ---- caption and the cue list
   const y0 = FH + 52;
@@ -176,6 +185,8 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     const cells = [[0, String(i + 1)], [22, c.id], [262, `${fmtT(c.t0)} to ${fmtT(c.t1)}`], [372, voiced(c) ? (q ? `${fmtDb(q.db)} dB` : '') : `${fmtDb(c.level)} dB`], [432, q && q.pan !== null ? q.pan.toFixed(2) : ''], [482, where + (c.new ? ', new' : '') + (c.enabled ? '' : ', offered, off')]];
     for (const [dx, s] of cells) if (s) L.fixed(x + dx, y, s, { size: 11, fill: dx === 0 || dx === 22 ? ccol : '#c9d4ee', ...(dx === 22 ? { cue: c.id, role: 'list' } : {}) });
   });
+  // every label placed or dropped counts, whichever placer it went through
+  L.dropped.push(...Lf.dropped, ...Ls.dropped, ...miniDropped);
   return { d, frame: fr, points, field, list, labeler: L };
 }
 
@@ -215,9 +226,10 @@ function miniMap(d, shot, t, list, points, w, num) {
   d.circle(cxp, cyp, 7, { fill: col, stroke: '#0b1020', sw: 1.2 });
   const L = makeLabeler(d, { pad: 1, bounds: { x0: MM.x + 2, x1: MM.x + MM.w - 2, y0: MM.y + 2, y1: MM.y + MM.h - 2 } });
   const m = `${span.toFixed(1)} m across`;
-  L.place(MM.x + MM.w - 4, MM.y + MM.h - 6, m, { size: 10, fill: '#8794b3' }, { cands: [[0, 0, 'w']], leader: false });
+  L.place(MM.x + MM.w - 6, MM.y + MM.h - 10, m, { size: 10, fill: '#8794b3' }, { cands: [[0, 0, 'w']], leader: false });
   for (const q of points) {
     const c = list.find((x) => x.id === q.id), [x, y] = P(q.p[0], q.p[2]);
     if (clip([[x, y]])) L.place(x, y, String(num.get(c.id)), { size: 9, fill: colorOf(c) }, { r: 4 });
   }
+  return L.dropped;
 }
