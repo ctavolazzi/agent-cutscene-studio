@@ -48,6 +48,30 @@ export const CONFIG = {
   // Tyre tracks (src/fx/tracks.js, look stage): the road's snow pressed down to wet asphalt.
   tracks: { color: '#3a3f48', opacity: 0.85 },
 
+  // The soundtrack (src/audio/, Stage 8). Rendered in one pass at `sr`, then normalized to `targetLufs` integrated
+  // with every sample under `ceilingDb` (a true peak near -1.5 dBTP). Bus levels in dB before normalization. The fades
+  // match the picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
+  audio: {
+    sr: 48000,
+    targetLufs: -16,
+    ceilingDb: -2.0,
+    masterHighpassHz: 25,
+    fadeIn: 3,
+    fadeOut: 1.5,
+    buses: { amb: 0, fx: 0, music: -3 },
+    reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
+    ambience: { windGain: 0.5, bridgeWindBoost: 0.8, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
+
+    // the car layer (src/audio/layers/car.js)
+    car: {},
+
+    // the foley layer (src/audio/layers/foley.js)
+    foley: {},
+
+    // the score (src/audio/layers/score.js)
+    score: {},
+  },
+
   // Stage 7 deliverables (scripts/finals.js). stills: shot number to the time of its best frame (a shot not listed
   // uses its middle). thumbs: 1280x720 candidates, each the frame at t upscaled `scale` times (3 or 4, nearest)
   // and cropped around (cx, cy), fractions of the frame from the top left; no text, room left for a title.

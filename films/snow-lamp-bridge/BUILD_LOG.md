@@ -460,3 +460,37 @@ signed off once the Stage 3 merge passes its checks; no more review pages or pan
 ### Published
 - The director uploaded the film to YouTube with the titled thumbnail: https://youtu.be/F02fKQvjlJQ
 - Actions: linked from this README, the repo's README (the thumbnail links to the video) and playbook/prompts/youtube.md.
+
+## Stage 8: Sound
+
+### S8.0  Plan
+- Before: the film is silent by the original brief. The director asked to continue the engineering with sound.
+- Plan: a soundtrack made the way the picture is made. Every sample is synthesized in code from the same timing data
+  (no recorded samples, seeded noise only), rendered in one pass over the whole film at 48 kHz stereo, deterministic to
+  the byte. Sources are placed in the stereo field from their position relative to each shot's camera (`cameraAt`), so
+  the car pans with the picture. Footsteps land on the frames the prints appear (`footprintList`), doors on the door
+  times, the lighter on `LIGHTER.t0`, drags on `EMBER.drags`, the exhale on `EXHALE.t`.
+- Engine first (one fixed API for the layers): `src/audio/` (DSP primitives, spatializer, mixer with buses and a
+  PS1-style reverb, BS.1770 loudness meter and normalization with a peak limiter, WAV writer), `scripts/sound.js`
+  (render to `out/sound.wav`), audio muxed by `scripts/capture.js --audio`, audio checks in `scripts/verify.js`, and
+  playback in the HTML player (rendered in a worker, video slaved to the audio clock).
+- Then four layers in parallel (ambience, car, foley, score), merged and mixed, then measured: onset times against the
+  events, stereo placement against the picture, integrated loudness and true peak (ffmpeg as the reference meter),
+  spectrograms. The director's ears are the real gate.
+
+### S8.1  The audio engine and the ambience bed
+- Actions: `src/audio/` written: `dsp.js` (noise, one-pole and RBJ biquad filters, envelopes, a Freeverb-style reverb
+  standing in for the PS1 SPU's), `spatial.js` (listener from `cameraAt`; pan, inverse-distance level, air lowpass,
+  quieter and darker behind the camera; gains ramped across each 256-sample block so a cut never clicks), `mix.js`
+  (layers into `amb`, `fx` and `music` buses, reverb send, 25 Hz master highpass, the picture's 3 s fade in, a 1.5 s
+  fade out), `loudness.js` (BS.1770-4 integrated loudness, a lookahead limiter), `wav.js` (16-bit with seeded TPDF
+  dither), `index.js` (the layer list, the context). `scripts/sound.js` renders `out/sound.wav` and its stats.
+  The ambience layer: wind (louder on the deck), the city far off, the lamp's 120 Hz hum at the lantern, the river
+  under the deck. Car, foley and score are silent stubs with their config blocks, so each is built in its own files.
+- Found: a single normalize pass came in 1.5 LU under the target on a signal with loud bursts, because limiting the
+  bursts takes their energy out of the measurement. `normalize` now corrects the gain and limits again from the
+  unlimited signal until it reads the target (at most 4 passes). The control test plants 5 ms bursts that go over 0 dBFS.
+- Measured: the 112 s soundtrack renders in about 5 s in Node; our meter and ffmpeg's ebur128 agree to 0.2 LU;
+  the master reads -16.0 LUFS and its true peak (ffmpeg) is under -1.5 dBTP.
+- Gate: 93 tests pass (8 new in `tests/audio.test.mjs`, each with a planted fault); forbidden, build, determinism,
+  cameras pass.
