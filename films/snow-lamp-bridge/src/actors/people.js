@@ -157,8 +157,8 @@ function onTorso(hip, pitch, twist, x, up) {
   return [hip[0] + xt, hip[1] + up * c + zt * s, hip[2] - up * s + zt * c];
 }
 
-// Scaled dimensions for one person.
-function dims(id) {
+// Scaled dimensions for one person (exported for the sound cues: the standing ankle height the prints use).
+export function dims(id) {
   const k = PEOPLE[id].height / 1.8;
   const D = {};
   for (const [key, v] of Object.entries(BODY)) if (typeof v === 'number') D[key] = v * k;
