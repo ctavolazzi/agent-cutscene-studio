@@ -5,28 +5,32 @@ import { renderSoundtrack } from '../../src/audio/index.js';
 import { integratedLufs } from '../../src/audio/loudness.js';
 
 const cache = new Map();
-// One layer (or several) alone: no reverb, no normalization, so onsets and levels are the layer's own. Cached per run.
-export function stem(only) {
-  const key = [].concat(only).join(',');
-  if (!cache.has(key)) cache.set(key, renderSoundtrack(CONFIG, { only: [].concat(only), reverb: false, normalize: false }));
+const stageKey = (config) => [config.audio.stage, config.audio.parked, config.seed];
+// One layer (or several) of a config's stage alone: no reverb, no normalization, so onsets and levels are the layer's
+// own. Cached per run.
+export function stem(only, config = CONFIG) {
+  const key = JSON.stringify([...stageKey(config), [].concat(only)]);
+  if (!cache.has(key)) cache.set(key, renderSoundtrack(config, { only: [].concat(only), reverb: false, normalize: false }));
   return cache.get(key);
 }
 
 // One layer with some of its config changed (parts muted, one person's steps): { layer, set: { key: value } }.
 // `keep` mutes every *Gain in the layer's config except those named. No reverb, no normalization. Cached per run.
-export function stemWith(layer, { keep = null, set = {} } = {}) {
-  const key = JSON.stringify([layer, keep, set]);
+export function stemWith(layer, { keep = null, set = {} } = {}, config = CONFIG) {
+  const key = JSON.stringify([...stageKey(config), layer, keep, set]);
   if (!cache.has(key)) {
-    const c = { ...CONFIG.audio[layer] };
+    const c = { ...config.audio[layer] };
     if (keep) for (const k of Object.keys(c)) if (k.endsWith('Gain') && !keep.includes(k)) c[k] = 0;
     Object.assign(c, set);
-    cache.set(key, renderSoundtrack({ ...CONFIG, audio: { ...CONFIG.audio, [layer]: c } }, { only: [layer], reverb: false, normalize: false }));
+    cache.set(key, renderSoundtrack({ ...config, audio: { ...config.audio, [layer]: c } }, { only: [layer], reverb: false, normalize: false }));
   }
   return cache.get(key);
 }
 
-// short-term loudness (BS.1770, ungated past the absolute gate) of [t0, t1)
-export function lufsOf(s, t0, t1) {
+// The integrated loudness (BS.1770, both gates: absolute at -70 LUFS, relative at -10 LU, the meter normalize() uses)
+// of [t0, t1). Named lufsOf until Sound 2.1, whose comment called it short-term and ungated: the gates stay, since the
+// balance bars in tests/sound-layers.test.mjs were set on it.
+export function integratedLufsOf(s, t0, t1) {
   const a = idx(t0, s.sr), b = idx(t1, s.sr);
   return integratedLufs(s.left.subarray(a, b), s.right.subarray(a, b), s.sr);
 }

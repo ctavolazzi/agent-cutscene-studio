@@ -1,6 +1,7 @@
 // Checks for the audio engine (src/audio/): determinism, the loudness meter against ffmpeg, normalization, the peak
-// ceiling, stereo placement from the camera, the fade in, clicks at cuts, and the WAV file. Each has a planted fault.
-// Run: node --test tests/audio.test.mjs
+// ceiling, stereo placement from the camera, the fade in, clicks at cuts, and the WAV file, on the default stage
+// (config.audio.stage); the stage switch and the parking (SOUND-PLAN 3.1, 4.4); the sidecar scripts/sound.js writes
+// and how verify.js reads it. Each has a planted fault. Run: node --test tests/audio.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -12,11 +13,14 @@ import { CONFIG } from '../src/config.js';
 import { SHOTS } from '../src/shots.js';
 import { T_TOTAL } from '../src/world.js';
 import { mulberry32 } from '../src/prng.js';
-import { renderSoundtrack } from '../src/audio/index.js';
+import { STAGES, atStage, buildLayers, layerNames, renderSoundtrack } from '../src/audio/index.js';
+import { renderAll } from '../src/audio/mix.js';
 import { integratedLufs, normalize, samplePeak } from '../src/audio/loudness.js';
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
+import { renderToWav } from '../scripts/sound.js';
+import { LEGACY_SOUND, madeBy } from '../scripts/verify.js';
 
 const SR = CONFIG.audio.sr;
 const dir = mkdtempSync(join(tmpdir(), 'audio-test-'));
@@ -48,9 +52,10 @@ test('determinism: two renders of the soundtrack give the same samples', () => {
   const a = master(), b = renderSoundtrack(CONFIG);
   assert.equal(hash(a.left, a.right), hash(b.left, b.right));
   assert.equal(a.left.length, Math.round(T_TOTAL * SR));
-  // control: another seed is another soundtrack
-  const other = renderSoundtrack({ ...CONFIG, seed: CONFIG.seed + 1 }, { only: ['ambience'], normalize: false });
-  const same = renderSoundtrack(CONFIG, { only: ['ambience'], normalize: false });
+  // control: another seed is another soundtrack (the stage's first layer, a stem)
+  const only = layerNames(CONFIG).slice(0, 1);
+  const other = renderSoundtrack({ ...CONFIG, seed: CONFIG.seed + 1 }, { only, normalize: false });
+  const same = renderSoundtrack(CONFIG, { only, normalize: false });
   assert.notEqual(hash(other.left, other.right), hash(same.left, same.right));
 });
 
@@ -128,4 +133,58 @@ test('the WAV: 16-bit PCM stereo at 48 kHz, the right length, readable by ffprob
   assert.deepEqual([s.codec_name, Number(s.sample_rate), s.channels], ['pcm_s16le', 48000, 2]);
   assert.ok(Math.abs(Number(s.duration) - T_TOTAL) < 1e-3);
   assert.equal(readFileSync(f).length, 44 + 4 * m.left.length);
+});
+
+// ---------- the stage switch and the parking (SOUND-PLAN 3.1, 4.4) ----------
+test('stages: each builds its own layers in mix order, minus the parked ones; an unknown stage or layer is refused', () => {
+  const names = (stage, parked) => layerNames(atStage(CONFIG, { stage, parked }));
+  assert.deepEqual(names('design', ['score']), ['ambience', 'car', 'foley']);
+  assert.deepEqual(names('design', []), ['ambience', 'car', 'foley', 'score'], 'the score comes back when unparked');
+  assert.deepEqual(buildLayers(atStage(CONFIG, { stage: 'design' }), ['car', 'foley']).map((l) => l.name), ['car', 'foley']);
+  for (const [stage, mods] of Object.entries(STAGES)) for (const name of Object.keys(mods)) assert.equal(typeof mods[name].build, 'function', `${stage} ${name}`);
+  // controls: a stage that does not exist, and a stem naming another stage's layer
+  assert.throws(() => names('look', []), /audio stage 'look'/);
+  assert.throws(() => layerNames(atStage(CONFIG, { stage: 'design' }), ['nope']), /no layer 'nope' in the design stage/);
+});
+
+test('parking: the score is parked by default and the music bus renders silence; a planted enabled score is heard', () => {
+  assert.ok(CONFIG.audio.parked.includes('score'), 'parked by default (SOUND-PLAN 3.1)');
+  // everything a config builds that goes to the music bus, mixed alone
+  const musicPeak = (config) => {
+    const r = renderAll({ layers: buildLayers(config).filter((l) => l.bus === 'music'), config, sr: SR, total: T_TOTAL, reverb: false, normalize: false });
+    return samplePeak(r.left, r.right);
+  };
+  const design = atStage(CONFIG, { stage: 'design' });
+  assert.equal(musicPeak(design), 0, 'the design stage with the score parked');
+  assert.deepEqual(layerNames(design, ['score']), [], 'a stem of a parked layer is empty: the parking holds for stems');
+  // control: the score planted back in, enabled, is heard on the music bus
+  assert.ok(musicPeak(atStage(design, { parked: [] })) > 1e-3);
+});
+
+test('sidecar: scripts/sound.js names the stage, the parked and the built layers; both files are the same bytes every run', () => {
+  const out = join(dir, 'stem.wav'), run = () => {
+    renderToWav({ out, stage: 'design', only: ['ambience'], raw: true, log: () => {} });
+    return [readFileSync(out), readFileSync(`${out}.json`)];
+  };
+  const [wav1, json1] = run(), [wav2, json2] = run();
+  assert.ok(wav1.equals(wav2) && json1.equals(json2), 'no clock in either file');
+  const side = JSON.parse(json1);
+  assert.deepEqual([side.stage, side.parked, side.layers], ['design', CONFIG.audio.parked, ['ambience']]);
+  assert.equal(side.renderSeconds, undefined, 'render time is not written: it differs every run');
+});
+
+test('verify check 5: a sidecar without stage or parked was made before the stage switch, score in', () => {
+  // the S8.3 listening copy's sidecar has neither field
+  const s83 = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, layers: 'all', renderSeconds: 11.86, sha256: 'f80b1542', stats: {} };
+  const legacy = madeBy(s83);
+  assert.deepEqual(legacy, { ...LEGACY_SOUND, parked: [] });
+  assert.deepEqual(layerNames(atStage(CONFIG, legacy)), ['ambience', 'car', 'foley', 'score'], 'rendered again with the S8.3 layers');
+  assert.ok(legacy.made.includes('before the stage switch'));
+  // a sidecar with the fields is read as written; no sidecar is the config as it is
+  assert.deepEqual(madeBy({ ...s83, stage: 'blockout', parked: ['score'] }).stage, 'blockout');
+  assert.deepEqual(madeBy({ ...s83, stage: 'design', parked: [] }).parked, []);
+  assert.deepEqual([madeBy(null).stage, madeBy(null).parked], [CONFIG.audio.stage, CONFIG.audio.parked]);
+  // controls: only one missing field is enough; a written stage is never overridden by the legacy reading
+  assert.equal(madeBy({ ...s83, stage: 'blockout' }).made, LEGACY_SOUND.made);
+  assert.notEqual(madeBy({ ...s83, stage: 'blockout', parked: [] }).made, LEGACY_SOUND.made);
 });
