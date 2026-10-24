@@ -19,6 +19,7 @@ npm run sound            # render the soundtrack to out/sound.wav (src/audio/), 
 npm run export           # build, render the sound, capture out/film.mp4 (1920x1080, 24 fps, H.264, AAC 48 kHz)
 npm run verify           # probe, frame match against fresh renders, seeks, timing, sound sync and loudness
 npm run finals           # out/stills/ and three thumbnail candidates in out/thumbnails/
+node scripts/mux.js --file out/film.mp4   # a new mix into a finished export, the picture copied untouched
 node scripts/capture.js --profile 4k --audio out/sound.wav && node scripts/verify.js --profile 4k   # 4K, same build
 python3 scripts/title-thumbnail.py <base.png> packaging/thumbnail 4 <x> <y> <size> <gap>   # title on a thumbnail
 ```

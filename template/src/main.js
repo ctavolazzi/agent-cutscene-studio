@@ -126,7 +126,8 @@ if (!params.capture) {
     sound.src.disconnect();
     sound.src = null;
   }
-  function startSource(t) {
+  function startSource(at) {
+    const t = ((at % T_TOTAL) + T_TOTAL) % T_TOTAL; // a ?t= past the end wraps, as the picture does
     stopSource();
     const c = sound.ctx;
     if (!sound.buf) {

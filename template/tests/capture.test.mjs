@@ -586,3 +586,31 @@ test('capture.js --audio: the clip carries the soundtrack from its own start, to
   assert.notEqual(miss.code, 0);
   assert.match(miss.err, /no soundtrack at/);
 });
+
+test('mux.js: a new soundtrack goes into an exported MP4 with the picture untouched, trimmed to its frames', async () => {
+  const { mux, videoHash } = await import('../scripts/mux.js');
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr);
+  const l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = 0; i < sr / 500; i++) { l[Math.round(11.5 * sr) + i] = 0.9 * (i % 2 ? -1 : 1); r[Math.round(11.5 * sr) + i] = l[Math.round(11.5 * sr) + i]; }
+  const d = fresh('mux');
+  const wav = resolve(d, 'click.wav');
+  writeFileSync(wav, encodeWav(l, r, sr, mulberry32(2)));
+  const file = resolve(d, 'silent.mp4');
+  const c = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '12', '--out', file]);
+  assert.equal(c.code, 0, c.err + c.out);
+  const before = videoHash(file);
+  assert.equal((await ffprobe(file)).audioStreams, 0);
+  await mux({ file, audio: wav, log: () => {} });
+  const p = await ffprobe(file);
+  assert.deepEqual([p.audioStreams, p.audioCodec, p.frames], [1, 'aac', 48]);
+  assert.equal(videoHash(file), before, 'the video stream is the same bytes');
+  // the sidecar says the clip starts at 10 s, so the click at 11.5 s lands 1.5 s in
+  const a = decodeAudio(file);
+  let at = null;
+  for (let i = 0; i < a.left.length && at === null; i++) if (Math.abs(a.left[i]) > 0.3) at = i / sr;
+  assert.ok(Math.abs(at - 1.5) <= 0.001, `click at ${at}`);
+  assert.ok(JSON.parse(readFileSync(`${file}.json`, 'utf8')).mux.from === 10);
+  // a missing soundtrack is refused and the file is left as it was
+  await assert.rejects(mux({ file, audio: resolve(d, 'nope.wav'), log: () => {} }), /no soundtrack at/);
+  assert.equal(videoHash(file), before);
+});
