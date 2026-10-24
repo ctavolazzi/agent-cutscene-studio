@@ -16,9 +16,9 @@ const NORTH_LANE_X = 2.2; // northbound traffic keeps right, which is the east h
 const TURN_R = 3.0;
 // The car (and its headlights) appear at 14.0, the cut into shot 3, already moving: switching on any earlier lights
 // facades in shot 2's frame in one step. Before 14.0 it would have been at x 44 at 13.0, on the same path.
-const X_START = 38.7;
+export const X_START = 38.7;
 const T_START = 14.0;
-const SPEED_W = 5.3; // cruising on the cross street
+export const SPEED_W = 5.3; // cruising on the cross street
 const SPEED_TURN = 3.4; // through the corner
 const X_BRAKE = 12.0; // brakes from here to the turn, so the speed never steps
 const X_TURN = NORTH_LANE_X + TURN_R; // 5.2
