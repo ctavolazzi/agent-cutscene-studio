@@ -44,6 +44,31 @@ export function buildThing(ctx) {
 - No textures loaded from files. No external assets.
 - No em or en dashes anywhere, comments included.
 
+## A sound layer
+
+```js
+// src/audio/layers/<name>.js, listed in LAYERS in src/audio/index.js, with its own block in config.audio
+export function build(ctx) {
+  const { sr, total, config, rngFor, spatializer } = ctx;
+  // make voices, filters and schedules once
+  return {
+    name: '<name>', bus: 'amb', reverb: 0.2, // bus 'amb', 'fx' or 'music'; reverb send 0 to 1
+    process(L, R, i0, n) {
+      // ADD n samples, starting at sample i0 (time i0 / sr), into L and R
+    },
+  };
+}
+```
+
+- The soundtrack is rendered once, front to back, in blocks: `process` is called for every block in order, so a
+  layer **may** keep state (filters, phases, envelopes), unlike a scene part. It is still deterministic: the same
+  config and seed give the same samples on every run.
+- Timing comes from the same functions the picture reads (`src/world.js`, the rigs, the prints), never from copied
+  numbers, so the sound follows any change to the animation.
+- `spatializer(place, law)` hears a mono voice from the shot's camera: `place(t)` returns a world point or null.
+  `src/audio/events.js` schedules one-shots. Seeded randomness only: `rngFor('audio:<layer>:<what>')`.
+- The player's AudioContext clock belongs to the playback block of `main.js`, like every other clock.
+
 ## The window API (for scripts in `scripts/`)
 
 | Name | Does |
@@ -54,5 +79,8 @@ export function buildThing(ctx) {
 | `window.__frameRGB(t)` | draws the frame and returns `{ info, b64 }`: base64 of the internal frame as RGB bytes, **bottom row first** (WebGL order; flip it with ffmpeg `vflip`) |
 | `window.__project([x,y,z], t)` | applies the camera for time `t` and returns `[sx, sy]`, the point's position as a fraction of the frame (0,0 top left), or `null` behind the camera |
 
-URL parameters: `?capture=1` (nothing animates on its own; only the API draws), `?overlay=0` (no shot overlay),
+In playback (not capture) mode, `window.__sound` holds the player's soundtrack state: `{ state: 'rendering' | 'ready' |
+'failed', progress, on, sr, left, right, stats, src, o0 }` (the tests read it).
+
+URL parameters: `?capture=1` (nothing animates on its own, no sound; only the API draws), `?overlay=0` (no shot overlay),
 `?t=<seconds>` (playback starts there).

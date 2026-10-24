@@ -31,8 +31,8 @@ export function buildLayers(config, only = null) {
 }
 
 // The finished soundtrack: { sr, left, right, stats }. `only` renders a subset of layers (stems for tests).
-export function renderSoundtrack(config, { only = null, reverb = true, normalize = true } = {}) {
-  return renderAll({ layers: buildLayers(config, only), config, sr: config.audio.sr, total: T_TOTAL, reverb, normalize });
+export function renderSoundtrack(config, { only = null, reverb = true, normalize = true, onProgress = null } = {}) {
+  return renderAll({ layers: buildLayers(config, only), config, sr: config.audio.sr, total: T_TOTAL, reverb, normalize, onProgress });
 }
 
 export { renderBlocks };

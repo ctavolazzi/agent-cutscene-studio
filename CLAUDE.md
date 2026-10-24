@@ -45,6 +45,8 @@ example: `films/snow-lamp-bridge/SOUND.md`.
 - Rendering is software WebGL in headless Chromium: about 100 ms a frame at 1080p, 200 ms at 4K. Plan exports.
 - The soundtrack renders in about 11 s in Node for a 112 s film; the player renders it in a worker as the page opens.
 - A pipe hides exit codes: capture to a log file, then read it.
+- `pkill -f <pattern>` also matches the shell running it (and any background chain whose command line holds the
+  pattern): find the PID with `ps` and kill that.
 - Scratch scripts must import project files and `playwright-core` by absolute path.
 - Dark shots: judge staging on a lifted copy (`curves=all='0/0 0.25/0.6 1/1'`), the look on the real frame.
 - Measure before offering a decision; set a test bar from a measurement, never from a guess.

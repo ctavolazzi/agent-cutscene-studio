@@ -49,8 +49,8 @@ export const CONFIG = {
   tracks: { color: '#3a3f48', opacity: 0.85 },
 
   // The soundtrack (src/audio/, Stage 8). Rendered in one pass at `sr`, then normalized to `targetLufs` integrated
-  // with every sample under `ceilingDb` (a true peak near -1.5 dBTP). Bus levels in dB before normalization. The fades
-  // match the picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
+  // with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades match the
+  // picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
   audio: {
     sr: 48000,
     targetLufs: -16,
@@ -60,7 +60,7 @@ export const CONFIG = {
     fadeOut: 1.5,
     buses: { amb: -9, fx: 0, music: -3 },
     reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
-    ambience: { windGain: 0.5, bridgeWindBoost: 0.8, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
+    ambience: { windGain: 0.5, bridgeWindBoost: 0.35, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
 
     // the car layer (src/audio/layers/car.js): each part's gain
     car: { level: 1.6, exhaustGain: 1, intakeGain: 1.6, tyreGain: 1, brakeGain: 2.2, settleGain: 0.16, doorGain: 0.16, keyGain: 0.16, tickGain: 0.04 },

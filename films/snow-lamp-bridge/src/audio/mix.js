@@ -45,11 +45,19 @@ export function* renderBlocks({ layers, config, sr, total, reverb = true }) {
   }
 }
 
-// The whole film: { sr, left, right, stats }. normalize: false leaves the raw mix (stems and tests).
-export function renderAll({ layers, config, sr, total, reverb = true, normalize: norm = true }) {
+// The whole film: { sr, left, right, stats }. normalize: false leaves the raw mix (stems and tests). onProgress(u) is
+// called with the fraction done, about every 1 percent of the mix and once before the normalization.
+export function renderAll({ layers, config, sr, total, reverb = true, normalize: norm = true, onProgress = null }) {
   const n = Math.round(total * sr);
   const left = new Float32Array(n), right = new Float32Array(n);
-  for (const b of renderBlocks({ layers, config, sr, total, reverb })) { left.set(b.L, b.i0); right.set(b.R, b.i0); }
+  const every = Math.max(1, Math.round(n / BLOCK / 100));
+  let k = 0;
+  for (const b of renderBlocks({ layers, config, sr, total, reverb })) {
+    left.set(b.L, b.i0); right.set(b.R, b.i0);
+    if (onProgress && ++k % every === 0) onProgress(0.85 * Math.min(1, (b.i0 + b.n) / n));
+  }
+  onProgress?.(0.85);
   const stats = norm ? normalize(left, right, config.audio, sr) : null;
+  onProgress?.(1);
   return { sr, left, right, stats };
 }

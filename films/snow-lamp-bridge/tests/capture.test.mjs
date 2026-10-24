@@ -11,7 +11,10 @@ import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { openScene, ROOT } from '../scripts/lib/browser.mjs';
-import { BT709_SCALE, BT709_TAGS, PHONE, encodeArgs, ffprobe, moovFirst, profileSize, rgbToPng, runFfmpeg, upscaleFactor, videoFilter } from '../scripts/lib/ffmpeg.mjs';
+import { AUDIO, BT709_SCALE, BT709_TAGS, PHONE, alignment, decodeAudio, encodeArgs, ffprobe, moovFirst, profileSize, rgbToPng, runFfmpeg, upscaleFactor, videoFilter } from '../scripts/lib/ffmpeg.mjs';
+import { encodeWav } from '../src/audio/wav.js';
+import { mulberry32 } from '../src/prng.js';
+import { T_TOTAL } from '../src/world.js';
 import { DEFAULT_OUT } from '../scripts/capture.js';
 import { contactSheetHtml, shotTimes, stillDisplay } from '../scripts/blockout-review.js';
 import { renderStills, stillName } from '../scripts/stills.js';
@@ -541,4 +544,71 @@ test('no em or en dashes in the capture files', () => {
   for (const f of ['scripts/lib/ffmpeg.mjs', 'scripts/stills.js', 'scripts/capture.js', 'scripts/blockout-review.js', 'tests/capture.test.mjs']) {
     assert.ok(!dash.test(readFileSync(resolve(ROOT, f), 'utf8')), f);
   }
+});
+
+test('ffmpeg.mjs: the soundtrack muxes as AAC 48 kHz stereo, trimmed to the frames; no audio input means -an', () => {
+  const has = (args, seq) => args.some((_, i) => seq.every((v, j) => args[i + j] === v));
+  const a = encodeArgs('full', { w: 480, h: 270 }, { output: 'x.mp4', audio: { file: 's.wav', from: 10, to: 12 } });
+  assert.ok(has(a, ['-i', 'pipe:0', '-ss', '10', '-to', '12', '-i', 's.wav']), a.join(' '));
+  assert.ok(has(a, ['-map', '0:v:0', '-map', '1:a:0', '-c:a', 'aac', '-b:a', AUDIO.bitrate, '-ar', '48000', '-ac', '2']), a.join(' '));
+  assert.ok(!a.includes('-an') && a.at(-1) === 'x.mp4');
+  assert.ok(encodeArgs('full', { w: 480, h: 270 }).includes('-an'), 'control: without a soundtrack the file stays silent');
+});
+
+test('capture.js --audio: the clip carries the soundtrack from its own start, to the millisecond', async () => {
+  // a test soundtrack the length of the film: quiet noise, with loud 2 ms clicks at 10.5 s and 11.25 s
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr), rng = mulberry32(5);
+  const l = new Float32Array(n).map(() => (rng() - 0.5) * 0.002), r = Float32Array.from(l);
+  const clicks = [10.5, 11.25];
+  for (const t of clicks) for (let i = 0; i < sr / 500; i++) { l[Math.round(t * sr) + i] = 0.9 * (i % 2 ? -1 : 1); r[Math.round(t * sr) + i] = 0.9 * (i % 2 ? -1 : 1); }
+  const wav = resolve(fresh('audio'), 'clicks.wav');
+  writeFileSync(wav, encodeWav(l, r, sr, mulberry32(1)));
+  const file = resolve(OUT, 'audio', 'preview-audio.mp4');
+  const res = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '12', '--out', file, '--audio', wav]);
+  assert.equal(res.code, 0, res.err + res.out);
+  const p = await ffprobe(file);
+  assert.deepEqual([p.audioStreams, p.audioCodec, p.audioRate, p.audioChannels, p.frames], [1, 'aac', 48000, 2, 48]);
+  assert.ok(Math.abs(p.audioDuration - 2) <= 1 / FPS, `audio ${p.audioDuration} s`);
+  const d = decodeAudio(file);
+  const first = (from) => { for (let i = Math.round(from * sr); i < d.left.length; i++) if (Math.abs(d.left[i]) > 0.3) return i / sr; return null; };
+  const got = [first(0), first(1)];
+  for (let k = 0; k < clicks.length; k++) assert.ok(Math.abs(got[k] - (clicks[k] - 10)) <= 0.001, `click ${k} at ${got[k]}, want ${clicks[k] - 10}`);
+  // the alignment helper agrees: the clip against the soundtrack from 10 s is lag 0, and a planted 5 ms shift is found
+  const ref = { left: l.subarray(10 * sr, 12 * sr), right: r.subarray(10 * sr, 12 * sr) };
+  assert.ok(Math.abs(alignment(ref, d, { i0: 0.2 * sr, i1: 1.8 * sr }).lag) <= 2);
+  const late = { left: new Float32Array(d.left.length), right: new Float32Array(d.left.length) };
+  late.left.set(d.left.subarray(0, d.left.length - 240), 240); late.right.set(d.right.subarray(0, d.right.length - 240), 240);
+  assert.ok(Math.abs(alignment(ref, late, { i0: 0.2 * sr, i1: 1.8 * sr }).lag - 240) <= 2, 'control');
+  // and a missing soundtrack is refused before any frame is drawn
+  const miss = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '11', '--out', resolve(OUT, 'audio', 'none.mp4'), '--audio', resolve(OUT, 'audio', 'nope.wav')]);
+  assert.notEqual(miss.code, 0);
+  assert.match(miss.err, /no soundtrack at/);
+});
+
+test('mux.js: a new soundtrack goes into an exported MP4 with the picture untouched, trimmed to its frames', async () => {
+  const { mux, videoHash } = await import('../scripts/mux.js');
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr);
+  const l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = 0; i < sr / 500; i++) { l[Math.round(11.5 * sr) + i] = 0.9 * (i % 2 ? -1 : 1); r[Math.round(11.5 * sr) + i] = l[Math.round(11.5 * sr) + i]; }
+  const d = fresh('mux');
+  const wav = resolve(d, 'click.wav');
+  writeFileSync(wav, encodeWav(l, r, sr, mulberry32(2)));
+  const file = resolve(d, 'silent.mp4');
+  const c = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '12', '--out', file]);
+  assert.equal(c.code, 0, c.err + c.out);
+  const before = videoHash(file);
+  assert.equal((await ffprobe(file)).audioStreams, 0);
+  await mux({ file, audio: wav, log: () => {} });
+  const p = await ffprobe(file);
+  assert.deepEqual([p.audioStreams, p.audioCodec, p.frames], [1, 'aac', 48]);
+  assert.equal(videoHash(file), before, 'the video stream is the same bytes');
+  // the sidecar says the clip starts at 10 s, so the click at 11.5 s lands 1.5 s in
+  const a = decodeAudio(file);
+  let at = null;
+  for (let i = 0; i < a.left.length && at === null; i++) if (Math.abs(a.left[i]) > 0.3) at = i / sr;
+  assert.ok(Math.abs(at - 1.5) <= 0.001, `click at ${at}`);
+  assert.ok(JSON.parse(readFileSync(`${file}.json`, 'utf8')).mux.from === 10);
+  // a missing soundtrack is refused and the file is left as it was
+  await assert.rejects(mux({ file, audio: resolve(d, 'nope.wav'), log: () => {} }), /no soundtrack at/);
+  assert.equal(videoHash(file), before);
 });

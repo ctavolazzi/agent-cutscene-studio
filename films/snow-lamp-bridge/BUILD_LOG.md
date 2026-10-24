@@ -521,3 +521,39 @@ signed off once the Stage 3 merge passes its checks; no more review pages or pan
   lighter on 78.6; all 14 bell notes within 5 ms. The car's balance matches the predicted pan within 0.11 dB.
   The master: -16.0 LUFS, -2.0 dBTP, LRA 6.7 LU, rendered in 11 s.
 - Gate: 15 audio tests pass (7 new in `tests/sound-layers.test.mjs`, each with a planted fault).
+
+### S8.3  Sound in the player and the exports; the mix pass
+- Before: the soundtrack existed only as `out/sound.wav`; the MP4s and the player were silent.
+- Player: `src/audio/worker.js` renders the soundtrack as the page opens (inlined with `?worker&inline`, so the single
+  HTML file still works from disk); the Sound button (or M) plays it once rendered, from a click as browsers require.
+  While it plays, the picture's time is the audio clock's less the output latency, and a seek, pause or shot button
+  restarts the source at the picture's time. Measured: Chromium's render equals Node's on all but 161 of 10.75
+  million samples, and those differ by one float32 step (about -144 dBFS; the last bit of a math function), so
+  `tests/sound-player.test.mjs` holds the player to one step, with equal stats, and a planted two-step change fails.
+- Export: `capture.js --audio` muxes the WAV as AAC-LC 48 kHz stereo at 320 kb/s, trimmed to exactly the captured
+  frames; `npm run export` renders the sound first. `scripts/mux.js` puts a new mix into a finished export with the
+  video stream copied (its MD5 checked equal), so a remix needs no new frames. `verify.js` check 5: the WAV is what the
+  code renders today (byte for byte), the MP4's audio is in sync with it (cross-correlation, three windows), the same
+  loudness within 0.3 LU, ffmpeg's true peak at or under -1 dBTP. Tests: AAC args, a capture with a click track
+  (clicks within 1 ms of their times, a planted 5 ms shift found), mux (picture unchanged, click 1.5 s into a clip
+  that starts at 10 s).
+- Mix pass, per shot (master LUFS): the bridge shots read -14.5 to -15.5, louder than the car's idle in shot 5,
+  because the wind on the deck was +5 dB. The brief: the car is the only loud thing, the bridge beats are small and
+  close. `bridgeWindBoost` 0.8 to 0.35. Now: shots 1 and 2 at -21.2 and -19.7 (the hush), shot 3 at -11.4 (the car,
+  the loudest moment), 4 to 9 at -16.1 to -18.6, 10 (moonrise, the score opening) at -14.4, 11 to 14 at -15.9 to
+  -16.7, 15 at -17.1.
+- 1080p: the first export (old mix) was remuxed with the new one; verify passes: the frames as before (worst frame
+  570 at 2.497 and 37.9 dB, identical to Stage 7), the WAV current, sync lag 0 samples in all three windows
+  (correlation 0.997, 1.000, 1.000), -16 LUFS, true peak -1.7 dBTP.
+- Template: the engine, an example ambience layer (wind, and the lamp's hum dipping with its flicker), sound.js,
+  mux.js, capture and verify with sound, the player's Sound button and the tests; 65 template tests pass. Playbook:
+  Stage 5.5 Sound in process.md, a Sound section in techniques.md.
+- Found: `pkill -f` with the capture's command line also killed the shell running it and the background chain
+  (the second time in this project); noted in the repo's CLAUDE.md: kill by PID.
+- The cut check's planted fault was a fixed +0.3 step at the middle cut; the new mix's neighbourhood there grew, so
+  the control stopped firing while the check itself passed. The control now plants a step three times over that
+  cut's own line, so it scales with what it tests (film and template).
+- The 4K capture with the earlier mix was stopped: the director asked for sound effects first, through the same
+  plan, storyboard and blockout stages as the picture (Stage S0 on). The 1080p with the S8.3 mix stays as the
+  listening copy.
+- Gate for this commit: 105 tests pass; forbidden, build, determinism, cameras pass.

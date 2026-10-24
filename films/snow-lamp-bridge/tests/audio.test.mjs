@@ -104,17 +104,19 @@ test('no click at any cut: the step across each shot boundary is within the rang
     const c = Math.round(s.start * SR), around = [];
     for (let i = c - SR / 2; i < c + SR / 2; i++) if (Math.abs(i - c) > SR / 100) around.push(Math.abs(left[i] - left[i - 1]));
     around.sort((a, b) => a - b);
-    const p999 = around[Math.floor(around.length * 0.999)];
+    const line = 2 * around[Math.floor(around.length * 0.999)] + 1e-4;
     let atCut = 0;
     for (let i = c - SR / 200; i < c + SR / 200; i++) atCut = Math.max(atCut, Math.abs(left[i] - left[i - 1]));
-    return { n: s.n, ok: atCut <= 2 * p999 + 1e-4 };
+    return { n: s.n, ok: atCut <= line, line };
   });
-  assert.deepEqual(check(m.left).filter((x) => !x.ok), []);
-  // control: a planted step at shot 8's cut is caught
+  const rows = check(m.left);
+  assert.deepEqual(rows.filter((x) => !x.ok), []);
+  // control: a step three times over the middle cut's own line, planted at that cut, is caught there and only there
+  const mid = SHOTS[Math.floor(SHOTS.length / 2)];
   const bad = Float32Array.from(m.left);
-  const c = Math.round(SHOTS[7].start * SR);
-  for (let i = c; i < c + SR / 100; i++) bad[i] += 0.3;
-  assert.deepEqual(check(bad).filter((x) => !x.ok).map((x) => x.n), [8]);
+  const c = Math.round(mid.start * SR), step = 3 * rows.find((x) => x.n === mid.n).line;
+  for (let i = c; i < c + SR / 100; i++) bad[i] += step;
+  assert.deepEqual(check(bad).filter((x) => !x.ok).map((x) => x.n), [mid.n]);
 });
 
 test('the WAV: 16-bit PCM stereo at 48 kHz, the right length, readable by ffprobe', () => {

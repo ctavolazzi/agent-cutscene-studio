@@ -82,6 +82,18 @@ is low-passed near 9 kHz (the feel of 22 kHz samples) and sent to the reverb.
 | 89 to 100 | Bbmaj7 then Fmaj7 at 94 | soft bell answers: F5 E5 D5 at 91, 93, 95 |
 | 100 to 112 | Gm7 at 100, A7sus4 at 104, D major (D3 A3 F#4 A4) at 107 held to the end | the melody once more, A4 D5 E5 at 101, 102.5, 104; the last chord rings into the fade |
 
+## In the player and in the export
+
+- The player (`dist/index.html`) renders the soundtrack in a worker (`src/audio/worker.js`) as the page opens. The
+  Sound button (or M) plays it once rendered; browsers start audio only from a click or a key. While it plays, the
+  picture's time is the audio clock's, less the output latency, so picture and sound cannot drift; a seek, a pause
+  or a shot button restarts the sound at the picture's time. Chromium renders the same samples as Node to within one
+  float32 step on 161 of 10.75 million samples (the last bit of a math function), bit-identical everywhere else.
+- `npm run export` renders `out/sound.wav` (`scripts/sound.js`), then the capture muxes it as AAC-LC 48 kHz stereo at
+  320 kb/s, trimmed to exactly the captured frames (`--audio`). `npm run verify` renders the soundtrack again and
+  compares the WAV byte for byte, then cross-correlates the MP4's decoded audio with it in three windows (lag 0),
+  and checks the loudness (within 0.3 LU) and ffmpeg's true peak (at or under -1 dBTP).
+
 ## Checks (each with a planted fault)
 
 `tests/audio.test.mjs` (the engine) and `tests/sound-layers.test.mjs` (the layers):
