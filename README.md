@@ -2,7 +2,8 @@
 
 Short films in the style of PlayStation 1 game cutscenes, made in three.js by an AI coding agent (Claude Code) with
 a human director. Every frame is a pure function of time, so a film renders identically in the browser and in the
-exported MP4, and every step is checked by tests with planted faults.
+exported MP4, and every step is checked by tests with planted faults. The sound is made the same way: synthesized in
+code from the film's own timing, seeded, and heard from each shot's camera.
 
 [![Snow, Lamp, Bridge](films/snow-lamp-bridge/packaging/thumbnail.jpg)](https://youtu.be/F02fKQvjlJQ)
 
@@ -17,7 +18,7 @@ exported MP4, and every step is checked by tests with planted faults.
 | Path | What it is |
 |---|---|
 | `films/<slug>/` | one self-contained film each: source, tests, plan, build log, review rounds, thumbnail |
-| `template/` | the starter film: the whole engine (PS1 look, timeline, capture, verify, stills, thumbnails, checks, playback UI) with a small example scene to replace |
+| `template/` | the starter film: the whole engine (PS1 look, timeline, sound, capture, verify, stills, thumbnails, checks, playback UI) with a small example scene to replace |
 | `tools/new-film.mjs` | `node tools/new-film.mjs <slug> "Title"` copies the template to `films/<slug>/` |
 | `playbook/` | the process, the rules, the techniques, paste-ready prompts and multi-agent workflow scripts |
 | `.claude/skills/` | Claude Code skills: `/new-film`, `/review-round`, `/ship-film` |

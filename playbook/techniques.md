@@ -56,6 +56,35 @@ in one ffmpeg pass, area-average back to the internal resolution and compare wit
 five seeks; and an identity check (each decoded frame closer to its own render than to a differing neighbour's).
 Measure the encoder floor before setting a bar: dithered pixel art sits near 38 dB at any crf.
 
+## Sound (`src/audio/`)
+
+- **Layers add into their own block.** A layer is `{ name, bus, reverb, process(L, R, i0, n) }`, called once per
+  256-sample block from the start of the film to the end, so filters may keep state. The mixer sums layers into
+  buses, feeds a reverb send, applies the master chain and normalizes the whole film at the end.
+- **Hear it from the camera.** `ctx.spatializer(place, law)` pans, levels and darkens a mono voice from where its
+  source is relative to the camera at t. Gains ramp across each block, so a cut moves a sound without a click. The
+  physical law (6 dB a doubling) buries a car at 26 m under the night; give loud sources a gentle law (the car: 3 m,
+  0.6) and intimate ones a close one (foley: 2.5 m, 0.7), the way a film mix does.
+- **Derive sounds from the animation.** Footsteps are the prints (`footprintList()`), so they move when the walk does;
+  the engine's rpm and throttle follow `carAt`; the flame follows the light's flicker; the paper crackles with the
+  ember's level. Merge events that land together (both boots at once is one heavier step), and let a quick step roll
+  onto its toe quickly, or its toe masks the next heel.
+- **Check timing per source.** Detect onsets on a stem of one source (one person's steps, one part of the car) with a
+  minimum gap shorter than the shortest step; a control with the schedule three frames early must fail.
+- **Normalize with the limiter's loss in the loop.** Limiting a transient takes its energy out of the measurement, so
+  a single pass lands short of the target: correct the gain and limit again from the unlimited signal. Limit on the
+  true peak (4x oversampled), not the sample peak: snow crunches put inter-sample peaks 0.9 dB over a sample ceiling.
+- **Watch the low end.** An octave-band check found 63 Hz as the loudest band (a sub-bass and an idling engine's 26 Hz
+  fundamental): high-pass the fundamental out of the engine and keep the sub low; the master high-passes at 35 Hz.
+- **Silence is a floor, not zero.** A filter's tail decays toward zero without reaching it; "silent" means under
+  -100 dBFS.
+- **The player.** Render in a worker (`?worker&inline`, so the single HTML file keeps working from disk); start audio
+  from a click or key (browsers require it); while it plays, take the picture's time from the audio clock minus the
+  output latency, and restart the source on every seek. Chromium and Node agree on all but a few samples, by one
+  float32 step: test the player against the export to that tolerance, not byte for byte.
+- **The export.** Mux the WAV as AAC-LC 48 kHz stereo trimmed to exactly the captured frames; verify it against the
+  WAV by cross-correlation (lag 0, correlation over 0.99 at 320 kb/s), loudness and ffmpeg's true peak.
+
 ## Thumbnails
 
 `npm run finals` crops three candidates from strong frames at an integer upscale (3x of 480x270 is 1440x810, cropped

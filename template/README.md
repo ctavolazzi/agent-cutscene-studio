@@ -15,10 +15,11 @@ npm run dev              # live playback in the browser (Space, arrows, [ and ],
 npm test                 # unit and browser checks, each with a planted-fault control
 npm run check            # forbidden clocks and dashes, build, determinism, cameras
 npm run review -- --round 01   # first, middle and last frame of every shot, and a contact sheet, in review/round-01/
-npm run export           # build, then capture out/film.mp4 (1920x1080, 24 fps, H.264, no audio)
-npm run verify           # probe, frame match against fresh renders, seeks, timing
+npm run sound            # render the soundtrack to out/sound.wav (src/audio/), with --spectrogram for a picture of it
+npm run export           # build, render the sound, capture out/film.mp4 (1920x1080, 24 fps, H.264, AAC 48 kHz)
+npm run verify           # probe, frame match against fresh renders, seeks, timing, sound sync and loudness
 npm run finals           # out/stills/ and three thumbnail candidates in out/thumbnails/
-node scripts/capture.js --profile 4k && node scripts/verify.js --profile 4k   # 4K from the same build
+node scripts/capture.js --profile 4k --audio out/sound.wav && node scripts/verify.js --profile 4k   # 4K, same build
 python3 scripts/title-thumbnail.py <base.png> packaging/thumbnail 4 <x> <y> <size> <gap>   # title on a thumbnail
 ```
 
@@ -32,6 +33,7 @@ python3 scripts/title-thumbnail.py <base.png> packaging/thumbnail 4 <x> <y> <siz
 | `src/scene.js` | everything the camera sees: built once, posed from t (split it into `src/set/`, `src/actors/`, `src/fx/` as it grows) |
 | `src/config.js` | every tunable value: resolution, PS1 look, lights, effects, deliverables |
 | `src/ps1/` | the PS1 look: vertex snap and affine warp (material patch), colour depth and dither (final pass) |
+| `src/audio/` | the soundtrack, synthesized: DSP, a spatializer that hears each source from the shot's camera, the mixer, loudness, and `layers/` (one per kind of sound; the example is wind and the lamp's hum). M or the Sound button plays it in the player |
 | `src/CONTRACT.md` | the rules every module follows, and the window API the scripts use |
 | `PLAN.md`, `ROADMAP.md`, `BUILD_LOG.md` | the plan, the stages, and the record of every step |
 

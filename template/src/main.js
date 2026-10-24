@@ -10,6 +10,7 @@ import { T_TOTAL } from './world.js';
 import { buildScene } from './scene.js';
 import { createPs1Uniforms, patchScene } from './ps1/material.js';
 import { createPost } from './ps1/post.js';
+import SoundWorker from './audio/worker.js?worker&inline';
 
 const params = readParams(location.search);
 const W = CONFIG.res.w, H = CONFIG.res.h;
@@ -83,8 +84,10 @@ if (!params.capture) {
   let offset = params.t ?? 0;
   let start = performance.now();
   let lastKey = null;
-  const now = () => (playing ? offset + (performance.now() - start) / 1000 : offset) % T_TOTAL;
-  // ---- controls (index.html #ui): play and pause, a scrub bar, the shot list, the overlay toggle
+  // While the sound plays the picture follows the audio clock (what is heard, past the output latency), so the two
+  // cannot drift apart; otherwise it follows the page's clock.
+  const now = () => (playing ? (sound.src ? audioNow() : offset + (performance.now() - start) / 1000) : offset) % T_TOTAL;
+  // ---- controls (index.html #ui): play and pause, sound, a scrub bar, the shot list, the overlay toggle
   const $ = (id) => document.getElementById(id);
   const ui = $('ui'), playBtn = $('play'), scrub = $('scrub'), timeEl = $('time'), titleEl = $('title'), debug = $('debug');
   const frame = 1 / CONFIG.fps;
@@ -104,11 +107,75 @@ if (!params.capture) {
   debug.checked = hud.overlay;
   ui.classList.add('on');
 
+  // ---- sound: the soundtrack (src/audio/) renders in a worker while the picture plays, the same samples as the export.
+  // Browsers start audio only from a click or a key, so it waits for the Sound button (or M) and plays once rendered.
+  const soundBtn = $('sound');
+  const sound = { state: 'rendering', progress: 0, on: false, ctx: null, buf: null, src: null, t0: 0, o0: 0 };
+  window.__sound = sound;
+  const pct = () => `${Math.round(sound.progress * 100)}%`;
+  const label = () => {
+    soundBtn.textContent = sound.state === 'failed' ? 'No sound'
+      : sound.on ? (sound.state === 'ready' ? 'Sound on' : `Sound ${pct()}`)
+        : (sound.state === 'ready' ? 'Sound off' : `Sound off (${pct()})`);
+  };
+  const audible = () => sound.on && sound.state === 'ready';
+  const audioNow = () => sound.o0 + Math.max(0, sound.ctx.currentTime - sound.t0 - (sound.ctx.outputLatency || sound.ctx.baseLatency || 0));
+  function stopSource() {
+    if (!sound.src) return;
+    sound.src.stop();
+    sound.src.disconnect();
+    sound.src = null;
+  }
+  function startSource(t) {
+    stopSource();
+    const c = sound.ctx;
+    if (!sound.buf) {
+      sound.buf = c.createBuffer(2, sound.left.length, sound.sr);
+      sound.buf.copyToChannel(sound.left, 0);
+      sound.buf.copyToChannel(sound.right, 1);
+    }
+    const src = c.createBufferSource();
+    src.buffer = sound.buf;
+    src.loop = true; // the buffer is the whole film, so it loops with the picture
+    src.connect(c.destination);
+    src.start(0, t);
+    Object.assign(sound, { src, t0: c.currentTime, o0: t });
+  }
+  // hand the time over between the two clocks without a jump: hold the picture's time, then start whichever runs now
+  function reclock() {
+    const t = now();
+    stopSource();
+    offset = t;
+    start = performance.now();
+    if (playing && audible()) startSource(t);
+  }
+  function setSound(on) {
+    if (on && !sound.ctx) {
+      try { sound.ctx = new AudioContext({ sampleRate: CONFIG.audio.sr }); } catch { sound.ctx = new AudioContext(); }
+    }
+    if (on) sound.ctx.resume();
+    sound.on = on;
+    reclock();
+    label();
+  }
+  const worker = new SoundWorker();
+  worker.onmessage = ({ data }) => {
+    if (!data.done) { sound.progress = data.progress; label(); return; }
+    Object.assign(sound, { state: 'ready', progress: 1, sr: data.sr, left: data.left, right: data.right, stats: data.stats });
+    worker.terminate();
+    reclock();
+    label();
+  };
+  worker.onerror = (e) => { sound.state = 'failed'; sound.error = e.message; label(); };
+  worker.postMessage('render');
+  label();
+
   const redraw = () => { lastKey = null; };
   const setPlaying = (on) => {
     if (on === playing) return;
     if (on) start = performance.now(); else offset = now();
     playing = on;
+    if (on && audible()) startSource(offset); else stopSource();
     playBtn.textContent = on ? 'Pause' : 'Play';
   };
   const toggle = () => setPlaying(!playing);
@@ -116,6 +183,7 @@ if (!params.capture) {
   function seek(t) {
     offset = ((t % T_TOTAL) + T_TOTAL) % T_TOTAL;
     start = performance.now();
+    if (playing && audible()) startSource(offset);
     redraw();
   }
   const step = (n) => { setPlaying(false); seek(Math.round(now() / frame + n) * frame); };
@@ -125,6 +193,7 @@ if (!params.capture) {
 
   canvas.addEventListener('click', toggle);
   playBtn.addEventListener('click', toggle);
+  soundBtn.addEventListener('click', () => setSound(!sound.on));
   let dragging = false;
   scrub.addEventListener('pointerdown', () => { dragging = true; });
   window.addEventListener('pointerup', () => { dragging = false; });
@@ -137,7 +206,7 @@ if (!params.capture) {
       Space: toggle, KeyK: toggle,
       ArrowLeft: () => step(e.shiftKey ? -CONFIG.fps : -1), ArrowRight: () => step(e.shiftKey ? CONFIG.fps : 1),
       BracketLeft: () => jumpShot(-1), BracketRight: () => jumpShot(1), Home: () => seek(0),
-      KeyD: () => setOverlay(!hud.overlay),
+      KeyD: () => setOverlay(!hud.overlay), KeyM: () => setSound(!sound.on),
     };
     if (keys[e.code]) { e.preventDefault(); keys[e.code](); }
   });
