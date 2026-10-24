@@ -175,18 +175,20 @@ test('panels: each frame is the shot\'s own, by its frame number', (t) => {
   // control: shot 7's panel with shot 8's frame
   assert.ok(frameProblems(buildSoundPanel(SHOTS[6], { frame: { ...panelFrame(SHOTS[7]), png: null } }), SHOTS[6]).length > 0, 'control: the next shot\'s frame');
   if (!existsSync(VIDEO)) { t.diagnostic(`no export at ${VIDEO}: the decoded pixels are not compared`); return; }
-  // the embedded image is that frame's pixels: frame n decoded by number equals the frame decoded at n / FPS by time,
-  // and differs from frame n + 1
+  // the embedded image is that frame's pixels: all 15 frames decoded by number in one pass, as the script decodes them,
+  // each equal to the frame decoded at n / FPS by time; control: the last shot's frame n + 1 differs
   const rgb = (args) => { const r = spawnSync('ffmpeg', ['-v', 'error', ...args, '-vf', `scale=${CONFIG.res.w}:${CONFIG.res.h}:flags=neighbor`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 26 }); assert.equal(r.status, 0, String(r.stderr)); return r.stdout; };
-  for (const s of SHOTS.slice(0, 2)) {
-    const fr = panelFrame(s), png = decodeFrames(VIDEO, [fr.n]).get(fr.n);
-    const panel = buildSoundPanel(s, { frame: { ...fr, png } });
+  const frames = SHOTS.map((s) => panelFrame(s)), pngs = decodeFrames(VIDEO, frames.map((f) => f.n));
+  let embedded = null;
+  for (const [i, s] of SHOTS.entries()) {
+    const fr = frames[i], panel = buildSoundPanel(s, { frame: { ...fr, png: pngs.get(fr.n) } });
     const b64 = /href="data:image\/png;base64,([^"]+)"/.exec(panel.d.toSVG())[1];
-    const embedded = spawnSync('ffmpeg', ['-v', 'error', '-f', 'png_pipe', '-i', '-', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { input: Buffer.from(b64, 'base64'), maxBuffer: 1 << 26 }).stdout;
+    embedded = spawnSync('ffmpeg', ['-v', 'error', '-f', 'png_pipe', '-i', '-', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { input: Buffer.from(b64, 'base64'), maxBuffer: 1 << 26 }).stdout;
     const byTime = rgb(['-ss', String(fr.n / FPS), '-i', VIDEO, '-frames:v', '1']);
     assert.ok(embedded.length === CONFIG.res.w * CONFIG.res.h * 3 && embedded.equals(byTime), `shot ${s.n}: the panel shows frame ${fr.n}`);
-    assert.ok(!embedded.equals(rgb(['-ss', String((fr.n + 1) / FPS), '-i', VIDEO, '-frames:v', '1'])), `control: frame ${fr.n + 1} differs`);
   }
+  const lastN = frames[frames.length - 1].n + 1;
+  assert.ok(!embedded.equals(rgb(['-ss', String(lastN / FPS), '-i', VIDEO, '-frames:v', '1'])), `control: frame ${lastN} differs`);
 });
 
 // ---------- labels ----------
@@ -274,6 +276,7 @@ import { buildTimeline } from './scripts/lib/sound-timeline.js';
 import { buildSoundPanel, panelFrame } from './scripts/lib/sound-panel.js';
 import { SHOTS } from './src/shots.js';
 import { Draw } from './scripts/lib/draw.js';
+import { sheetHtml } from './scripts/sound-storyboard.js';
 const h = (s) => createHash('sha256').update(s).digest('hex');
 const png = Buffer.from('89504e470d0a1a0a', 'hex'); // the same stand-in bytes for a frame in every run
 const out = {};
@@ -284,6 +287,7 @@ for (const g of soundDetails()) out[g.id] = h(buildSoundDetail(g).d.toSVG());
 out.timeline = h(buildTimeline().d.toSVG());
 for (const s of [SHOTS[0], SHOTS[4], SHOTS[10]]) out['shot' + s.n] = h(buildSoundPanel(s, { frame: { ...panelFrame(s), png } }).d.toSVG());
 const sheet = new Draw(1, 1); buildSoundMap({}, sheet, [0, 0]); out.excalidraw = h(JSON.stringify(sheet.toExcalidraw()));
+out.sheet = h(sheetHtml(null));
 console.log(JSON.stringify(out));`;
 const drawRun = (env = {}) => {
   const r = spawnSync(process.execPath, ['--input-type=module', '-e', DRAW], { cwd: ROOT, env: { ...process.env, ...env }, encoding: 'utf8' });
@@ -292,9 +296,9 @@ const drawRun = (env = {}) => {
 };
 const diffs = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]);
 
-test('determinism: two runs draw byte-identical maps, timeline, panels and Excalidraw scene', () => {
+test('determinism: two runs draw byte-identical maps, timeline, panels, Excalidraw scene and sheet', () => {
   const a = drawRun(), b = drawRun();
-  assert.equal(Object.keys(a).length, 10);
+  assert.equal(Object.keys(a).length, 11);
   assert.deepEqual(diffs(a, b), []);
   // control: a drawing that reads a clock differs between runs, and the comparison sees it
   assert.deepEqual(diffs(drawRun({ PLANT: '1' }), drawRun({ PLANT: '1' })), ['map'], 'control: a planted clock');
