@@ -121,8 +121,10 @@ function ring(r) {
 }
 // A label placer over a drawing: each label goes to the first candidate whose box is clear of every box placed or
 // blocked so far and inside `bounds`. A label set away from its point gets a thin leader line. Returns the text item, or
-// null when nothing fits (the caller counts those, so a dropped label is never silent).
-export function makeLabeler(d, { bounds = null, pad = 2 } = {}) {
+// null when nothing fits (the caller counts those, so a dropped label is never silent). With `chip`, each placed label
+// sits on a dark box (role 'chip'), so the rings and wedges drawn under it cannot cross its letters.
+export const CHIP = { fill: '#0b1020', fillOp: 0.72 };
+export function makeLabeler(d, { bounds = null, pad = 2, chip = false } = {}) {
   const boxes = [];
   const fits = (b) => (!bounds || (b.x0 >= bounds.x0 && b.x1 <= bounds.x1 && b.y0 >= bounds.y0 && b.y1 <= bounds.y1)) && boxes.every((o) => !boxesHit(o, b, pad));
   const textAt = (x, y, side, str, o) => {
@@ -140,7 +142,7 @@ export function makeLabeler(d, { bounds = null, pad = 2 } = {}) {
     // a label exactly here (titles, legends): drawn and blocked; false if it overlaps something already placed
     fixed(x, y, str, o = {}) { const it = { k: 'text', x, y, str, size: 14, ...o }; const b = textBox(it); const ok = fits(b); boxes.push(b); d.add(it); return ok; },
     // `later`: an array that takes the items instead of the drawing, for a label placed now and drawn on top later
-    place(x, y, str, o = {}, { r = 4, cands = null, leader = true, later = null } = {}) {
+    place(x, y, str, o = {}, { r = 4, cands = null, leader = true, later = null, chip: onChip = chip } = {}) {
       const put = (it) => (later ? later.push(it) : d.add(it));
       for (const [dx, dy, side] of cands ?? ring(r)) {
         const at = textAt(x + dx, y + dy, side, str, o), it = { k: 'text', str, size: 11, ...o, ...at }, b = textBox(it);
@@ -150,6 +152,7 @@ export function makeLabeler(d, { bounds = null, pad = 2 } = {}) {
           const tx = Math.min(Math.max(x, b.x0), b.x1), ty = Math.min(Math.max(y, b.y0), b.y1);
           put({ k: 'line', pts: [[x, y], [tx, ty]], stroke: o.fill ?? '#c9d4ee', sw: 0.7, strokeOp: 0.6 });
         }
+        if (onChip) put({ k: 'rect', x: b.x0 - 1.5, y: b.y0 - 1, w: b.x1 - b.x0 + 3, h: b.y1 - b.y0 + 2, ...CHIP, role: 'chip' });
         put(it);
         return it;
       }
@@ -200,6 +203,10 @@ function drawBase(d, v, w, g) {
   const pool = [];
   for (let i = 0; i < 48; i++) pool.push([LAMP.base[0] + Math.cos((i / 48) * 2 * Math.PI) * LAMP.poolRadius, LAMP.base[1] + Math.sin((i / 48) * 2 * Math.PI) * LAMP.poolRadius]);
   g.poly(pool, { fill: C.pool, fillOp: 0.06, stroke: C.pool, strokeOp: 0.5, sw: 1, dash: [6, 5] });
+  // the car's body where it stops, so the doors, the seats and the bay have something to sit on
+  const cs = w.carAt(w.carTimes.stop), h = cs.heading * D2R;
+  const corner = (along, side) => [cs.x + Math.sin(h) * along + Math.cos(h) * side, cs.z - Math.cos(h) * along + Math.sin(h) * side];
+  g.poly([[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([a, s]) => corner(a * w.CAR.length / 2, s * w.CAR.width / 2)), { fill: C.car, fillOp: 0.06, stroke: C.car, strokeOp: 0.55, sw: 1 });
   g.line([[RAIL.x, BRIDGE.z1], [RAIL.x, CROSS.z0]], { stroke: C.line180, sw: 1.6, dash: [10, 7], strokeOp: 0.85 });
   g.line([[v.x0, BRIDGE.z0], [v.x1, BRIDGE.z0]], { stroke: C.unplaced, sw: 2, dash: [3, 4] });
 }
@@ -208,7 +215,7 @@ function labelBase(d, v, w, g, L, detail) {
   const fs = detail ? 12 : 11, at = (x, z, s, o, opt) => g.inside(x, z) && L.place(v.X(x), v.Y(z), s, { size: fs, fill: C.dim, ...o }, opt);
   at(RAIL.x, BRIDGE.z1 + 2, '180 degree line', { fill: C.line180, weight: 700 }, { r: 2 });
   at(LAMP.base[0] - LAMP.poolRadius, LAMP.base[1], 'lamp pool', { fill: C.pool }, { r: 2 });
-  for (const b of BUILDINGS) at((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, b.id, {}, { cands: [[0, 0, 'n']], leader: false });
+  for (const b of BUILDINGS) at((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, b.id, {}, { cands: [[0, 0, 'n']], leader: false, chip: false });
   at(-STREET.walkOuter - 2, (BRIDGE.z0 + BRIDGE.z1) / 2, 'RIVER', { fill: '#4f7bb0' }, { r: 2 });
   at(-STREET.walkOuter - 2, (CROSS.z0 + CROSS.z1) / 2, 'CROSS STREET', {}, { r: 2 });
 }
@@ -286,7 +293,7 @@ export function listenerGlyph(d, v, g, L, shot, { cues, w, detail = false, wedge
 function cameraMarks(d, L, marks) {
   const later = [];
   for (const m of marks.filter(Boolean)) {
-    const at = L.place(m.x, m.y, String(m.n), { size: m.size, weight: 700, fill: '#0b1020' }, { cands: [[0, -(m.size * 0.5), 's']], leader: false, later });
+    const at = L.place(m.x, m.y, String(m.n), { size: m.size, weight: 700, fill: '#0b1020' }, { cands: [[0, -(m.size * 0.5), 's']], leader: false, later, chip: false });
     if (!at) { L.dropped.pop(); L.place(m.x, m.y, String(m.n), { size: m.size, weight: 700, fill: m.col }, { r: m.R, later }); }
   }
   for (const m of marks.filter(Boolean)) L.block({ x0: m.x - m.R, x1: m.x + m.R, y0: m.y - m.R, y1: m.y + m.R });
@@ -311,18 +318,17 @@ const sameSpot = (p, q) => Math.hypot(p[0] - q[0], p[2] - q[2]) < 0.02;
 function drawSources(d, v, g, L, cues, w, { label, detail, span = null, pred }) {
   const show = cues.filter((c) => voiced(c) && c.place && (!span || (c.t0 < span[1] && c.t1 > span[0])));
   const fs = detail ? 11 : 10, R = detail ? 5.5 : 3.6;
-  // the car's path, centre of the car, from the engine's first sound to its stop, with marks every 2 s
-  const eng = cues.find((c) => c.family === 'engine' && c.placement === 'tracked');
+  // the car's path, centre of the car, from the engine's first sound to its stop, with its parts every 2 s; the time
+  // marks are labelled after the glyphs, and the path is blocked for the labels, so neither covers a mark or the path
+  const eng = cues.find((c) => c.family === 'engine' && c.placement === 'tracked'), marks = [], path = [];
   if (eng) {
-    const t0 = span ? Math.max(eng.t0, span[0]) : eng.t0, t1 = span ? Math.min(eng.t1, span[1]) : eng.t1, path = [];
+    const t0 = span ? Math.max(eng.t0, span[0]) : eng.t0, t1 = span ? Math.min(eng.t1, span[1]) : eng.t1;
     for (let t = t0; t <= t1 + 1e-9; t += 0.05) { const c = w.carAt(t); if (c.present) path.push([c.x, c.z]); }
     g.line(path, { stroke: C.car, sw: detail ? 2.5 : 2, strokeOp: 0.75 });
     const parts = cues.filter((c) => c.placement === 'tracked' && voiced(c) && ['engine', 'tyres'].includes(c.family));
     for (let t = Math.ceil(t0 / 2) * 2; t <= t1; t += 2) {
-      for (const c of parts) { const p = c.place(t); if (p && g.inside(p[0], p[2])) glyph(d, v.X(p[0]), v.Y(p[2]), FAMILY[c.family].shape, R * 0.7, { fill: colorOf(c) }, { role: 'part', cue: c.id, at: t }); }
-      const cc = w.carAt(t), ew = Math.abs(Math.sin(cc.heading * D2R)) > 0.7, r = 7;
-      const first = ew ? [[0, r + 3, 's'], [0, -r - 3, 'n']] : [[r + 3, 0, 'e'], [-r - 3, 0, 'w']];
-      if (g.inside(cc.x, cc.z)) L.place(v.X(cc.x), v.Y(cc.z), `${t} s`, { size: fs, fill: C.car }, { r, cands: [...first, ...ring(r)] });
+      for (const c of parts) { const p = c.place(t); if (p && g.inside(p[0], p[2])) { glyph(d, v.X(p[0]), v.Y(p[2]), FAMILY[c.family].shape, R * 0.7, { fill: colorOf(c) }, { role: 'part', cue: c.id, at: t }); path.push([p[0], p[2]]); } }
+      marks.push(t);
     }
   }
   // tracked sources: their path over their span, faint
@@ -343,6 +349,12 @@ function drawSources(d, v, g, L, cues, w, { label, detail, span = null, pred }) 
     placed.push({ c, p, at });
   }
   for (const q of placed) L.block({ x0: v.X(q.p[0]) - R, x1: v.X(q.p[0]) + R, y0: v.Y(q.p[2]) - R, y1: v.Y(q.p[2]) + R });
+  for (const [x, z] of path) if (g.inside(x, z)) L.block({ x0: v.X(x) - R * 0.7, x1: v.X(x) + R * 0.7, y0: v.Y(z) - R * 0.7, y1: v.Y(z) + R * 0.7 }); // the path and its parts
+  for (const t of marks) {
+    const cc = w.carAt(t), ew = Math.abs(Math.sin(cc.heading * D2R)) > 0.7, r = 7;
+    const first = ew ? [[0, r + 3, 's'], [0, -r - 3, 'n']] : [[r + 3, 0, 'e'], [-r - 3, 0, 'w']];
+    if (g.inside(cc.x, cc.z)) L.place(v.X(cc.x), v.Y(cc.z), `${t} s`, { size: fs, fill: C.car, mark: t }, { r, cands: [...first, ...ring(r)] });
+  }
   if (label === 'all') {
     // cues at one spot share a label; steps carry their contact time, A's to the west and B's to the east
     const groups = [];
@@ -365,22 +377,24 @@ function drawSources(d, v, g, L, cues, w, { label, detail, span = null, pred }) 
   }
   return placed;
 }
-// the label of the cues at one spot: their family and part, and their onsets
-export function shortLabel(cs) {
-  // the id's source and part; a numbered part names its family ('A scuff 1', 'tick 03')
+// the label of the cues at one spot: their family and part, and their onsets (or `when`); an offered one says so
+export function shortLabel(cs, when = (c) => fmtT(c.t0)) {
+  // the id's source and part; a numbered part, or the car's one-word part, names its family ('A scuff 1', 'tick 03',
+  // 'tyres front', 'settle dip')
   const part = (c) => {
     if (c.family === 'hum') return 'lamp hum';
     const p = c.id.split('.').slice(2);
     if (/^[0-9]+$/.test(p[p.length - 1])) p.splice(p.length - 1, 0, c.family);
-    return p.join(' ').replace(/^car /, '');
+    const s = p.join(' ').replace(/^car /, '');
+    return s.includes(' ') || s.startsWith(c.family) ? s : `${c.family} ${s}`;
   };
   if (cs.length > 3) return `${cs[0].family} x${cs.length}, ${fmtT(cs[0].t0)} to ${fmtT(cs[cs.length - 1].t0)}`;
-  return cs.map((c) => `${part(c)} ${fmtT(c.t0)}`).join('\n');
+  return cs.map((c) => `${part(c)} ${when(c)}${c.enabled ? '' : ' (offered)'}`).join('\n');
 }
 // a source drawn later than its onset (a detail map that starts after it) says where it is drawn
 function labelOf(gq) {
   if (gq.family === 'feet') return fmtT(gq.cs[0].sync);
-  return gq.late ? `${shortLabel(gq.cs).split(' ').slice(0, -1).join(' ')} at ${fmtT(gq.at)} (from ${fmtT(gq.cs[0].t0)})` : shortLabel(gq.cs);
+  return gq.late ? shortLabel(gq.cs, (c) => `at ${fmtT(gq.at)} (from ${fmtT(c.t0)})`) : shortLabel(gq.cs);
 }
 // The main map's labels: one per cluster of sources (the car at rest, each walker's steps, the rail, the hum).
 function labelGroups(d, v, g, L, placed, fs, R, pred) {
@@ -447,7 +461,7 @@ export function buildSoundMap({ cues = CUES, w = WORLD } = {}, d = null, offset 
   const B = w.bounds;
   const v = makeView(B.x0, B.x1, B.z0, B.z1, MAP_SCALE, 40 + offset[0], 110 + offset[1]);
   d = d ?? new Draw(v.w + LEGEND_W + 100, v.h + 150, { bg: '#080c16' });
-  const L = makeLabeler(d), g = api(d, v), pred = makePredictor({ cues, w });
+  const L = makeLabeler(d, { chip: true }), g = api(d, v), pred = makePredictor({ cues, w });
   L.fixed(40 + offset[0], 48 + offset[1], 'Snow, Lamp, Bridge: sound map, top-down', { size: 26, weight: 700, fill: '#fff' });
   L.fixed(40 + offset[0], 76 + offset[1], `Generated from src/audio/cues.js (${cues.length} cues), SHOTS and spatial.js. Sound 1 storyboard, for your markup. North is up.`, { size: 14, fill: C.dim });
   drawBase(d, v, w, g);
@@ -498,7 +512,7 @@ export function buildSoundDetail(group, { cues = CUES, w = WORLD } = {}, d = nul
   const top = 56 + head.length * 16;
   const v = makeView(x0, x1, z0, z1, scale, (width - (x1 - x0) * scale) / 2 + offset[0], top + offset[1]);
   d = d ?? new Draw(width, v.h + top + 30, { bg: '#080c16' });
-  const L = makeLabeler(d, { bounds: { x0: offset[0] + 4, x1: offset[0] + width - 4, y0: offset[1] + 4, y1: offset[1] + v.h + top + 26 } }), g = api(d, v);
+  const L = makeLabeler(d, { bounds: { x0: offset[0] + 4, x1: offset[0] + width - 4, y0: offset[1] + 4, y1: offset[1] + v.h + top + 26 }, chip: true }), g = api(d, v);
   const shots = w.SHOTS.filter((s) => group.only.includes(s.n));
   L.fixed(30 + offset[0], 36 + offset[1], `Sound detail: ${group.title}`, { size: 21, weight: 700, fill: '#fff' });
   head.forEach((line, i) => L.fixed(30 + offset[0], 58 + offset[1] + i * 16, line, { size: 12, fill: C.dim }));

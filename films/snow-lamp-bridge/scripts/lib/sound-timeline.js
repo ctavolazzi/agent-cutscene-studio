@@ -49,9 +49,11 @@ export const DB = { lo: -30, hi: 18 };
 const CAT_NAME = { bg: 'BACKGROUNDS AND AMBIENCES', hard: 'HARD EFFECTS', foley: 'FOLEY' };
 const STEP = 1 / 48; // envelope samples: two per frame
 
-// a cue's label in its lane: the part of its id after the source (a step's ordinal, 'unlatch', 'walk2')
+// a cue's label in its lane: the part of its id after the source (a step's ordinal, 'unlatch', 'walk2'); a background
+// names its place or its story ('street bed', 'wind ease')
 export function partOf(c) {
   const p = c.id.split('.');
+  if (c.category === 'bg') return p.slice(2).join(' ');
   return c.family === 'feet' || c.family === 'tick' ? p[p.length - 1] : p.slice(3).join('.') || p[1];
 }
 
@@ -168,15 +170,17 @@ export function buildTimeline({ cues = CUES, w = WORLD } = {}) {
       const cands = [[1, -2, 'e'], [1, -14, 'e'], [9, -2, 'e'], [9, -14, 'e'], [18, -14, 'e'], [18, -2, 'e']];
       L.place(X(c.t0), ln.envTop, str, { size: 10, fill: ccol }, { cands, leader: false });
     }
-    // the in-frame bar: runs of samples in frame
+    // the in-frame bar: runs of samples in frame, broken where no cue of the lane sounds (a gap wider than a sample)
     onBar.sort((a, b) => a.t - b.t);
     let run = null;
+    const end = () => { d.rect(X(run.t0), ln.barY, Math.max(1.5, X(run.t1 + STEP) - X(run.t0)), TL.bar, { fill: col, onScreen: ln.source, t0: run.t0, t1: run.t1 }); run = null; };
     for (const s of onBar) {
+      if (run && s.t - run.t1 > STEP * 1.5) end();
       if (s.on && !run) run = { t0: s.t, t1: s.t };
       else if (s.on) run.t1 = s.t;
-      else if (run) { d.rect(X(run.t0), ln.barY, Math.max(1.5, X(run.t1 + STEP) - X(run.t0)), TL.bar, { fill: col, onScreen: ln.source }); run = null; }
+      else if (run) end();
     }
-    if (run) d.rect(X(run.t0), ln.barY, Math.max(1.5, X(run.t1 + STEP) - X(run.t0)), TL.bar, { fill: col, onScreen: ln.source });
+    if (run) end();
   }
   return { d, lanes, manifest, labeler: L, X };
 }
