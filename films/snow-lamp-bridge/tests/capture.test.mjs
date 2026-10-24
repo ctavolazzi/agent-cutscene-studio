@@ -612,3 +612,108 @@ test('mux.js: a new soundtrack goes into an exported MP4 with the picture untouc
   await assert.rejects(mux({ file, audio: resolve(d, 'nope.wav'), log: () => {} }), /no soundtrack at/);
   assert.equal(videoHash(file), before);
 });
+
+// ---------- captions (ROADMAP Sound 1.10 and 2.8): --captions and --burn-captions ----------
+const captionsLib = () => import('../scripts/lib/captions.js');
+// every frame of a video as RGB, top row first
+function frames(file) {
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 30 });
+  assert.equal(r.status, 0, `decode ${file}: ${r.stderr}`);
+  return r.stdout;
+}
+// the largest difference in each row of a w x h picture, over every frame
+function rowDiff(a, b, w, h) {
+  assert.equal(a.length, b.length, 'the same number of frames');
+  const out = new Array(h).fill(0);
+  for (let i = 0; i < a.length; i++) { const y = Math.floor(i / (w * 3)) % h, d = Math.abs(a[i] - b[i]); if (d > out[y]) out[y] = d; }
+  return out;
+}
+
+test('capture.js --captions: the review track as one mov_text stream over exactly the captured frames, top left, with or without a soundtrack', async () => {
+  const { reviewTrack, toVtt, probeSubtitles, subtitleText, movTextJustification } = await captionsLib();
+  const d = fresh('captions');
+  const vtt = resolve(d, 'review.vtt');
+  writeFileSync(vtt, toVtt(reviewTrack()));
+  const page = plantedPage(resolve(d, 'flat.html'));
+  // 13 to 15 s: the street's bed, then at 14.000 the car's first light
+  const file = resolve(d, 'soft.mp4');
+  const r = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', file, '--file', page, '--captions', vtt]);
+  assert.equal(r.code, 0, r.err + r.out);
+  const s = probeSubtitles(file), p = await ffprobe(file);
+  assert.deepEqual([s.streams, s.codec, s.start, p.videoStreams, p.audioStreams, p.frames], [1, 'mov_text', 0, 1, 0, 48]);
+  assert.ok(Math.abs(s.duration - 2) <= 1 / FPS, `captions last ${s.duration} s, the clip 2 s`);
+  const text = subtitleText(file);
+  assert.match(text, /^1\n00:00:00,000 --> 00:00:01,000\n[^\n]*street: city, wind/);
+  assert.match(text, /\n2\n00:00:01,000 --> 00:00:02,000\n[^\n]*the car rises out of the quiet \(new\)/);
+  assert.deepEqual(movTextJustification(file), [[0, 0]], 'top left, out of the bottom band');
+  const side = JSON.parse(readFileSync(`${file}.json`, 'utf8'));
+  assert.deepEqual(side.problems, []);
+  assert.deepEqual([side.captions.file, side.captions.burned, side.captions.subtitles.streams], [vtt, false, 1]);
+  assert.ok(readdirSync(d).every((f) => !f.includes('.captions.')), 'the clip\'s caption files are cleaned up');
+
+  // with a soundtrack (Sound 2.8): video, AAC and the captions, each its own stream
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr), silent = new Float32Array(n);
+  const wav = resolve(d, 'silent.wav');
+  writeFileSync(wav, encodeWav(silent, silent, sr, mulberry32(3)));
+  const both = resolve(d, 'both.mp4');
+  const r2 = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', both, '--file', page, '--captions', vtt, '--audio', wav]);
+  assert.equal(r2.code, 0, r2.err + r2.out);
+  const p2 = await ffprobe(both), s2 = probeSubtitles(both);
+  assert.deepEqual([p2.videoStreams, p2.audioStreams, p2.audioCodec, s2.streams, s2.codec, p2.frames], [1, 1, 'aac', 1, 'mov_text', 48]);
+  assert.ok(Math.abs(s2.duration - 2) <= 1 / FPS && Math.abs(p2.audioDuration - 2) <= 1 / FPS);
+
+  // controls: without --captions no subtitle stream; a track that ends 1 s into the clip gives a stream of 1 s, so the
+  // duration measured above is the track's; --burn-captions alone and a missing track are refused
+  const none = resolve(d, 'none.mp4');
+  assert.equal(node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', none, '--file', page]).code, 0);
+  assert.equal(probeSubtitles(none).streams, 0);
+  const shortVtt = resolve(d, 'short.vtt');
+  writeFileSync(shortVtt, 'WEBVTT\n\n1\n00:00:00.000 --> 00:00:14.000\nthe street\n');
+  const short = resolve(d, 'short.mp4');
+  assert.equal(node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', short, '--file', page, '--captions', shortVtt]).code, 0);
+  assert.ok(Math.abs(probeSubtitles(short).duration - 1) <= 1 / FPS, `a 1 s track, got ${probeSubtitles(short).duration}`);
+  const lone = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '14', '--out', resolve(d, 'x.mp4'), '--file', page, '--burn-captions']);
+  assert.notEqual(lone.code, 0);
+  assert.match(lone.err, /--burn-captions burns the --captions track/);
+  const gone = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '14', '--out', resolve(d, 'y.mp4'), '--file', page, '--captions', resolve(d, 'nope.vtt')]);
+  assert.notEqual(gone.code, 0);
+  assert.match(gone.err, /no captions at/);
+});
+
+test('capture.js --burn-captions: only the caption band changes; a band planted at the bottom fails the same check', async () => {
+  const { reviewTrack, toVtt, toAss, parseVtt, burnFilter, STRIP, LANE, SAFE } = await captionsLib();
+  const d = fresh('burn');
+  const vtt = resolve(d, 'review.vtt');
+  writeFileSync(vtt, toVtt(reviewTrack()));
+  const page = plantedPage(resolve(d, 'flat.html'));
+  // 33 to 35 s: three lines and steps in the lane, on a flat picture so any change is the burn's
+  const run = (name, extra) => {
+    const f = resolve(d, `${name}.mp4`);
+    const r = node('scripts/capture.js', ['--profile', 'preview', '--from', '33', '--to', '35', '--out', f, '--file', page, '--captions', vtt, ...extra]);
+    assert.equal(r.code, 0, r.err + r.out);
+    return f;
+  };
+  const soft = run('soft', []), burned = run('burned', ['--burn-captions']);
+  assert.equal(JSON.parse(readFileSync(`${burned}.json`, 'utf8')).captions.burned, true);
+  // the encoder works in 16 px macroblocks and its deblocking filter reaches 3 px across a block edge, so a change in
+  // the band may touch the rows of the blocks that hold it and 3 more (measured: rows 64 and 65 by 5 levels, then 0)
+  const MB = 16, DEBLOCK = 3, blocks = Math.ceil(LANE.bottom / MB) * MB + DEBLOCK;
+  const check = (other) => {
+    const rows = rowDiff(frames(soft), frames(other), W, H);
+    return { inBand: Math.max(...rows.slice(STRIP, LANE.bottom)), below: Math.max(...rows.slice(blocks)), bottom: Math.max(...rows.slice(H - SAFE)) };
+  };
+  const got = check(burned);
+  // a control: the same burn moved into the bottom band, drawn over the soft capture with the same encoder settings
+  const ass = toAss(parseVtt(readFileSync(vtt, 'utf8')), { from: 33, to: 35, strip: false });
+  const plantedAss = resolve(d, 'planted.ass');
+  writeFileSync(plantedAss, ass.replace(/\\pos\(3,11\)/g, `\\pos(3,${H - SAFE + 4})`));
+  const planted = resolve(d, 'planted.mp4');
+  const args = encodeArgs('preview', { w: W, h: H });
+  const codec = args.slice(args.indexOf('-c:v'), args.indexOf('-pix_fmt', args.indexOf('-c:v')));
+  assert.equal(spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', soft, '-map', '0:v:0', '-vf', burnFilter(plantedAss), ...codec, '-pix_fmt', 'yuv420p', ...BT709_TAGS, planted]).status, 0);
+  const bad = check(planted);
+  console.log(`  burn against the soft capture, largest change: in the band ${got.inBand}, below its macroblocks ${got.below}, bottom ${SAFE} rows ${got.bottom}; planted at the bottom: bottom rows ${bad.bottom}`);
+  assert.ok(got.inBand > 100, 'the captions are drawn in the band');
+  assert.ok(got.below <= 2 && got.bottom <= 2, 'nothing else changes (starting value: 2 levels of encoder rounding; measured 0)');
+  assert.ok(bad.bottom > 100, 'control: a line burned into the bottom band shows in the same check');
+});

@@ -313,6 +313,21 @@ export function parseVtt(text) {
   }
   return { entries, ticks, notes };
 }
+// A clip's soft track: the cues over [from, to) of the film (seconds), shifted to start at 0, their identifiers, settings
+// and text as written. NOTE blocks are left out (the ticks are in film time; only a burn reads them).
+export function clipVtt(text, from, to) {
+  const blocks = text.replace(/\r\n/g, '\n').split(/\n{2,}/).map((b) => b.split('\n').filter((l) => l !== '')).filter((b) => b.length);
+  if (!/^WEBVTT/.test(blocks[0]?.[0] ?? '')) throw new Error('captions: not a WebVTT file');
+  const a0 = ms(from), out = ['WEBVTT', ''];
+  for (const b of blocks.slice(1)) {
+    const ti = b.findIndex((l) => l.includes('-->'));
+    if (/^NOTE\b/.test(b[0]) || ti < 0) continue;
+    const [a, rest] = b[ti].split(' --> '), [e, ...settings] = rest.split(' ');
+    const s = Math.max(parseTime(a), a0), f = Math.min(parseTime(e), ms(to));
+    if (s < f) out.push(...b.slice(0, ti), [`${vttTime(s - a0)} --> ${vttTime(f - a0)}`, ...settings].join(' '), ...b.slice(ti + 1), '');
+  }
+  return out.join('\n');
+}
 // A cue line into styled runs: { text, italic, lane, mark }
 function parseCueLine(line) {
   const out = [], stack = [];
