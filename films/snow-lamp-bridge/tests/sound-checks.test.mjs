@@ -26,7 +26,7 @@ const real = {};
 const run = (id) => (real[id] ??= SC[id](REAL));
 
 // ---------- 1 trace ----------
-const still = { sync: 0, t0: 0, t1: 0, place: 0, gone: false, other: [] };
+const still = { sync: 0, t0: 0, t1: 0, print: null, place: 0, gone: false, other: [] };
 function observe(cues, moves) {
   const o = { added: [] };
   for (const c of cues) o[c.id] = { ...still, ...(moves[c.id] ?? {}) };
@@ -68,6 +68,34 @@ test('1 trace: provenance on every cue; a literal time, a door reading the wrong
   assert.ok(off.rows.some((x) => x.cue === 'hard.door.driver.latch' && /not the shift/.test(x.problem)), 'control: a shift 1 us off');
   const unreached = SC.trace({ ...REAL, cues: CUES, trace: { perturbations: [{ ...DOORS('driver'), reached: false, note: 'the probe did not move' }], observed: { 'doors.driver': { added: [] } } } });
   assert.equal(unreached.status, 'fail', 'control: an unreached perturbation');
+});
+
+// one person's keys, as perturb.mjs declares them: that person's inputs, and the people's shared ones for that person
+const KEYS = (id) => ({ id: `keys.${id}`, person: id, tokens: [`PEOPLE_KEYS.${id}`, `makePoser('${id}')`], shared: ['PEOPLE_KEYS', 'makePoser', 'footprintList'], shift: 0.125, reached: true });
+const problems = (r, id) => r.rows.filter((x) => x.cue === id && x.problem).map((x) => x.problem);
+
+test('1 trace: a cue of A\'s reading B\'s keys, a cue only the perturbed picture has, and a step whose place does not follow its print', () => {
+  // A's lean, its time read from B's keys: it moves under B's keys, whose inputs its provenance does not name
+  const reads = like('foley.moves.A.lean', { id: 'planted.reads.B' }), moves = { [reads.id]: { sync: 0.125, t0: 0.125, t1: 0.125 } };
+  const underB = (P) => SC.trace({ ...REAL, cues: [reads], trace: { perturbations: [P], observed: { [P.id]: observe([reads], moves) } } });
+  assert.ok(problems(underB(KEYS('B')), reads.id).some((x) => /names none of PEOPLE_KEYS\.B/.test(x)), 'control: A\'s cue reading B\'s keys');
+  // with one token list for both people (the first run's) its PEOPLE_KEYS.A named B's keys too
+  assert.deepEqual(problems(underB({ ...KEYS('B'), person: null, shared: null, tokens: ['PEOPLE_KEYS', 'makePoser', 'footprintList'] }), reads.id), [], 'the first run\'s tokens let it pass');
+  // the shared tokens: a step of A's (footprintList()) and the handbrake (PEOPLE_KEYS, no one's) are named by A's keys
+  assert.ok(SC.names(KEYS('A'), byId.get('foley.feet.A.05')) && SC.names(KEYS('A'), byId.get('hard.cabin.car.handbrake')) && !SC.names(KEYS('B'), byId.get('foley.feet.A.05')));
+  // a cue only the perturbed picture has is judged like a move: a step of A's appears under A's keys (named), one whose
+  // provenance names nothing fails, and the table can forbid it or allow it
+  const step = { ...byId.get('foley.feet.A.05'), id: 'planted.added.step' };
+  const added = (x, expect) => SC.trace({ ...REAL, cues: [], trace: { perturbations: [KEYS('A')], observed: { 'keys.A': { added: [x] } }, expect } });
+  assert.deepEqual(problems(added(step), step.id), []);
+  assert.ok(problems(added({ ...step, derivedFrom: 'a typed list', rule: null }), step.id).some((x) => /names none/.test(x)), 'control: an added cue named by nothing');
+  assert.ok(problems(added(step, () => ({ kind: 'still' })), step.id).some((x) => /table does not allow/.test(x)), 'control: the table forbids it');
+  assert.deepEqual(problems(added(step, () => ({ kind: 'still', free: ['added'] })), step.id), []);
+  // a step whose print moves is another step, at another place: with the table's couple, a place left still fails
+  const last = byId.get('foley.feet.A.35'), RAIL = { id: 'rail', tokens: ['RAIL', 'footprintList'], shift: null, reached: true };
+  const coupled = (place) => SC.trace({ ...REAL, cues: [last], trace: { perturbations: [RAIL], observed: { rail: observe([last], { [last.id]: { sync: -0.875, t0: -0.875, t1: -0.875, print: -0.875, place } }) }, expect: () => ({ kind: 'still', free: ['sync', 't0', 't1', 'print', 'place', 'gone', 'added', 'other'], couple: [['print', 'place']] }) } });
+  assert.deepEqual(problems(coupled(0.4), last.id), []);
+  assert.ok(problems(coupled(0), last.id).some((x) => /the place does not follow the print/.test(x)), 'control: a typed place');
 });
 
 // ---------- 2 onScreen ----------

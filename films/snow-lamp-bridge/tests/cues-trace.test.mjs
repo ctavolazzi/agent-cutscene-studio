@@ -2,7 +2,8 @@
 // time, each in a child process whose module hook serves a patched world.js, set.js, shots.js or actors/car.js to every
 // importer (scripts/lib/perturb.mjs). The declared table below says, family by family, which perturbations must move
 // a cue and how; the trace check (scripts/lib/sound-checks.js) compares it with what moved. A planted module, imported
-// in the same hooked children, carries a literal-time cue, a door cue reading the wrong door and today's RUSTLES.
+// in the same hooked children, carries a literal-time cue, a door cue reading the wrong door, today's RUSTLES, a step
+// whose time reads footprintList() while its place is typed in, and a cue of A's whose time reads B's keys.
 // Run: node --test tests/cues-trace.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -25,14 +26,20 @@ const like = (id, patch) => Object.freeze({ ...byId.get(id), ...patch });
 // ---------- the planted module ----------
 // Imported by every child after cues.js, so it sees the same patched picture. Its cues are plain snapshots. A data:
 // URL, so no file is written: it imports the picture by absolute URL, the same modules the hook patches.
+const LAST_A = CUES.filter((c) => c.family === 'feet' && c.person === 'A').at(-1);
 const PLANTED = `data:text/javascript,${encodeURIComponent(`
-import { carTimes } from '${src('src/world.js')}';
+import { carTimes, PEOPLE_KEYS } from '${src('src/world.js')}';
+import { footprintList } from '${src('src/fx/footprints.js')}';
 import { RUSTLES } from '${src('src/audio/layers/foley.js')}';
-const cue = (id, t, dur) => ({ id, sync: t, t0: t, t1: t + dur, enabled: true, place: null });
+const cue = (id, t, dur, extra = {}) => ({ id, sync: t, t0: t, t1: t + dur, enabled: true, place: null, ...extra });
+const last = footprintList().filter((p) => p.id === 'A').at(-1);
 export const CUES = [
   cue('planted.literal', 62.0, 1.5), // A's lean key, typed as a number
   cue('planted.door.wrong', carTimes.doors.passenger.close1, 0.25), // the driver's latch, reading the passenger's door
   ...RUSTLES.map((r, i) => cue('planted.rustle.' + (i + 1), r.t, r.dur)), // today's typed cloth moments
+  // A's last step: its time and print from footprintList(), its place typed in as it stood when authored
+  cue('planted.typed.step', last.t, ${LAST_A.t1 - LAST_A.t0}, { print: last.t, place: () => ${JSON.stringify(LAST_A.place(LAST_A.t0))} }),
+  cue('planted.person.wrong', PEOPLE_KEYS.B.find((k) => k.pose === 'lean').t, 1.5), // A's lean, reading B's lean key
 ];
 `)}`;
 // the planted cues as the catalogue would carry them: their provenance claims what a derived cue would read
@@ -40,12 +47,16 @@ const PLANTED_CUES = [
   like('foley.moves.A.lean', { id: 'planted.literal', sync: 62.0, t0: 62.0, t1: 63.5, place: null, rule: null }),
   like('hard.door.driver.latch', { id: 'planted.door.wrong', place: null }),
   ...[0, 1, 2, 3].map((i) => like('foley.moves.A.lean', { id: `planted.rustle.${i + 1}`, place: null, rule: null, derivedFrom: 'PEOPLE_KEYS (the lean, the lee turns); poser root + CLOTH.up' })),
+  like(LAST_A.id, { id: 'planted.typed.step' }),
+  like('foley.moves.A.lean', { id: 'planted.person.wrong', place: null, rule: null }),
 ];
 
 // ---------- the declared table ----------
-// Codes: '.' still (the default); 'S' sync, t0 and t1 move by exactly the perturbation's shift; 's' sync and t0 do, t1
-// stays; 't' only t1 does; a trailing 'p' lets the place move, 'o' lets other fields move (a step's print); 'P' the
-// times stay and the place must move; 'p' alone the times stay, the place may move; '~' it must move somehow; '?' free.
+// Codes: '.' still (the default); 'S' sync, t0, t1 and a step's print move by exactly the perturbation's shift; 's'
+// sync and t0 do, t1 stays; 't' only t1 does; a trailing 'p' lets the place move; 'P' the times stay and the place must
+// move; 'p' alone the times stay, the place may move; 'c' a step under a change of the walk's ground or path, compared
+// by its number among the person's steps: wherever its print moves (another step) its place must move too, and the
+// contact, the count and the rest may change; '~' it must move somehow; '?' free.
 // A cue's place follows a person's rig, so under that person's keys it may move wherever the person is still moving
 // at the cue's own times (the lighter strikes as A comes out of the turn into the lee); its time must not.
 const doorOf = (id) => Object.keys(DOOR_SIDE).find((tag) => DOOR_SIDE[tag] === EXIT.outSide[id]);
@@ -71,8 +82,10 @@ const TABLE = [
   ['the ticks', (c) => c.family === 'tick', () => ({ 'car.lights': 'S', 'car.dims': 'P', 'car.shape': 'P' })],
   ['the doors', (c) => c.family === 'door', (c) => ({ [`doors.${c.meta.door}`]: 'S', 'car.shape': 'P' })],
   ['getting out', (c) => c.family === 'unload', (c) => ({ [`keys.${c.person}`]: 'S' })],
-  // the steps near the abutment (the curb's ramp) and on the way to the rail move with the rig; which ones is the rig's
-  ['the steps', (c) => c.family === 'feet', (c) => ({ [`keys.${c.person}`]: 'So', bridge: '?', rail: '?' })],
+  // the steps near the abutment (the curb's ramp) and on the last walk to the rail move with the rig: measured, A.26 to
+  // A.29 and B.20 to B.23 under the bridge (B.20 by its contact alone, 1 ms, its print and place kept), A.34 and B.26 to
+  // B.28 under the rail, where A takes one step fewer (A.35 gone)
+  ['the steps', (c) => c.family === 'feet', (c) => ({ [`keys.${c.person}`]: 'S', bridge: 'c', rail: 'c' })],
   ['the scuffs', (c) => c.family === 'scuff', (c) => ({ [`keys.${c.person}`]: 'S', rail: atRail(c, c.sync) ? 'P' : '.' })],
   ['cloth on the walk', (c) => c.meta.kind === 'walk', (c) => ({ [`keys.${c.person}`]: 'S', rail: keyAt(c, c.t1)?.x === RAIL.x ? 'P' : '.' })],
   ['the lean', (c) => c.meta.kind === 'lean', (c) => ({ [`keys.${c.person}`]: 'S', rail: 'P' })],
@@ -93,9 +106,10 @@ const TABLE = [
   ['the hum', (c) => c.family === 'hum', () => ({ lamp: 'P' })],
 ];
 const CODES = {
-  '.': { kind: 'still' }, S: { kind: 'shift', fields: ['sync', 't0', 't1'] }, Sp: { kind: 'shift', fields: ['sync', 't0', 't1'], free: ['place'] },
-  So: { kind: 'shift', fields: ['sync', 't0', 't1'], free: ['other'] }, s: { kind: 'shift', fields: ['sync', 't0'] }, sp: { kind: 'shift', fields: ['sync', 't0'], free: ['place'] },
+  '.': { kind: 'still' }, S: { kind: 'shift', fields: ['sync', 't0', 't1', 'print'] }, Sp: { kind: 'shift', fields: ['sync', 't0', 't1', 'print'], free: ['place'] },
+  s: { kind: 'shift', fields: ['sync', 't0'] }, sp: { kind: 'shift', fields: ['sync', 't0'], free: ['place'] },
   t: { kind: 'shift', fields: ['t1'] }, tp: { kind: 'shift', fields: ['t1'], free: ['place'] }, P: { kind: 'still', must: ['place'] }, p: { kind: 'still', free: ['place'] },
+  c: { kind: 'still', free: ['sync', 't0', 't1', 'print', 'place', 'gone', 'added', 'other'], couple: [['print', 'place']] },
   '~': { kind: 'moves' }, '?': { kind: 'free' },
 };
 const rowOf = (c, table = TABLE) => table.filter(([, sel]) => sel(c));
@@ -121,7 +135,11 @@ test('every perturbation reaches its constant through the hook (no fallback need
 
 test('the catalogue moves exactly as the table says under every perturbation, pure shifts exactly', async () => {
   const r = traceOf(await perturbed());
-  assert.deepEqual(r.rows.filter((x) => x.problem && byId.has(x.cue)).map((x) => `${x.cue} ${x.perturbation}: ${x.problem}`), []);
+  // every problem row counts, as in the report: a cue only a perturbed picture has is judged there too
+  assert.deepEqual(r.rows.filter((x) => x.problem).map((x) => `${x.cue} ${x.perturbation}: ${x.problem}`), []);
+  // the steps the rail and the bridge reach: their print and place move together, and A's last is gone under the rail
+  const stepMoves = (pid) => r.rows.filter((x) => x.perturbation === pid && x.moved && byId.get(x.cue)?.family === 'feet').map((x) => x.cue).sort();
+  assert.deepEqual([stepMoves('rail'), stepMoves('bridge')], [['foley.feet.A.34', 'foley.feet.A.35', 'foley.feet.B.26', 'foley.feet.B.27', 'foley.feet.B.28'], ['foley.feet.A.26', 'foley.feet.A.27', 'foley.feet.A.28', 'foley.feet.A.29', 'foley.feet.B.20', 'foley.feet.B.21', 'foley.feet.B.22', 'foley.feet.B.23']]);
   // every cue moves under something except the rule-made night opening; and the shifts that should be exact are
   const movers = new Set(r.rows.filter((x) => x.moved && byId.has(x.cue)).map((x) => x.cue));
   assert.deepEqual(CUES.filter((c) => !movers.has(c.id)).map((c) => c.id), ['bg.ambience.night.open']);
@@ -136,7 +154,7 @@ test('the catalogue moves exactly as the table says under every perturbation, pu
   assert.ok(traceOf(await perturbed(), { cues: vague }).rows.some((x) => x.cue === 'bg.hum.lamp.bed' && /names none/.test(x.problem ?? '')), 'control: an unnamed input');
 });
 
-test('planted: a literal time, a door cue reading the wrong door and today\'s RUSTLES are caught', async () => {
+test('planted: a literal time, a door cue reading the wrong door, today\'s RUSTLES, a typed step place and A reading B\'s keys are caught', async () => {
   const r = traceOf(await perturbed(), { cues: [...CUES, ...PLANTED_CUES] });
   const of = (id) => r.rows.filter((x) => x.cue === id && x.problem).map((x) => `${x.perturbation}: ${x.problem}`);
   // the literal: still where A's keys move, and moved by nothing
@@ -146,4 +164,12 @@ test('planted: a literal time, a door cue reading the wrong door and today\'s RU
   assert.ok(w.some((x) => /^doors\.driver: .*not the shift/.test(x)) && w.some((x) => /^doors\.passenger: .*names none/.test(x)), w.join('\n'));
   // the rustles: the lean and lee-turn keys move, the rustles do not (SOUND-PLAN 4.2)
   for (let i = 1; i <= 4; i++) assert.ok(of(`planted.rustle.${i}`).some((x) => /never moves/.test(x)), `planted.rustle.${i}`);
+  // the typed step place: under A's keys it shifts like a step, under the rail its print moves to A's new last print
+  // and its place stays where it was typed
+  const typed = of('planted.typed.step');
+  assert.ok(typed.some((x) => /^rail: .*the place does not follow the print/.test(x)) && !typed.some((x) => /^keys\.A/.test(x)), typed.join('\n'));
+  // A's lean reading B's lean key: it moves under B's keys, whose inputs it does not name (PEOPLE_KEYS.A is not B's),
+  // and is still under A's
+  const person = of('planted.person.wrong');
+  assert.ok(person.some((x) => /^keys\.B: moves, but its provenance names none of PEOPLE_KEYS\.B/.test(x)) && person.some((x) => /^keys\.A: .*not the shift/.test(x)), person.join('\n'));
 });

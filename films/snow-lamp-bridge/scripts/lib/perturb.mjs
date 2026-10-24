@@ -26,9 +26,11 @@ const firstPositive = (f) => { let lo = 0, hi = 1000; if (f(lo) > 0) return lo; 
 // whole number of the rig's table steps (1/120 s), print steps (1/48 s) and audio samples, exactly in floating point,
 // so a pure time shift of the rig is bit exact. Measured with 0.1 s: A's ankle moves by up to 25 um round 40.4 s (a
 // table sample lands on a key time on one side of the rounding and not the other) and step A.16 by one sample less.
+// One person's keys name that person's inputs (`tokens`, for any cue) and the people's shared ones (`shared`, which
+// count only for a cue of that person or of no one), so a cue of A's that reads B's keys is caught by the report too.
 export function makePerturbations({ placeShot }) {
   const people = ['PEOPLE_KEYS', 'makePoser', 'footprintList'];
-  const keys = (id) => ({ id: `keys.${id}`, label: `PEOPLE_KEYS.${id} +0.125 s`, shift: 0.125, tokens: people, patches: [{ url: WORLD_JS, append: `for (const k of PEOPLE_KEYS.${id}) k.t += 0.125;` }], probe: (W) => W.PEOPLE_KEYS[id][0].t, want: (b) => b + 0.125 });
+  const keys = (id) => ({ id: `keys.${id}`, label: `PEOPLE_KEYS.${id} +0.125 s`, shift: 0.125, person: id, tokens: [`PEOPLE_KEYS.${id}`, `makePoser('${id}')`], shared: people, patches: [{ url: WORLD_JS, append: `for (const k of PEOPLE_KEYS.${id}) k.t += 0.125;` }], probe: (W) => W.PEOPLE_KEYS[id][0].t, want: (b) => b + 0.125 });
   const door = (tag) => ({ id: `doors.${tag}`, label: `carTimes.doors.${tag} +0.5 s`, shift: 0.5, tokens: [`carTimes.doors.${tag}`, 'carTimes.doors open0', 'doorOpen'], patches: [{ url: WORLD_JS, append: `for (const k of ['open0', 'open1', 'close0', 'close1']) carTimes.doors.${tag}[k] += 0.5;` }], probe: (W) => W.carTimes.doors[tag].open0, want: (b) => b + 0.5 });
   return [
     keys('A'), keys('B'),
@@ -50,10 +52,12 @@ export function makePerturbations({ placeShot }) {
   ];
 }
 
-// A cue as plain data: its times, its print and surface, and its place at its own start, middle and end.
+// A cue as plain data: its times, its print and surface, its place at its own start, middle and end, and what a cue
+// only one picture has is judged by (its family, person, meta and provenance).
 const snap = (c) => ({
   id: c.id, sync: c.sync, t0: c.t0, t1: c.t1, print: c.print ?? null, surface: c.surface ?? null, enabled: c.enabled,
   place: c.place ? [c.t0, (c.t0 + c.t1) / 2, c.t1 - 1e-6].map((t) => c.place(t)) : null,
+  category: c.category ?? null, family: c.family ?? null, person: c.person ?? null, offered: c.offered ?? false, meta: c.meta ?? {}, derivedFrom: c.derivedFrom ?? null, rule: c.rule ?? null,
 });
 
 // ---------- the child ----------
@@ -85,15 +89,16 @@ async function pool(jobs, n) {
   return out;
 }
 const dist3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
-// the change of one cue: time deltas, the largest move of its place samples, the other fields that changed
+// the change of one cue: time deltas (its print's among them), the largest move of its place samples, the other fields
+// that changed (a print that appears or goes counts there)
 function delta(b, p) {
-  if (!p) return { sync: null, t0: null, t1: null, place: 0, gone: true, other: [] };
+  if (!p) return { sync: null, t0: null, t1: null, print: null, place: 0, gone: true, other: [] };
   let place = 0;
   if ((b.place === null) !== (p.place === null)) place = Infinity;
   else if (b.place) b.place.forEach((q, i) => { const s = p.place[i]; place = Math.max(place, q === null && s === null ? 0 : q === null || s === null ? Infinity : dist3(q, s)); });
   const other = ['surface', 'enabled'].filter((k) => b[k] !== p[k]);
-  if (b.print !== p.print) other.push(b.print === null || p.print === null ? 'print' : `print ${p.print - b.print > 0 ? '+' : ''}${Math.round((p.print - b.print) * 1e6) / 1e6}`);
-  return { sync: p.sync - b.sync, t0: p.t0 - b.t0, t1: p.t1 - b.t1, place, gone: false, other };
+  if ((b.print === null) !== (p.print === null)) other.push('print');
+  return { sync: p.sync - b.sync, t0: p.t0 - b.t0, t1: p.t1 - b.t1, print: b.print === null || p.print === null ? null : p.print - b.print, place, gone: false, other };
 }
 
 // Every perturbation (or `only` those ids) in its own child, `extra` a module URL whose CUES are snapshotted beside the
@@ -110,12 +115,12 @@ export async function perturbAll({ only = null, extra = null } = {}) {
   list.forEach((P, i) => {
     const res = rest[i], want = P.want(base.data.probes[P.id]);
     const reached = res.ok && Math.abs(res.data.probes[P.id] - want) <= 1e-9 * Math.max(1, Math.abs(want));
-    perturbations.push({ id: P.id, label: P.label, tokens: P.tokens, shift: P.shift, reached, note: res.ok ? (reached ? null : `the probe reads ${res.data.probes[P.id]}, want ${want}`) : res.error });
+    perturbations.push({ id: P.id, label: P.label, tokens: P.tokens, shared: P.shared ?? null, person: P.person ?? null, shift: P.shift, reached, note: res.ok ? (reached ? null : `the probe reads ${res.data.probes[P.id]}, want ${want}`) : res.error });
     if (!res.ok) { observed[P.id] = { added: [] }; return; }
     const got = new Map(all(res.data).map((c) => [c.id, c])), o = {};
     for (const b of all(base.data)) o[b.id] = delta(b, got.get(b.id));
     const had = new Set(all(base.data).map((c) => c.id));
-    o.added = all(res.data).map((c) => c.id).filter((x) => !had.has(x));
+    o.added = all(res.data).filter((c) => !had.has(c.id)); // their snapshots: provenance and family, to judge them by
     observed[P.id] = o;
   });
   return { perturbations, observed, base: base.data };

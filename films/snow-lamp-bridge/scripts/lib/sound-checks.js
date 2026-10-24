@@ -131,24 +131,37 @@ export function holdRule(input, c, model = input.models[0]) {
 
 // ---------- 1 trace ----------
 // Static: every cue has derivedFrom or a rule and names its designed fields (each a field it has, level among them).
-// Perturbation (SOUND-PLAN 4.2, input.trace): `perturbations` [{ id, label, tokens, shift, reached, note }] and
-// `observed` { [id]: { [cue]: { sync, t0, t1, place, gone, other } } } (time deltas in s, place the largest move in m,
-// `added`: ids only the perturbed picture has). A cue that moves must name an input of that perturbation (one of its
-// tokens) in its derivedFrom or rule; a cue that never moves must be rule-made or have a designed sync. With `expect`
-// (cue, perturbation) -> { kind, fields, free, must, label } the movement must be exactly that: 'moves' (somehow),
-// 'free' (anything), or 'shift' / 'still', field by field: each time field in `fields` moved by the perturbation's own
-// shift (to `tol(cue)` s), every other one unchanged unless in `free`; the place unchanged unless in `free` (or, in
-// `must`, required to move); a cue gone, or its other fields (surface, print) changed, only if `free` names it.
+// Perturbation (SOUND-PLAN 4.2, input.trace): `perturbations` [{ id, label, tokens, shared, person, shift, reached,
+// note }] and `observed` { [id]: { [cue]: { sync, t0, t1, print, place, gone, other }, added: [snapshots] } } (time
+// deltas in s, place the largest move in m, `added` the cues only the perturbed picture has, with their provenance).
+// A cue that moves, or appears, must name an input of that perturbation in its derivedFrom or rule: one of its tokens,
+// or, for one person's perturbation (`person`), one of its `shared` tokens on a cue of that person or of no one, unless
+// narrowed to someone (PEOPLE_KEYS.B, makePoser('B') name B's alone). A cue that never moves must be rule-made or have a
+// designed sync. With `expect` (cue, perturbation) -> { kind, fields, free, must, couple, label } the movement must be
+// exactly that: 'moves' (somehow), 'free' (anything), or 'shift' / 'still', field by field: each time field (sync, t0,
+// t1, a step's print) in `fields` moved by the perturbation's own shift (to `tol(cue)` s), every other one unchanged
+// unless in `free`; the place unchanged unless in `free` (or, in `must`, required to move); for each [a, b] in `couple`,
+// where a moved b must have moved too (a step whose print moves is another step, at another place); a cue gone or
+// added, or its other fields (surface) changed, only if `free` names it.
 const MOVE = { t: 1e-12, m: 1e-9 }; // under these a value is unchanged: float noise, far below any real move
+const TIMES = ['sync', 't0', 't1', 'print'];
+const movedField = (d, k) => (k === 'place' ? d.place > MOVE.m : d[k] !== null && d[k] !== undefined && Math.abs(d[k]) > MOVE.t);
 function movedOf(d) {
   if (!d) return null;
   const parts = [];
   if (d.gone) parts.push('gone');
-  for (const k of ['sync', 't0', 't1']) if (d[k] !== null && Math.abs(d[k]) > MOVE.t) parts.push(`${k} ${d[k] > 0 ? '+' : ''}${r(d[k], 9)}`);
-  if (d.place > MOVE.m) parts.push(`place ${r(d.place, 6)} m`);
+  for (const k of TIMES) if (movedField(d, k)) parts.push(`${k} ${d[k] > 0 ? '+' : ''}${r(d[k], 9)}`);
+  if (movedField(d, 'place')) parts.push(`place ${r(d.place, 6)} m`);
   for (const k of d.other ?? []) parts.push(k);
   return parts.length ? parts.join(', ') : null;
 }
+// a shared token names everyone's input, unless narrowed to someone: followed by .X or ('X')
+const sharedIn = (text, k) => new RegExp(`${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![.(]['\\w])`).test(text);
+export function names(P, c) {
+  const text = `${c.derivedFrom ?? ''} ${c.rule ?? ''}`;
+  return P.tokens.some((k) => text.includes(k)) || (!!P.shared && (!c.person || !P.person || c.person === P.person) && P.shared.some((k) => sharedIn(text, k)));
+}
+const inputsOf = (P) => [...P.tokens, ...(P.shared ?? []).map((k) => (P.person ? `${k} (on ${P.person}'s cues or no one's)` : k))].join(', ');
 export function trace(input) {
   const T = input.trace ?? null, rows = [];
   for (const c of input.cues) {
@@ -163,26 +176,33 @@ export function trace(input) {
     for (const P of T.perturbations) {
       if (!P.reached) { rows.push({ perturbation: P.id, moved: null, named: null, expected: null, problem: `not reached: ${P.note ?? 'the hook did not change it'}` }); continue; }
       ran++;
-      for (const id of T.observed[P.id].added ?? []) rows.push({ cue: id, perturbation: P.id, moved: 'added', named: null, expected: null, problem: 'only the perturbed picture has it' });
+      for (const x of T.observed[P.id].added ?? []) {
+        const named = names(P, x), want = T.expect ? T.expect(x, P.id) : null, p = [];
+        if (!named) p.push(`only the perturbed picture has it, and its provenance names none of ${inputsOf(P)}`);
+        if (want && (want.kind === 'shift' || want.kind === 'still') && !(want.free ?? []).includes('added')) p.push('only the perturbed picture has it, the table does not allow it');
+        rows.push({ cue: x.id, perturbation: P.id, moved: 'added', named, expected: want ? want.label ?? want.kind : null, problem: p.length ? p.join('; ') : null });
+      }
     }
     for (const c of input.cues) {
-      const text = `${c.derivedFrom ?? ''} ${c.rule ?? ''}`, movers = [];
+      const movers = [];
       for (const P of T.perturbations) {
         if (!P.reached) continue;
-        const d = T.observed[P.id][c.id], moved = movedOf(d), named = P.tokens.some((k) => text.includes(k));
+        const d = T.observed[P.id][c.id], moved = movedOf(d), named = names(P, c);
         const want = T.expect ? T.expect(c, P.id) : null, p = [];
         if (!d) { rows.push({ cue: c.id, perturbation: P.id, moved: null, named, expected: null, problem: 'not observed under this perturbation' }); continue; }
         if (moved) movers.push(P.id);
-        if (moved && !named) p.push(`moves, but its provenance names none of ${P.tokens.join(', ')}`);
+        if (moved && !named) p.push(`moves, but its provenance names none of ${inputsOf(P)}`);
         if (want && want.kind === 'moves' && !moved) p.push('still, the table says it moves');
         if (want && (want.kind === 'shift' || want.kind === 'still')) {
           const tol = T.tol ? T.tol(c) : EPS, free = want.free ?? [], must = want.must ?? [], fields = want.kind === 'shift' ? want.fields : [];
-          for (const k of ['sync', 't0', 't1']) {
-            if (fields.includes(k)) { if (d[k] === null || Math.abs(d[k] - P.shift) > tol) p.push(`${k} moved ${r(d[k], 9)}, not the shift ${P.shift} (to ${tol} s)`); }
-            else if (!free.includes(k) && d[k] !== null && Math.abs(d[k]) > MOVE.t) p.push(`${k} moved ${r(d[k], 9)}, the table says still`);
+          for (const k of TIMES) {
+            if (k === 'print' && (d.print ?? null) === null) continue; // no print, or one that appears or goes (other)
+            if (fields.includes(k)) { if ((d[k] ?? null) === null || !(Math.abs(d[k] - P.shift) <= tol)) p.push(`${k} moved ${r(d[k], 9)}, not the shift ${P.shift} (to ${tol} s)`); }
+            else if (!free.includes(k) && movedField(d, k)) p.push(`${k} moved ${r(d[k], 9)}, the table says still`);
           }
-          if (must.includes('place') && !(d.place > MOVE.m)) p.push('place still, the table says it moves');
-          else if (!must.includes('place') && !free.includes('place') && d.place > MOVE.m) p.push(`place moved ${r(d.place, 6)} m, the table says still`);
+          if (must.includes('place') && !movedField(d, 'place')) p.push('place still, the table says it moves');
+          else if (!must.includes('place') && !free.includes('place') && movedField(d, 'place')) p.push(`place moved ${r(d.place, 6)} m, the table says still`);
+          for (const [a, b] of d.gone ? [] : want.couple ?? []) if (movedField(d, a) && !movedField(d, b)) p.push(`its ${a} moved${a === 'place' ? '' : ` ${r(d[a], 9)} s`} and its ${b} did not: the ${b} does not follow the ${a}`);
           if (d.gone && !free.includes('gone')) p.push('gone, the table does not allow it');
           if ((d.other ?? []).length && !free.includes('other')) p.push(`${d.other.join(', ')} changed, the table does not allow it`);
         }
@@ -196,7 +216,7 @@ export function trace(input) {
   const summary = `${input.cues.length} cues; ${T ? `${ran} of ${T.perturbations.length} perturbations run, ${rows.filter((x) => x.moved).length} cue moves` : 'perturbation not run'}; ${bad.length} problems`;
   // the declared table is the film's own (its tests): applied when the caller passes it, said so when not
   const table = T?.expect ? '; against the declared table each cue moves under exactly the perturbations it reads, a pure time shift by exactly the shift' : '; the declared table of which perturbations move each family, and by how much, is applied by the film\'s trace test, not here';
-  return entry(input, 'trace', 1, 'Trace', `Every cue has derivedFrom or a rule and names its designed fields; under each perturbation of the picture (SOUND-PLAN 4.2) a cue moves only if its provenance names an input of it, and a cue that never moves is rule-made or designed${table}`, 'Exact', [], status, summary, ['cue', 'perturbation', 'moved', 'named', 'expected', 'problem'], rows);
+  return entry(input, 'trace', 1, 'Trace', `Every cue has derivedFrom or a rule and names its designed fields; under each perturbation of the picture (SOUND-PLAN 4.2) a cue moves, or appears, only if its provenance names an input of it (one person's input only on that person's cues or no one's), and a cue that never moves is rule-made or designed${table}`, 'Exact', [], status, summary, ['cue', 'perturbation', 'moved', 'named', 'expected', 'problem'], rows);
 }
 
 // ---------- 2 onScreen ----------
