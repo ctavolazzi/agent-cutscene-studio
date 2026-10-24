@@ -11,7 +11,7 @@ import { dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Draw } from './lib/draw.js';
 import { shotColor } from './lib/map.js';
-import { buildSoundMap, buildSoundDetail, soundDetails, makePredictor, RULE_TEXT, FAMILY, PERSON, LAW_COLOR, fmtT, fmtDb } from './lib/sound-map.js';
+import { buildSoundMap, buildSoundDetail, soundDetails, makePredictor, ruleText, FAMILY, PERSON, LAW_COLOR, fmtT, fmtDb } from './lib/sound-map.js';
 import { buildTimeline, bedOnlyWindows } from './lib/sound-timeline.js';
 import { buildSoundPanel, decodeFrames, panelFrame, PANEL_W } from './lib/sound-panel.js';
 import { rasterize } from './lib/raster.mjs';
@@ -88,14 +88,15 @@ export const cueAnchor = (id) => `cue-${id}`;
 // schema (SOUND-PLAN 4.3, in the order of their n), and every cue. `report` is the parsed report.json, or null.
 export function sheetHtml(report, { cues = CUES, w = WORLD } = {}) {
   const ids = new Set(cues.map((c) => c.id));
-  // a cell, generically: numbers to three places, a cue id linked to its row in the cue list (the "cue" column must
-  // name one; any other cell that holds a cue id, such as the cue a pair is masked by, is linked too)
+  // a cell, generically: numbers to three places (never "-0.000"), a cue id linked to its row in the cue list (the "cue"
+  // column must name one, by its id as a string; any other cell that holds a cue id, such as the cue a pair is masked
+  // by, is linked too)
   const cell = (key, v) => {
     if (v === null || v === undefined) return '';
+    if (key === 'cue' && !(typeof v === 'string' && ids.has(v))) return `<span class="warn">${esc(v)} (no such cue)</span>`;
     if (typeof v === 'boolean') return v ? 'yes' : 'no';
-    if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(3);
+    if (typeof v === 'number') return Number.isInteger(v) ? String(v + 0) : v.toFixed(3).replace(/^-(0\.0+)$/, '$1');
     if (ids.has(v)) return `<a href="#${esc(cueAnchor(v))}">${esc(v)}</a>`;
-    if (key === 'cue') return `<span class="warn">${esc(v)} (no such cue)</span>`;
     return esc(v);
   };
   // a table of rows; a long one scrolls in its own box, so one check cannot bury the next
@@ -111,7 +112,7 @@ export function sheetHtml(report, { cues = CUES, w = WORLD } = {}) {
     const sec = checks.map((c) => `<section class="check" id="check-${esc(c.id)}">
 <h3>${esc(c.n)}. ${esc(c.name)} <span class="chip ${esc(c.status)}">${esc(c.status)}</span></h3>
 <p>${esc(c.definition)}</p>
-<p><b>Bar:</b> ${esc(c.bar)}${c.starting ? ' <span class="dim">(a starting value, to be set from measurement)</span>' : ''}</p>
+<p><b>Bar:</b> ${c.bar === null || c.bar === undefined ? '<span class="dim">none given</span>' : esc(c.bar)}${c.starting ? ' <span class="dim">(a starting value, to be set from measurement)</span>' : ''}</p>
 <p class="summary">${esc(c.summary)}</p>
 ${table(c)}
 </section>`).join('\n');
@@ -142,7 +143,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 Helvet
 main { max-width: 1500px; margin: 0 auto; padding: 24px 16px 64px; }
 h1 { font-size: 28px; margin: 0 0 4px; } h2 { font-size: 20px; margin: 40px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
 h3 { font-size: 16px; margin: 22px 0 6px; }
-p, li { color: #c9d4ee; max-width: 100ch; } .dim { color: var(--dim); } .note { color: #c9d4ee; border-left: 3px solid #8fb0ff; padding-left: 10px; }
+p, li { color: #c9d4ee; max-width: 100ch; } p, li, h1, h2, h3 { overflow-wrap: anywhere; } .dim { color: var(--dim); } .note { color: #c9d4ee; border-left: 3px solid #8fb0ff; padding-left: 10px; }
 img { display: block; width: 100%; height: auto; background: #0d1320; }
 .maps { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 640px), 1fr)); margin-top: 16px; }
 .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); }
@@ -160,7 +161,8 @@ a { color: #9db4ff; } tr:target td { background: #1d2a4a; }
 <h1>Snow, Lamp, Bridge: sound storyboard</h1>
 <p class="dim">Sound 1, for your markup. Everything here is generated from <code>src/audio/cues.js</code> (${cues.length} cues, ${cues.filter((c) => c.enabled).length} enabled, ${cues.filter((c) => c.new).length} new, ${cues.filter((c) => c.offered).length} offered and off), the shot table and <code>src/audio/spatial.js</code>, so it cannot drift from the picture. The panels show the published film's own frames.</p>
 <h2>How to read it</h2>
-<p><b>Predicted level.</b> ${esc(RULE_TEXT)}</p>
+<p><b>Predicted level.</b> ${esc(ruleText(pred))}</p>
+<p><b>Hidden sources</b> (SOUND-PLAN 3.7): a source in frame but behind a building, the parapet, the deck, a bank or the car, as the checks judge it. The timeline outlines its bar and names the blocker under it; the panels bar its glyph in the stereo field and its mark on the frame, and name the blocker in the shot's list.</p>
 <p><b>Families</b> (glyph colours; A orange, B blue for the people's sounds): ${famLegend}</p>
 <p><b>Distance laws</b> (the rings): ${lawLegend}</p>
 <p><b>Bed-only windows</b> (SOUND-PLAN 3.11): ${esc(windows)}. <b>Places:</b> ${esc(places)}.</p>

@@ -1,20 +1,21 @@
 // Sound storyboard, part 3: one panel per shot (SOUND-PLAN.md 4.3). The film's own frame at the shot's middle, decoded
 // from the published export, with every cue's screen point marked through the shot's camera (makeCamera(...).project);
 // beside it the stereo field over the whole shot (x the pan from -1 to 1 with the lens's frame edges at +/- sin(hfov/2),
-// y the time down the shot; glyph size the predicted level, filled in frame, hollow out of frame, a cross behind the
-// camera); a mini map of the listener; and the shot's cue list underneath, whose numbers the marks carry.
+// y the time down the shot; glyph size the predicted level, filled in frame and seen, hollow out of frame, barred in
+// frame but hidden, a cross behind the camera); a mini map of the listener; and the shot's cue list underneath, whose
+// numbers the marks carry. A hidden point names its blocker in the list (SOUND-PLAN 3.7).
 import { spawnSync } from 'node:child_process';
 import { Draw } from './draw.js';
 import { shotColor, makeView, wedge } from './map.js';
 import { makeCamera, bearingOf, dirOf, clipPolyRect, clipLineRect, D2R } from './math.js';
 import { CUES, LAWS, WORLD } from '../../src/audio/cues.js';
 import { CONFIG } from '../../src/config.js';
-import { makePredictor, makeLabeler, colorOf, voiced, sounding, fmtT, fmtDb, glyph, wrapText, textBox, FAMILY, LAW_COLOR, RING_DB, ringRadius } from './sound-map.js';
-import { DB, inFrame, frameSize } from './sound-timeline.js';
+import { makePredictor, makeSight, makeLabeler, colorOf, voiced, sounding, fmtT, fmtDb, glyph, wrapText, textBox, FAMILY, LAW_COLOR, RING_DB, ringRadius } from './sound-map.js';
+import { DB } from './sound-timeline.js';
 
 export const FW = 960, FH = 540; // the frame as drawn: the export's 480x270 internal pixels at 2x
 const RIGHT = { x: 990, w: 500 };
-const SF = { x: RIGHT.x + 34, y: 66, w: RIGHT.w - 44, h: 322 };
+export const SF = { x: RIGHT.x + 34, y: 66, w: RIGHT.w - 44, h: 322 }; // the stereo field's box
 const MM = { x: RIGHT.x + 10, y: SF.y + SF.h + 46, w: RIGHT.w - 20, h: 250 };
 export const PANEL_W = RIGHT.x + RIGHT.w + 10;
 const ROW = 15, LIST_Y = MM.y + MM.h + 44; // the cue list starts under the frame's caption and the mini map
@@ -74,18 +75,21 @@ export function framePoint(c, shot, tf, w = WORLD) {
   return { id: c.id, t, p, x: q ? q[0] : null, y: q ? q[1] : null, depth: q ? q[2] : null, sounding: c.t0 <= tf && tf < c.t1 };
 }
 const FIELD_STEPS = 20; // glyphs down the stereo field for a cue that sounds through the whole shot
-const levelR = (db) => 2.5 + Math.min(1, Math.max(0, (db - DB.lo) / (DB.hi - DB.lo))) * 10;
+// a field glyph's radius for a level, and its x for a pan
+export const levelR = (db) => 2.5 + Math.min(1, Math.max(0, (db - DB.lo) / (DB.hi - DB.lo))) * 10;
+export const fieldX = (pan) => SF.x + ((pan + 1) / 2) * SF.w;
 
-// frame: { n, t, png (a Buffer of the decoded frame) } or null (drawn as a placeholder note)
-export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } = {}) {
-  const pred = makePredictor({ cues, w }), list = panelCues(shot, cues), col = shotColor(shot.n);
+// frame: { n, t, png (a Buffer of the decoded frame) } or null (drawn as a placeholder note). pred and sight: the level
+// rule and the screen test (makePredictor, makeSight), passed in only to plant faults.
+export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null, pred = makePredictor({ cues, w }), sight = makeSight(w) } = {}) {
+  const list = panelCues(shot, cues), col = shotColor(shot.n);
   const fr = frame ?? { ...panelFrame(shot, w), png: null };
   const rows = Math.ceil(list.length / 2);
   const H = LIST_Y + 22 + rows * ROW + 20;
   const d = new PanelDraw(PANEL_W, H, { bg: '#080c16' });
   const L = makeLabeler(d, { pad: 1 });
   const num = new Map(list.map((c, i) => [c.id, i + 1]));
-  const F = frameSize(w), hfov = w.hfovDeg(shot.lens), edge = Math.sin((hfov * D2R) / 2);
+  const hfov = w.hfovDeg(shot.lens), edge = Math.sin((hfov * D2R) / 2), camAt = w.cameraAt(shot, fr.t).pos;
 
   // ---- the frame, and every placed cue's point on it
   if (fr.png) d.image(0, 0, FW, FH, `data:image/png;base64,${Buffer.from(fr.png).toString('base64')}`);
@@ -102,11 +106,15 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     points.push(q);
     if (q.x === null) continue; // behind the camera: in the list and the stereo field, not on the frame
     const inside = q.x >= 0 && q.x <= FW && q.y >= 0 && q.y <= FH, ccol = colorOf(c);
+    // in frame but behind something, the car where the frame shows it: the mark is barred, the list names the blocker
+    q.by = inside ? sight.hiddenBy(c, q.p, camAt, fr.t) : null;
     const x = Math.min(FW - 7, Math.max(7, q.x)), y = Math.min(FH - 7, Math.max(7, q.y));
     // an offered cue (default out) is dashed, never filled
     const lit = q.sounding && c.enabled;
-    if (inside) d.circle(q.x, q.y, 6, { fill: lit ? ccol : '#0b1020', fillOp: lit ? 0.9 : 0.6, stroke: lit ? '#0b1020' : ccol, sw: 2, cue: c.id, role: 'frame', ...(c.enabled ? {} : { dash: [2, 2] }) });
-    else d.poly([[x, y - 6], [x + 6, y], [x, y + 6], [x - 6, y]], { fill: 'none', stroke: ccol, sw: 1.5, cue: c.id, role: 'frame-edge', cx: x, cy: y });
+    if (inside) {
+      d.circle(q.x, q.y, 6, { fill: lit ? ccol : '#0b1020', fillOp: lit ? 0.9 : 0.6, stroke: lit ? '#0b1020' : ccol, sw: 2, cue: c.id, role: 'frame', ...(q.by ? { hidden: q.by } : {}), ...(c.enabled ? {} : { dash: [2, 2] }) });
+      if (q.by) d.line([[q.x - 9, q.y], [q.x + 9, q.y]], { stroke: ccol, sw: 2.2, cue: c.id, role: 'frame-bar' });
+    } else d.poly([[x, y - 6], [x + 6, y], [x, y + 6], [x - 6, y]], { fill: 'none', stroke: ccol, sw: 1.5, cue: c.id, role: 'frame-edge', cx: x, cy: y });
     L.block({ x0: x - 6, x1: x + 6, y0: y - 6, y1: y + 6 });
   }
   // numbers: each beside its point and kept inside the frame, on a dark chip so a bright frame cannot hide it
@@ -120,15 +128,15 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     if (it.k === 'text') { const b = textBox(it); d.rect(b.x0 - 1.5, b.y0 - 1, b.x1 - b.x0 + 3, b.y1 - b.y0 + 2, { fill: '#0b1020', fillOp: 0.7 }); }
     d.add(it);
   }
-  const capLines = wrapText(`Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); dashed, offered and off; diamond at the edge, out of frame.`, FW - 8, 11);
+  const capLines = wrapText(`Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); barred, in frame but hidden (the list names what hides it); dashed, offered and off; diamond at the edge, out of frame.`, FW - 8, 11);
   capLines.forEach((line, i) => L.fixed(4, FH + 17 + i * 14, line, { size: 11, fill: '#c9d4ee' }));
 
   // ---- the stereo field over the whole shot
   L.fixed(RIGHT.x + 10, 22, 'STEREO FIELD OVER THE SHOT', { size: 13, weight: 700, fill: '#c9d4ee' });
   L.fixed(RIGHT.x + 10, 38, `x: pan, left to right. y: time, ${fmtT(shot.start)} at the top to ${fmtT(shot.end)} s.`, { size: 11, fill: '#8794b3' });
   const bedsAt = pred.beds(pred.locAt(shot.start).name);
-  L.fixed(RIGHT.x + 10, 53, `Unplaced beds, on both sides: ${bedsAt.map((c) => `${c.family} ${fmtDb(c.level - pred.bg[pred.locAt(shot.start).name])}`).join(', ')} dB.`, { size: 11, fill: '#8794b3' });
-  const PX = (pan) => SF.x + ((pan + 1) / 2) * SF.w, TY = (t) => SF.y + ((t - shot.start) / (shot.end - shot.start)) * SF.h;
+  L.fixed(RIGHT.x + 10, 53, `Unplaced beds, on both sides, at ${fmtT(shot.start)} s: ${bedsAt.map((c) => `${c.family} ${fmtDb(pred.at(c, shot.start).db)}`).join(', ')}; background ${fmtDb(pred.refAt(shot.start))} dB.`, { size: 11, fill: '#8794b3' });
+  const PX = fieldX, TY = (t) => SF.y + ((t - shot.start) / (shot.end - shot.start)) * SF.h;
   d.rect(SF.x, SF.y, SF.w, SF.h, { fill: '#0d1320', stroke: '#2a3552', sw: 1 });
   d.rect(PX(-edge), SF.y, PX(edge) - PX(-edge), SF.h, { fill: col, fillOp: 0.07 });
   for (const s of [-edge, edge]) d.line([[PX(s), SF.y], [PX(s), SF.y + SF.h]], { stroke: col, sw: 1.2, dash: [5, 4], edge: s });
@@ -151,11 +159,13 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     for (const t of ts) {
       const q = pred.at(c, t);
       if (!q) continue;
-      const x = PX(q.pan), y = TY(t), r = levelR(q.db), on = !q.behind && inFrame(w, q.p, t, F);
+      const x = PX(q.pan), y = TY(t), r = levelR(q.db), { state, by } = sight.state(c, q.p, t), tag = { cue: c.id, role: 'field', at: t, state, by };
       pts.push([x, y]);
-      field.push({ id: c.id, t, pan: q.pan, db: q.db, behind: q.behind, on });
-      if (q.behind) { d.line([[x - r, y - r], [x + r, y + r]], { stroke: ccol, sw: 1.6, cue: c.id, role: 'field' }); d.line([[x - r, y + r], [x + r, y - r]], { stroke: ccol, sw: 1.6 }); }
-      else d.circle(x, y, r, { fill: on ? ccol : 'none', fillOp: on ? 0.75 : 1, stroke: ccol, sw: 1.4, cue: c.id, role: 'field', ...(c.enabled ? {} : { dash: [2, 2] }) });
+      field.push({ id: c.id, t, pan: q.pan, db: q.db, state, by });
+      // behind the camera a cross; hidden, a hollow glyph with a bar through it; out of frame hollow; seen, filled
+      if (state === 'behind') { d.line([[x - r, y - r], [x + r, y + r]], { stroke: ccol, sw: 1.6, ...tag, cx: x, cy: y, r }); d.line([[x - r, y + r], [x + r, y - r]], { stroke: ccol, sw: 1.6 }); continue; }
+      d.circle(x, y, r, { fill: state === 'on' ? ccol : 'none', fillOp: state === 'on' ? 0.75 : 1, stroke: ccol, sw: 1.4, ...tag, ...(c.enabled ? {} : { dash: [2, 2] }) });
+      if (state === 'hidden') d.line([[x - r - 2.5, y], [x + r + 2.5, y]], { stroke: ccol, sw: 1.6, cue: c.id, role: 'field-bar', at: t });
     }
     if (pts.length > 1) d.line(pts, { stroke: ccol, sw: 0.8, strokeOp: 0.6 });
   }
@@ -173,7 +183,7 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
   const y0 = FH + 17 + capLines.length * 14 + 24;
   L.fixed(4, y0, `SHOT ${shot.n}  ${shot.title}`, { size: 22, weight: 700, fill: '#fff' });
   const loc = pred.locAt(fr.t).name;
-  wrapText(`${fmtT(shot.start)} to ${fmtT(shot.end)} s (${(shot.end - shot.start).toFixed(0)} s), ${shot.lens} mm, the ${loc} (background ${fmtDb(pred.bg[loc])} dB). ${list.length} cues sound in this shot. In the list, each placed cue's level (dB against the background), pan and place are at the moment it is marked on the frame. Glyph size in the stereo field: ${DB.lo} to ${fmtDb(DB.hi)} dB; a cross is behind the camera.`, FW - 10, 12)
+  wrapText(`${fmtT(shot.start)} to ${fmtT(shot.end)} s (${(shot.end - shot.start).toFixed(0)} s), ${shot.lens} mm, the ${loc} (background ${fmtDb(pred.refAt(fr.t))} dB at the frame). ${list.length} cues sound in this shot. In the list, each placed cue's level (dB on the level plan's scale, read against that background), pan and place are at the moment it is marked on the frame. In the stereo field, glyph size is the level, ${DB.lo} to ${fmtDb(DB.hi)} dB: filled, in frame and seen; hollow, out of frame; barred, in frame but hidden; a cross, behind the camera.`, FW - 10, 12)
     .forEach((line, i) => L.fixed(4, y0 + 24 + i * 16, line, { size: 12, fill: col }));
   const COLS = [[0, '#'], [22, 'cue'], [262, 'sounds, s'], [372, 'level'], [432, 'pan'], [482, 'where']];
   for (const x of [14, 14 + PANEL_W / 2]) for (const [dx, s] of COLS) L.fixed(x + dx, LIST_Y, s, { size: 11, weight: 700, fill: '#8794b3' });
@@ -182,9 +192,9 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null } =
     const pt = points.find((p) => p.id === c.id), at = pt ? pt.t : Math.min(Math.max(fr.t, c.t0, shot.start), Math.min(c.t1, shot.end) - 1e-6);
     const q = voiced(c) ? pred.at(c, at) : null;
     const where = !voiced(c) ? `modifies ${(c.meta.modifies ?? []).join(', ')}` : !c.place ? 'unplaced bed' : !q || !pt ? 'nowhere' : pt.x === null || q.behind ? 'behind the camera'
-      : pt.x < 0 ? 'off left' : pt.x > FW ? 'off right' : pt.y < 0 ? 'off the top' : pt.y > FH ? 'off the foot' : 'in frame';
+      : pt.x < 0 ? 'off left' : pt.x > FW ? 'off right' : pt.y < 0 ? 'off the top' : pt.y > FH ? 'off the foot' : pt.by ? `hidden (${pt.by})` : 'in frame';
     const cells = [[0, String(i + 1)], [22, c.id], [262, `${fmtT(c.t0)} to ${fmtT(c.t1)}`], [372, voiced(c) ? (q ? `${fmtDb(q.db)} dB` : '') : `${fmtDb(c.level)} dB`], [432, q && q.pan !== null ? q.pan.toFixed(2) : ''], [482, where + (c.new ? ', new' : '') + (c.enabled ? '' : ', offered, off')]];
-    for (const [dx, s] of cells) if (s) L.fixed(x + dx, y, s, { size: 11, fill: dx === 0 || dx === 22 ? ccol : '#c9d4ee', ...(dx === 22 ? { cue: c.id, role: 'list' } : {}) });
+    for (const [dx, s] of cells) if (s) L.fixed(x + dx, y, s, { size: 11, fill: dx === 0 || dx === 22 ? ccol : '#c9d4ee', ...(dx === 22 ? { cue: c.id, role: 'list' } : dx === 372 && q ? { cue: c.id, role: 'list-level', at, db: q.db } : dx === 482 ? { cue: c.id, role: 'list-where' } : {}) });
   });
   // every label placed or dropped counts, whichever placer it went through
   L.dropped.push(...Lf.dropped, ...Ls.dropped, ...miniDropped);

@@ -7,9 +7,10 @@
 // file only through cues.js's WORLD, so a map built from makeCues(patched world) follows the patch.
 import { Draw } from './draw.js';
 import { makeView, wedge, shotColor } from './map.js';
-import { clipPolyRect, clipLineRect, bearingOf, dirOf, D2R } from './math.js';
+import { clipPolyRect, clipLineRect, bearingOf, dirOf, makeCamera, D2R } from './math.js';
 import { CUES, LAWS, WORLD, makeLocations } from '../../src/audio/cues.js';
 import { SPATIAL, listenerAt, placeAt } from '../../src/audio/spatial.js';
+import { DIMS } from '../../src/set/build.js';
 
 const r2 = (n) => Math.round(n * 100) / 100;
 const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -19,29 +20,113 @@ export const fmtDb = (db) => { const r = Math.round(db * 10) / 10; return r === 
 
 // ---------- the predicted level and pan: the one rule ----------
 // A cue at time t is heard from the camera of the shot playing at t (spatial.listenerAt): pan and gain come from
-// spatial.placeAt at the cue's place under its law (LAWS[c.law]), and the cue's designed level is added. The result is
-// shown against the background of the place playing at t: the power sum of that place's enabled background beds (the
-// street sums to 0 dB, the reference of SOUND-PLAN 1.3). An unplaced bed has no pan and its designed level. A cue with
-// no voice of its own (voices 0: the rise, the swell, the ambience changes) is a change to others, not a level.
-export const RULE_TEXT = 'Predicted level = the cue\'s designed level + 20 log10(gain), gain from spatial.placeAt at the cue\'s place under LAWS[cue.law], heard from the camera playing at that moment; shown in dB against the place\'s background (the power sum of its background beds: street 0 dB, the reference). Pan from the same placeAt. Unplaced beds: no pan, their designed level.';
-const powerSum = (dbs) => 10 * Math.log10(dbs.reduce((s, db) => s + 10 ** (db / 10), 0));
+// spatial.placeAt at the cue's place under its law (LAWS[c.law]). Its level is its designed level, plus 20 log10(gain),
+// plus the modifiers over it: a cue with no voice of its own (voices 0, meta.modifies: the rise, the swell, the
+// ambience changes) changes the families it names, for the cues whose span overlaps its own, from its onset by its
+// track's first field, the rise from its level up to 0 (question 3 (a), out of the quiet) and the others from 0 up to
+// their level, each holding what it reaches at its end. The same reading of SOUND-PLAN 1.3 and 4.1 as
+// scripts/sound-report.js's hear(), which a test holds equal once both are in one tree. Levels are on the level plan's
+// scale (cues.js LEVELS): the street's background beds sum to 0 dB on it, the bridge's to one designed step over it.
+// Every drawing shows the background playing (the power sum of the place's beds, modifiers included) at its own
+// level, so the step at the place change shows and a cue is read against it. An unplaced bed has no pan.
+export const powerSum = (dbs) => 10 * Math.log10(dbs.reduce((s, db) => s + 10 ** (db / 10), 0));
+// the rule in words, with the places' backgrounds from the catalogue (the sheet, the map and the timeline print it)
+export const ruleText = (pred) => `Predicted level, in dB on the level plan's scale (SOUND-PLAN 1.3; on it the background beds sum to ${pred.locations.map((l) => `${fmtDb(pred.bg[l.name])} dB on the ${l.name}`).join(' and ')}) = the cue's designed level + 20 log10(gain) + its modifiers. Gain and pan from spatial.placeAt at the cue's place under LAWS[cue.law], heard from the camera playing at that moment. Modifiers (${pred.mods.map((m) => m.label.replace(/^\[the |\]$/g, '')).join(', ')}) change the families they name from their onset by their track: the rise from its level up to 0, the others from 0 to their level, held after their end. The background playing is drawn at its own level; read a cue against it. Unplaced beds: no pan.`;
 
 export function makePredictor({ cues = CUES, w = WORLD } = {}) {
   const locations = makeLocations(w);
   const beds = (name) => cues.filter((c) => c.enabled && c.category === 'bg' && !c.place && c.voices > 0 && c.meta.location === name);
   const bg = Object.fromEntries(locations.map((l) => [l.name, powerSum(beds(l.name).map((c) => c.level))]));
   const locAt = (t) => locations.find((l) => t >= l.t0 && t < l.t1) ?? locations[locations.length - 1];
+  const mods = cues.filter((m) => m.enabled && !voiced(m) && m.meta.modifies);
+  // a modifier's share of its level at t: its track's first field (0 to 1), clamped to its span; the rise counts down
+  const share = (m, t) => { const k = m.track(Math.min(Math.max(t, m.t0), m.t1 - 1e-9)), u = k[Object.keys(k)[0]]; return m.id.split('.')[3] === 'rise' ? 1 - u : u; };
+  const modDb = (c, t) => mods.reduce((s, m) => (m.meta.modifies.includes(c.family) && m.t0 < c.t1 && c.t0 < m.t1 && t >= m.t0 ? s + m.level * share(m, t) : s), 0);
+  // the background playing at t: the power sum of its place's beds, each with its modifiers
+  const refAt = (t) => powerSum(beds(locAt(t).name).map((c) => c.level + modDb(c, t)));
   return {
-    bg, locations, locAt, beds,
-    // { t, pan (null unplaced), db (against the background), abs, ref, dist, behind, p } or null when the source is nowhere
+    bg, locations, locAt, beds, mods, modDb, refAt,
+    // { t, pan (null unplaced), db (the plan's scale), over (db above the background playing), mod, dist, behind, p },
+    // or null when the source is nowhere
     at(c, t) {
-      const ref = bg[locAt(t).name];
-      if (!c.place) return { t, pan: null, abs: c.level, db: c.level - ref, ref, dist: null, behind: false, p: null };
+      const mod = modDb(c, t);
+      if (!c.place) { const db = c.level + mod; return { t, pan: null, db, over: db - refAt(t), mod, dist: null, behind: false, p: null }; }
       const p = c.place(t);
       if (!p) return null;
       const L = listenerAt(t), s = placeAt(p, t, L, LAWS[c.law]);
-      const abs = c.level + 20 * Math.log10(s.gain);
-      return { t, pan: s.pan, abs, db: abs - ref, ref, dist: s.dist, behind: dot(sub(p, L.pos), L.f) < 0, p };
+      const db = c.level + mod + 20 * Math.log10(s.gain);
+      return { t, pan: s.pan, db, over: db - refAt(t), mod, dist: s.dist, behind: dot(sub(p, L.pos), L.f) < 0, p };
+    },
+  };
+}
+
+// ---------- what the camera sees of a source ----------
+// SOUND-PLAN 3.7: the storyboard marks every hidden cue with its blocker. The solids are the checks' own
+// (scripts/sound-report.js, held equal by a test once both are in one tree): the buildings, the parapets, the deck and
+// the banks as boxes (set.js and the set builder's DIMS), and the car's body and cabin while it is there. A point is
+// hidden when the segment from the camera to it passes through a box, leaving out its last centimetre (a point on a
+// surface is not hidden by that surface). The car's own sounds are judged against its boxes like any point (a far door,
+// the exhaust, the tyres under it), except a point inside one of them (the engine bay, the springs, the brake at the
+// axle), which by convention sounds through its own surface; what sounds inside the car for a person (the cabin, the
+// getting out) is hidden by it.
+const AXES = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+const aabb = (name, x0, x1, y0, y1, z0, z1) => ({ name, c: [(x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2], ax: AXES, h: [(x1 - x0) / 2, (y1 - y0) / 2, (z1 - z0) / 2] });
+// a point inside a box by more than eps on every axis (a point on a face is not inside it)
+const insideBox = (p, box, eps = 0.01) => { const o = sub(p, box.c); return box.ax.every((a, k) => Math.abs(dot(o, a)) < box.h[k] - eps); };
+// a slab test in the box's own axes
+export function segmentHits(a, b, box, eps = 0.01) {
+  const d = sub(b, a), len = Math.hypot(d[0], d[1], d[2]), o = sub(a, box.c);
+  if (len === 0) return false;
+  let u0 = 0, u1 = 1;
+  for (let k = 0; k < 3; k++) {
+    const p = dot(o, box.ax[k]), q = dot(d, box.ax[k]);
+    if (Math.abs(q) < 1e-12) { if (Math.abs(p) > box.h[k]) return false; continue; }
+    let s0 = (-box.h[k] - p) / q, s1 = (box.h[k] - p) / q;
+    if (s0 > s1) [s0, s1] = [s1, s0];
+    u0 = Math.max(u0, s0); u1 = Math.min(u1, s1);
+    if (u0 > u1) return false;
+  }
+  return u0 < 1 - eps / len;
+}
+// The frame's aspect from the lens tables (tan of the half angles), so in-frame tests need no resolution.
+export function frameSize(w = WORLD, H = 540) {
+  const a = Math.tan((w.hfovDeg(50) * Math.PI) / 360) / Math.tan((w.vfovDeg(50) * Math.PI) / 360);
+  return { W: Math.round(H * a), H };
+}
+export function makeSight(w = WORLD, dims = w.DIMS ?? DIMS) {
+  const { BRIDGE, SHAPE, CAR } = w, inner = BRIDGE.halfWidth - BRIDGE.parapetThick, F = dims.far, Fs = frameSize(w);
+  const solids = [
+    ...w.BUILDINGS.map((b) => aabb(`building ${b.id}`, b.x0, b.x1, 0, b.h, b.z0, b.z1)),
+    aabb('parapet east', inner, BRIDGE.halfWidth, 0, BRIDGE.parapetTop, BRIDGE.z1, BRIDGE.z0),
+    aabb('parapet west', -BRIDGE.halfWidth, -inner, 0, BRIDGE.parapetTop, BRIDGE.z1, BRIDGE.z0),
+    aabb('deck', -BRIDGE.halfWidth, BRIDGE.halfWidth, -dims.deckThick, 0, BRIDGE.z1, BRIDGE.z0),
+    aabb('bank south', -F, F, -F, 0, BRIDGE.z0, F),
+    aabb('bank north', -F, F, -F, 0, -F, BRIDGE.z1),
+  ];
+  // the car's body and cabin at t, oriented by its heading (right, up, forward), or none before it is there
+  const carBoxes = (t) => {
+    const k = w.carAt(t);
+    if (!k.present) return [];
+    const h = k.heading * D2R, fw = [Math.sin(h), 0, -Math.cos(h)], rt = [Math.cos(h), 0, Math.sin(h)], B = SHAPE.body, Cb = SHAPE.cabin;
+    const at = (along, up) => [k.x + fw[0] * along, up, k.z + fw[2] * along];
+    return [
+      { name: 'car body', c: at(0, (B.y0 + B.y1) / 2), ax: [rt, [0, 1, 0], fw], h: [CAR.width / 2, (B.y1 - B.y0) / 2, CAR.length / 2] },
+      { name: 'car cabin', c: at(-Cb.back, (Cb.y0 + Cb.y1) / 2), ax: [rt, [0, 1, 0], fw], h: [Cb.width / 2, (Cb.y1 - Cb.y0) / 2, Cb.length / 2] },
+    ];
+  };
+  const ownCar = (c) => c.source.startsWith('car') && !['cabin', 'unload'].includes(c.family);
+  const blockers = (c, t) => [...solids, ...carBoxes(t).map((b) => ({ ...b, own: ownCar(c) }))];
+  return {
+    blockers,
+    // the name of what hides point p of cue c from `from`, the car where it is at t; null when nothing does
+    hiddenBy(c, p, from, t) { const b = blockers(c, t).find((x) => !(x.own && insideBox(p, x)) && segmentHits(from, p, x)); return b ? b.name : null; },
+    // where p is in the picture at t through the shot's camera: { state: 'behind' | 'off' | 'hidden' | 'on', by }
+    state(c, p, t) {
+      const cam = w.cameraAt(w.shotAt(t), t), q = makeCamera(cam, Fs.W, Fs.H).project(p);
+      if (!q) return { state: 'behind', by: null };
+      if (q[0] < 0 || q[0] > Fs.W || q[1] < 0 || q[1] > Fs.H) return { state: 'off', by: null };
+      const by = this.hiddenBy(c, p, cam.pos, t);
+      return { state: by ? 'hidden' : 'on', by };
     },
   };
 }
@@ -365,10 +450,15 @@ function drawSources(d, v, g, L, cues, w, { label, detail, span = null, pred }) 
       if (gq) gq.cs.push(q.c); else groups.push({ p: q.p, at: q.at, late, family: q.c.family, person: q.c.person, cs: [q.c] });
     }
     groups.sort((a, b) => (a.family === 'feet') - (b.family === 'feet') || a.cs[0].t0 - b.cs[0].t0);
+    // each walker's step labels go on the side away from the other walker: the one whose prints lie further west on
+    // this map labels to the west (on the bridge B walks west of A, in the street A does)
+    const meanX = (id) => { const qs = placed.filter((q) => q.c.family === 'feet' && q.c.person === id); return qs.length ? qs.reduce((s, q) => s + q.p[0], 0) / qs.length : null; };
+    const xs = Object.fromEntries([...new Set(placed.filter((q) => q.c.family === 'feet').map((q) => q.c.person))].map((id) => [id, meanX(id)]));
+    const westOf = (id) => Object.values(xs).every((x) => xs[id] <= x);
     for (const gq of groups) {
       const x = v.X(gq.p[0]), y = v.Y(gq.p[2]), col = colorOf(gq.cs[0]);
       const str = labelOf(gq);
-      const west = gq.person === 'A';
+      const west = westOf(gq.person);
       const cands = gq.family === 'feet' ? ring(R).filter(([, , s]) => s === (west ? 'w' : 'e')).concat(ring(R).filter(([, , s]) => s !== (west ? 'w' : 'e'))) : null;
       L.place(x, y, str, { size: fs, fill: col, cues: gq.cs.map((c) => c.id) }, { r: R, cands }); // the ids it names, for the tests
     }
@@ -416,7 +506,7 @@ function labelGroups(d, v, g, L, placed, fs, R, pred) {
 }
 
 // ---------- legend ----------
-function drawLegend(d, x, y, L, { cues, wFor, main = true }) {
+function drawLegend(d, x, y, L, { cues, wFor, pred, main = true }) {
   const line = (dy, str, o = {}) => L.fixed(x, y + dy, str, { size: 12, fill: C.text, ...o });
   let dy = 0;
   line(dy, 'LEGEND', { size: 14, weight: 700 }); dy += 24;
@@ -429,7 +519,9 @@ function drawLegend(d, x, y, L, { cues, wFor, main = true }) {
   }
   dy += 6;
   glyph(d, x + 8, y + dy - 4, 'square', 5, { fill: 'none', stroke: PERSON.A, dash: [2, 2] });
-  line(dy, 'offered, default out (disabled)', { x: x + 34 }); dy += 24;
+  line(dy, 'offered, default out (disabled)', { x: x + 34 }); dy += 20;
+  if (main) { for (const s of wrapText('Steps: one label per walker on this map; each step\'s contact time is on the detail maps.', wFor)) { line(dy, s, { fill: C.dim }); dy += 16; } }
+  dy += 4;
   line(dy, 'LISTENERS (one per camera)', { size: 13, weight: 700 }); dy += 20;
   for (const s of wrapText(`Wedge: field of view at the shot's start, dashed at its end. The line through the camera is its left and right axis, the head at its right. Shaded half-disc: behind the camera, ${fmtDb(20 * Math.log10(SPATIAL.behindGain))} dB and darker (behindGain ${SPATIAL.behindGain}, air x ${SPATIAL.behindAir}). Rings, over the half in front: where each law has fallen by -6, -12, -18 and -24 dB, for the laws its shot's cues use${main ? `; this map leaves out rings past ${MAIN_RING} m (the detail maps draw them all)` : ''}.`, wFor)) { line(dy, s, { fill: C.dim }); dy += 16; }
   dy += 4;
@@ -440,7 +532,7 @@ function drawLegend(d, x, y, L, { cues, wFor, main = true }) {
   for (const db of RING_DB) { d.line([[x, y + dy - 4], [x + 26, y + dy - 4]], { stroke: C.text, sw: 1.2, dash: RING_DASH[db] ?? undefined }); line(dy, `${db} dB ring`, { x: x + 34 }); dy += 17; }
   dy += 8;
   line(dy, 'PREDICTED LEVEL', { size: 13, weight: 700 }); dy += 20;
-  for (const s of wrapText(RULE_TEXT, wFor)) { line(dy, s, { fill: C.dim }); dy += 16; }
+  for (const s of wrapText(ruleText(pred), wFor)) { line(dy, s, { fill: C.dim }); dy += 16; }
   return dy;
 }
 export function wrapText(text, px, size = 12) {
@@ -471,7 +563,7 @@ export function buildSoundMap({ cues = CUES, w = WORLD } = {}, d = null, offset 
   unplaced();
   marks();
   labelBase(d, v, w, g, L, false);
-  drawLegend(d, v.rect.x1 + 30, v.rect.y0 + 10, L, { cues, wFor: LEGEND_W - 20 });
+  drawLegend(d, v.rect.x1 + 30, v.rect.y0 + 10, L, { cues, wFor: LEGEND_W - 20, pred });
   return { d, v, placed, labeler: L, pred };
 }
 
@@ -506,7 +598,7 @@ const detailCues = (cues, group, span) => cues.filter((c) => voiced(c) && c.plac
 export function buildSoundDetail(group, { cues = CUES, w = WORLD } = {}, d = null, offset = [0, 0]) {
   const [x0, x1, z0, z1, scale] = group.view, pred = makePredictor({ cues, w });
   const width = Math.max((x1 - x0) * scale + 60, 760), head = [
-    `${group.note ?? ''}${scale} px per meter. The cues sounding ${fmtT(group.span[0])} to ${fmtT(group.span[1])} s, each labelled with its onset; steps with their contact times, A's to the west of the print and B's to the east. Listeners, rings and shading as on the main map.`,
+    `${group.note ?? ''}${scale} px per meter. The cues sounding ${fmtT(group.span[0])} to ${fmtT(group.span[1])} s, each labelled with its onset; steps with their contact times, each walker's on the side away from the other's prints. Listeners, rings and shading as on the main map.`,
     `Backgrounds, unplaced: ${pred.locations.map((l) => `${l.name} ${pred.beds(l.name).map((c) => `${c.family} ${fmtDb(c.level)}`).join(', ')} (sum ${fmtDb(pred.bg[l.name])} dB)`).join('; ')}.`,
   ].flatMap((p) => wrapText(p, width - 60, 12));
   const top = 56 + head.length * 16;
