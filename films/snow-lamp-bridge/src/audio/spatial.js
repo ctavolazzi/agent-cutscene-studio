@@ -20,13 +20,15 @@ export function listenerAt(t) {
 
 export const SPATIAL = { refDist: 1.5, airMeters: 60, minAirHz: 1800, behindGain: 0.75, behindAir: 0.45 };
 
-// How a source at world point p sounds from the listener: pan -1..1, gain, and a lowpass cutoff in Hz
-export function placeAt(p, t, L = listenerAt(t)) {
+// How a source at world point p sounds from the listener: pan -1..1, gain, and a lowpass cutoff in Hz. `refDist` and
+// `rolloff` set the distance law, gain = (refDist / dist) ^ rolloff past refDist: 1 is the physical law (6 dB a
+// doubling); a loud source heard across the set (the car) uses a gentler one, as a film mix does.
+export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, rolloff = 1 } = {}) {
   const d = sub(p, L.pos), dist = Math.hypot(d[0], d[1], d[2]);
   const x = dot(d, L.r), z = dot(d, L.f);
   const flat = Math.hypot(x, z) || 1;
   const pan = clamp(x / flat, -1, 1);
-  let gain = SPATIAL.refDist / Math.max(SPATIAL.refDist, dist);
+  let gain = (refDist / Math.max(refDist, dist)) ** rolloff;
   let hz = Math.max(SPATIAL.minAirHz, 20000 * Math.exp(-dist / SPATIAL.airMeters));
   if (z < 0) { gain *= SPATIAL.behindGain; hz *= SPATIAL.behindAir; }
   return { pan, gain, hz, dist };
@@ -35,12 +37,12 @@ export function placeAt(p, t, L = listenerAt(t)) {
 // A voice placed in space. place(t) is where its source is (or null when it is nowhere). Each block of samples is
 // panned and levelled with gains interpolated from the block's start to its end (so a cut moves the sound within one
 // block, a few ms, never a click), and passed through a lowpass that follows the distance.
-export function makeSpatializer(sr, place) {
+export function makeSpatializer(sr, place, law = {}) {
   const lpL = new OnePole(sr, 20000), lpR = new OnePole(sr, 20000);
   const gainsAt = (t) => {
     const p = place(t);
     if (!p) return { l: 0, r: 0, hz: 20000 };
-    const s = placeAt(p, t);
+    const s = placeAt(p, t, undefined, law);
     const a = (s.pan + 1) * Math.PI / 4;
     return { l: Math.cos(a) * s.gain, r: Math.sin(a) * s.gain, hz: s.hz };
   };

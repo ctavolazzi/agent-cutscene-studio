@@ -55,21 +55,21 @@ export const CONFIG = {
     sr: 48000,
     targetLufs: -16,
     ceilingDb: -2.0,
-    masterHighpassHz: 25,
+    masterHighpassHz: 35,
     fadeIn: 3,
     fadeOut: 1.5,
-    buses: { amb: 0, fx: 0, music: -3 },
+    buses: { amb: -9, fx: 0, music: -3 },
     reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
     ambience: { windGain: 0.5, bridgeWindBoost: 0.8, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
 
-    // the car layer (src/audio/layers/car.js)
-    car: {},
+    // the car layer (src/audio/layers/car.js): each part's gain
+    car: { level: 1.6, exhaustGain: 1, intakeGain: 1.6, tyreGain: 1, brakeGain: 2.2, settleGain: 0.16, doorGain: 0.16, keyGain: 0.16, tickGain: 0.04 },
 
-    // the foley layer (src/audio/layers/foley.js)
-    foley: {},
+    // the foley layer (src/audio/layers/foley.js): the layer's level and each part's gain
+    foley: { level: 1, stepsBy: 'AB', stepGain: 0.8, rustleGain: 0.25, lighterGain: 0.35, dragGain: 0.2, breathGain: 0.9 },
 
-    // the score (src/audio/layers/score.js)
-    score: {},
+    // the score (src/audio/layers/score.js): the layer's level and each instrument's gain
+    score: { level: 0.8, padGain: 1, subGain: 0.35, bellGain: 1 },
   },
 
   // Stage 7 deliverables (scripts/finals.js). stills: shot number to the time of its best frame (a shot not listed

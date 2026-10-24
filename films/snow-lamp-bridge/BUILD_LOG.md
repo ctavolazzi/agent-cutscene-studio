@@ -494,3 +494,30 @@ signed off once the Stage 3 merge passes its checks; no more review pages or pan
   the master reads -16.0 LUFS and its true peak (ffmpeg) is under -1.5 dBTP.
 - Gate: 93 tests pass (8 new in `tests/audio.test.mjs`, each with a planted fault); forbidden, build, determinism,
   cameras pass.
+
+### S8.2  The car, the foley and the score
+- Before: ambience only; car, foley and score were silent stubs.
+- Actions: `src/audio/events.js` (one-shots with their own voice and spatializer while they sound; seeded grains).
+  Car (`layers/car.js`): a four-cylinder engine from rpm and throttle that follow `carAt` (firing pulses with per-cycle
+  variation and a burble, the intake at the front and the exhaust at the rear of the car), tyres on snow that crunch
+  slower as it stops, the brake creak, the settle, both doors (latch, seal, hinge; thunk and latch), the key and the
+  run-down, hot metal ticks. Foley (`layers/foley.js`): a step per landing in `footprintList()` by surface and person,
+  cloth at the lean and A's turns, the lighter with the flame following `lighterFlicker`, three drags with the paper
+  crackling with `emberLevel`, the exhale. Score (`layers/score.js`): the cue in SOUND.md, with held common tones, a
+  pad filter that opens at moonrise, FM bells and a sub, the bus low-passed at 9 kHz.
+- Found and fixed:
+  - The car was 20 dB under the night bed in shot 3 (26 m away, physical distance law): loud and intimate sources now
+    get their own law (car (3 m, 0.6), foley (2.5 m, 0.7)); the ambience bus went to -9 dB.
+  - The limiter worked 5 dB on the cruising engine: a soft saturation on the exhaust and the car 2 dB down; now 1 dB
+    on its peaks only.
+  - The master's true peak was -1.1 dBTP with every sample under -2 dBFS (inter-sample overs on snow transients): the
+    limiter now detects true peaks on a 4x windowed-sinc interpolation (checked on a sine at fs/4: samples 0.707,
+    true peak 1.000). Now -2.0 dBTP by ffmpeg.
+  - Octave bands showed 63 Hz as the loudest band from 44 s on: the score's sub down 9 dB, the idle's 26 Hz
+    fundamental high-passed out of the exhaust, the master highpass from 25 to 35 Hz.
+  - One of A's steps (39.29, 146 ms after the last) read 34 ms late: its toe roll triggered the detector. A quick step
+    now rolls onto its toe within 40 percent of the gap, and the step check uses a 50 ms minimum gap.
+- Measured: every door, the settle and the key on their cue to the sample; 63 steps within 5 ms of their prints; the
+  lighter on 78.6; all 14 bell notes within 5 ms. The car's balance matches the predicted pan within 0.11 dB.
+  The master: -16.0 LUFS, -2.0 dBTP, LRA 6.7 LU, rendered in 11 s.
+- Gate: 15 audio tests pass (7 new in `tests/sound-layers.test.mjs`, each with a planted fault).

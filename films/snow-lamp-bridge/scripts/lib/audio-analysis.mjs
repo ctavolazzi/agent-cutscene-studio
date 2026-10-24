@@ -2,6 +2,7 @@
 // Everything takes Float32Arrays at a sample rate, times in seconds.
 import { CONFIG } from '../../src/config.js';
 import { renderSoundtrack } from '../../src/audio/index.js';
+import { integratedLufs } from '../../src/audio/loudness.js';
 
 const cache = new Map();
 // One layer (or several) alone: no reverb, no normalization, so onsets and levels are the layer's own. Cached per run.
@@ -10,6 +11,31 @@ export function stem(only) {
   if (!cache.has(key)) cache.set(key, renderSoundtrack(CONFIG, { only: [].concat(only), reverb: false, normalize: false }));
   return cache.get(key);
 }
+
+// One layer with some of its config changed (parts muted, one person's steps): { layer, set: { key: value } }.
+// `keep` mutes every *Gain in the layer's config except those named. No reverb, no normalization. Cached per run.
+export function stemWith(layer, { keep = null, set = {} } = {}) {
+  const key = JSON.stringify([layer, keep, set]);
+  if (!cache.has(key)) {
+    const c = { ...CONFIG.audio[layer] };
+    if (keep) for (const k of Object.keys(c)) if (k.endsWith('Gain') && !keep.includes(k)) c[k] = 0;
+    Object.assign(c, set);
+    cache.set(key, renderSoundtrack({ ...CONFIG, audio: { ...CONFIG.audio, [layer]: c } }, { only: [layer], reverb: false, normalize: false }));
+  }
+  return cache.get(key);
+}
+
+// short-term loudness (BS.1770, ungated past the absolute gate) of [t0, t1)
+export function lufsOf(s, t0, t1) {
+  const a = idx(t0, s.sr), b = idx(t1, s.sr);
+  return integratedLufs(s.left.subarray(a, b), s.right.subarray(a, b), s.sr);
+}
+
+// the last time anything sounds before t (or -Infinity), and the first time anything sounds after t (or Infinity).
+// "Sounds" is over `floor` (default -100 dBFS): a filter's tail decays toward zero without ever reaching it.
+const over = (s, i, floor) => Math.abs(s.left[i]) > floor || Math.abs(s.right[i]) > floor;
+export function lastSoundBefore(s, t, floor = 1e-5) { for (let i = idx(t, s.sr) - 1; i >= 0; i--) if (over(s, i, floor)) return i / s.sr; return -Infinity; }
+export function firstSoundAfter(s, t, floor = 1e-5) { for (let i = idx(t, s.sr); i < s.left.length; i++) if (over(s, i, floor)) return i / s.sr; return Infinity; }
 
 export const idx = (t, sr) => Math.max(0, Math.round(t * sr));
 

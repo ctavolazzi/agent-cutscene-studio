@@ -20,7 +20,7 @@ export function makeContext(config) {
     total: T_TOTAL,
     config,
     rngFor: (name) => mulberry32((config.seed ^ hashString(name)) >>> 0),
-    spatializer: (place) => makeSpatializer(sr, place),
+    spatializer: (place, law) => makeSpatializer(sr, place, law),
   };
 }
 

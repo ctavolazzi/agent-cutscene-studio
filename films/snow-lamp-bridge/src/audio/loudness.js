@@ -47,12 +47,46 @@ export function samplePeak(left, right) {
   return p;
 }
 
-// Offline peak limiter: every sample ends at or under `ceiling`. The gain starts falling `attack` samples before a
-// peak (a symmetric minimum over the window) and recovers at `release` per sample, so it never clicks.
-export function limit(left, right, ceiling, sr = 48000, attackMs = 2, releaseMs = 120) {
+// The true-peak envelope (BS.1770 annex 2, oversampled 4x): for each sample, the largest magnitude of either channel at
+// it and on the interpolated points either side of it (a windowed-sinc interpolator, 32 taps). A sample-peak limit
+// lets the reconstructed waveform go up to a dB or more over the ceiling between samples on sharp transients.
+const TP_TAPS = 16, TP_PHASES = [0.25, 0.5, 0.75];
+const TP_H = TP_PHASES.map((p) => {
+  const h = new Float64Array(2 * TP_TAPS);
+  for (let j = 0; j < 2 * TP_TAPS; j++) {
+    const k = j - TP_TAPS + 1, x = p - k; // tap j weighs sample i + k for the point at i + p
+    const sinc = x === 0 ? 1 : Math.sin(Math.PI * x) / (Math.PI * x);
+    const w = 0.5 + 0.5 * Math.cos(Math.PI * x / (TP_TAPS + 0.5)); // Hann
+    h[j] = sinc * w;
+  }
+  return h;
+});
+export function truePeakEnvelope(left, right) {
+  const n = left.length, env = new Float32Array(n);
+  for (let i = 0; i < n; i++) env[i] = Math.max(Math.abs(left[i]), Math.abs(right[i]));
+  const between = new Float32Array(n); // the largest interpolated magnitude between i and i + 1
+  for (const ch of [left, right]) {
+    for (let i = 0; i < n - 1; i++) {
+      for (const h of TP_H) {
+        let v = 0;
+        for (let j = 0; j < h.length; j++) { const k = i + j - TP_TAPS + 1; if (k >= 0 && k < n) v += ch[k] * h[j]; }
+        const a = Math.abs(v);
+        if (a > between[i]) between[i] = a;
+      }
+    }
+  }
+  for (let i = 0; i < n; i++) env[i] = Math.max(env[i], between[i], i > 0 ? between[i - 1] : 0);
+  return env;
+}
+
+// Offline peak limiter: every sample, and every point between samples (true peak), ends at or under `ceiling`. The
+// gain starts falling `attack` samples before a peak (a symmetric minimum over the window) and recovers at `release`
+// per sample, so it never clicks. `peaks` is the signal's true-peak envelope (computed here if not given), and
+// `scale` the gain already applied to the signal since it was measured.
+export function limit(left, right, ceiling, sr = 48000, attackMs = 2, releaseMs = 120, peaks = truePeakEnvelope(left, right), scale = 1) {
   const n = left.length, need = new Float32Array(n);
   for (let i = 0; i < n; i++) {
-    const p = Math.max(Math.abs(left[i]), Math.abs(right[i]));
+    const p = peaks[i] * scale;
     need[i] = p > ceiling ? ceiling / p : 1;
   }
   const att = Math.max(1, Math.round(attackMs * sr / 1000)), rel = 1 / Math.max(1, releaseMs * sr / 1000);
@@ -83,14 +117,14 @@ export function limit(left, right, ceiling, sr = 48000, attackMs = 2, releaseMs 
 export function normalize(left, right, { targetLufs, ceilingDb }, sr = 48000, passes = 4) {
   const before = integratedLufs(left, right, sr);
   if (!Number.isFinite(before)) return { lufsBefore: before, gainDb: 0, peakBeforeLimitDb: -Infinity, limitedSamples: 0, passes: 0, lufs: before, peakDb: -Infinity };
-  const srcL = Float32Array.from(left), srcR = Float32Array.from(right);
+  const srcL = Float32Array.from(left), srcR = Float32Array.from(right), peaks = truePeakEnvelope(srcL, srcR);
   let gainDb = targetLufs - before, lufs = before, peakBefore = 0, lim = null, pass = 0;
   while (pass < passes) {
     pass++;
     const g = dbToGain(gainDb);
     for (let i = 0; i < left.length; i++) { left[i] = srcL[i] * g; right[i] = srcR[i] * g; }
     peakBefore = gainToDb(samplePeak(left, right));
-    lim = limit(left, right, dbToGain(ceilingDb), sr);
+    lim = limit(left, right, dbToGain(ceilingDb), sr, undefined, undefined, peaks, g);
     lufs = integratedLufs(left, right, sr);
     if (Math.abs(lufs - targetLufs) < 0.05) break;
     gainDb += targetLufs - lufs;

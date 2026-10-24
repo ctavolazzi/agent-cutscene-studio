@@ -17,10 +17,15 @@ rather than realistic. Never harsh: nothing clips, nothing clicks at a cut.
 ## Engine facts the layers rely on
 
 - 48 kHz stereo, one pass front to back in blocks of 256; a layer's `process(L, R, i0, n)` adds into its block.
-- `ctx.spatializer(place)` places a mono voice: `place(t)` returns a world point `[x, y, z]` (or null) and the voice is
-  panned, levelled (inverse distance past 1.5 m) and low-passed (air, behind the camera) from the camera at t.
-- Buses `amb`, `fx`, `music` (levels in `config.audio.buses`), a reverb send per layer, master highpass at 25 Hz, the
-  picture's 3 s fade in and a 1.5 s fade out, then normalization to -16 LUFS integrated with every sample under -2 dBFS.
+- `ctx.spatializer(place, law)` places a mono voice: `place(t)` returns a world point `[x, y, z]` (or null) and the
+  voice is panned, levelled and low-passed (air, behind the camera) from the camera at t. The distance law is
+  `(refDist / dist) ^ rolloff`: physical (1.5 m, 1) by default; the car uses (3 m, 0.6) and the foley (2.5 m, 0.7), the
+  way a film mix keeps its loud and its intimate sounds readable across the set.
+- `src/audio/events.js` schedules one-shots (`{ t, dur, place, make, law }`), each with its own voice and spatializer
+  only while it sounds, and `grains()` builds crunches and crackles from seeded decaying ticks with the first at 0.
+- Buses `amb`, `fx`, `music` (levels in `config.audio.buses`), a reverb send per layer, master highpass at 35 Hz, the
+  picture's 3 s fade in and a 1.5 s fade out, then normalization to -16 LUFS integrated under a -2 dBFS ceiling on the
+  true peak (4x oversampled), corrected and limited again until the limited mix reads the target.
 - Seeded randomness: `ctx.rngFor('audio:<layer>:<what>')`. No `Math.random`, no clocks.
 - Raw levels: write each layer so its loudest moments peak around -12 to -6 dBFS raw at a close camera; the mix pass
   sets the final balance with the bus and layer gains.
@@ -33,7 +38,8 @@ rather than realistic. Never harsh: nothing clips, nothing clicks at a cut.
 | 14.0 | the car appears far east on the cross street at 5.3 m/s (x 38.7, z 17.5), engine at a cruise | car |
 | 19.04 to 20.60 | braking for the corner, 5.3 to 3.4 m/s | car |
 | 20.60 to 21.99 | the turn north into the bridge street | car |
-| 21.99 to 29.0 | slowing to a stop at (2.2, 1.85), last metre very slow; a soft brake creak at the end, settle at 29.0 | car |
+| 21.99 to 29.0 | slowing to a stop at (2.2, 1.85), last metre very slow, the snow crunching slower under the tyres; the brakes creak from 28.45 | car |
+| 29.0, 29.38 | the body settles on its springs, twice | car |
 | 29.0 to 36.2 | engine idling | car |
 | 30.5 to 31.1 | driver door opens (latch at 30.5, hinge during the swing) | car |
 | 31.77, 32.04 | A's first boot, then the second (on the road snow) | foley |
@@ -41,13 +47,15 @@ rather than realistic. Never harsh: nothing clips, nothing clicks at a cut.
 | 33.31 | B lands on both boots at once (one heavier crunch) | foley |
 | 33.9 to 34.5 | driver door shuts (thunk and latch at 34.5) | car |
 | 35.0 to 35.6 | passenger door shuts (thunk at 35.6) | car |
-| 36.2 to 36.6 | engine off (key click at 36.2, a short run-down), headlights off; then hot metal ticks now and then | car |
-| 31.77 to 61.71 | 64 footsteps: A 35, B 29, at the exact times in `footprintList()` (17 on the road, 33 on the sidewalk, 14 on the deck) | foley |
+| 36.2 to 36.65 | engine off (key click at 36.2, a 0.45 s run-down with a misfire or two), headlights off | car |
+| 37.7 to 75 | hot metal ticks, further apart as it cools | car |
+| 31.77 to 61.71 | 64 prints: A 35, B 29, at the exact times in `footprintList()` (17 on the road, 33 on the sidewalk, 14 on the deck); 63 steps, as B's two boots at 33.31 make one. A quick step rolls onto its toe quickly | foley |
 | 40 | the score enters, very soft, as they stand in the lamp light (shot 6) | score |
 | 54 to 62 | onto the bridge: wind rises, the river below comes up | ambience |
-| 63.5 | both lean on the parapet: a coat and sleeve rustle | foley |
+| 62.75 to 63.75 | both lean on the parapet: A's wool coat, B's nylon jacket, forearms landing at 63.47 and 63.5 | foley |
+| 77.6, 82.3 | A's coat as A turns into the lee to cup the flame, and back | foley |
 | 68 to 76 | moonrise: the score opens up (the main melody) | score |
-| 78.6 | the lighter: flint strike, flame catches; flame flutter with `lighterFlicker(t)` until 80.1 | foley |
+| 78.6 | the lighter: the wheel's rasp on the flint, sparks, the flame catches; flame flutter with `lighterFlicker(t)` until 80.1, then the button let go | foley |
 | 80.2, 89.2, 97.0 | drags (0.8 s each): a soft inhale and the paper crackling, louder with `emberLevel(t)` | foley |
 | 90.0 | A exhales (smoke for 2.8 s): a long breath out | foley |
 | 100 to 112 | the last wide: the score resolves; the fade out over the last 1.5 s | score |
@@ -76,11 +84,20 @@ is low-passed near 9 kHz (the feel of 22 kHz samples) and sent to the reverb.
 
 ## Checks (each with a planted fault)
 
-- Determinism: two renders give the same bytes.
+`tests/audio.test.mjs` (the engine) and `tests/sound-layers.test.mjs` (the layers):
+
+- Determinism: two renders give the same bytes; another seed gives another soundtrack.
 - Loudness: the meter agrees with ffmpeg's ebur128 within 0.2 LU; the master lands at -16 LUFS; the true peak (ffmpeg)
-  is at or under -1.5 dBTP.
-- Timing: every scheduled event's onset in its layer's stem is within one frame (1/24 s) of its time; shifting a
-  schedule by 3 frames fails the check.
-- Placement: where the car is screen right, its stem is louder on the right; a swapped spatializer fails.
-- Silence: no car before 14 s, no engine after 37 s; no score before 40 s.
+  is at or under -1.5 dBTP; normalize holds the target on a signal with bursts that need limiting.
+- Timing: the settle, every door and the key, every footstep (per person, so A's and B's never mask each other), the
+  lighter and every bell note start within one frame (1/24 s) of their cue in their layer's stem; the same schedule
+  three frames early does not match.
+- Placement: window by window, the car's stereo balance is the pan the camera predicts, within 0.5 dB; swapped
+  channels fail.
+- Silence: no car before 14 s, no engine after its run-down, no score before 40 s (a planted sample at -80 dBFS is
+  found).
+- Presence: the lean, each drag and the exhale rise 20 dB over the moment before them; a window with nothing
+  scheduled does not.
+- Balance, as the brief has it: the car over the bed by 6 LU while it drives and its idle 6 LU under its drive; the
+  score creeping in 6 LU under the bed and opening 3 LU at moonrise; the footsteps reading over the bed.
 - Cuts: no click at any shot boundary (the master's sample-to-sample step at a cut is within its neighbourhood's range).
