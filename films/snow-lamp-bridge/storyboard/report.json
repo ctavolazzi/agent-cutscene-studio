@@ -1,0 +1,1043 @@
+{
+ "carFromShot3": {
+  "hiddenAt": 13,
+  "noseVisible": 17.7199999999999,
+  "fullyVisible": 18.59999999999988
+ },
+ "carFromShot2": {
+  "hiddenAt": 13,
+  "noseVisible": 19.479999999999862,
+  "fullyVisible": 20.639999999999837
+ },
+ "landmarks": [
+  {
+   "shot": "1",
+   "t": 4,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.36,
+     "y": 0.3,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "1 (last frame)",
+   "t": 6.95,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.36,
+     "y": 0.3,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "2",
+   "t": 7.2,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.667,
+     "y": 0.44,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.67,
+     "y": 0.506,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.625,
+     "y": 0.494,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.729,
+     "y": 0.366,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "2 (last frame)",
+   "t": 13.95,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.667,
+     "y": 0.44,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.671,
+     "y": 0.507,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.624,
+     "y": 0.495,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.733,
+     "y": 0.36,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "3",
+   "t": 16.4,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "corner bldg NW corner": {
+     "x": 0.37,
+     "y": 0.024,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.5,
+     "y": 0.529,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "3 (last frame)",
+   "t": 21.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.451,
+     "y": 0.366,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.46,
+     "y": 0.525,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.344,
+     "y": 0.497,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.552,
+     "y": 0.546,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "4",
+   "t": 26.2,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.294,
+     "y": 0.599,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.411,
+     "y": 0.442,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.563,
+     "y": 0.583,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "4 (last frame)",
+   "t": 28.95,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.273,
+     "y": 0.639,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.394,
+     "y": 0.481,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.576,
+     "y": 0.612,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "5",
+   "t": 32.4,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "car centre": {
+     "x": 0.485,
+     "y": 0.103,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.281,
+     "y": 0.647,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.409,
+     "y": 0.487,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "5 (last frame)",
+   "t": 39.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.448,
+     "y": 0.331,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.81,
+     "y": 0.432,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "6",
+   "t": 44,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.193,
+     "y": 0.637,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.587,
+     "y": 0.338,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.585,
+     "y": 0.653,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.69,
+     "y": 0.367,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.688,
+     "y": 0.635,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "6 (last frame)",
+   "t": 45.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.193,
+     "y": 0.637,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.506,
+     "y": 0.334,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.506,
+     "y": 0.667,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.627,
+     "y": 0.365,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.626,
+     "y": 0.65,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "7",
+   "t": 52,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.68,
+     "y": 0.688,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.497,
+     "y": 0.258,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.498,
+     "y": 0.807,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.762,
+     "y": 0.289,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.755,
+     "y": 0.871,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "7 (last frame)",
+   "t": 53.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "lamp base": {
+     "x": 0.884,
+     "y": 0.696,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.496,
+     "y": 0.26,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.497,
+     "y": 0.81,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.768,
+     "y": 0.287,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.761,
+     "y": 0.891,
+     "safeStrip": true
+    }
+   }
+  },
+  {
+   "shot": "8",
+   "t": 57,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.46,
+     "y": 0.199,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.433,
+     "y": 0.699,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.843,
+     "y": 0.629,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.412,
+     "y": 0.356,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.574,
+     "y": 0.625,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.473,
+     "y": 0.521,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.473,
+     "y": 0.792,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.525,
+     "y": 0.543,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.525,
+     "y": 0.777,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "8 (last frame)",
+   "t": 59.95,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.46,
+     "y": 0.199,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.433,
+     "y": 0.699,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.843,
+     "y": 0.629,
+     "safeStrip": false
+    },
+    "corner bldg NW corner": {
+     "x": 0.412,
+     "y": 0.356,
+     "safeStrip": false
+    },
+    "car centre": {
+     "x": 0.574,
+     "y": 0.625,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.477,
+     "y": 0.515,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.477,
+     "y": 0.832,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.538,
+     "y": 0.542,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.538,
+     "y": 0.8,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "9",
+   "t": 64.5,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "A head": {
+     "x": 0.271,
+     "y": 0.452,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.47,
+     "y": 0.516,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "9 (last frame)",
+   "t": 67.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "A head": {
+     "x": 0.282,
+     "y": 0.452,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.459,
+     "y": 0.517,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "10",
+   "t": 75.5,
+   "hfov": 28.2,
+   "vfov": 16.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.813,
+     "y": 0.18,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.808,
+     "y": 0.806,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.515,
+     "y": 0.761,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.247,
+     "y": 0.595,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.247,
+     "y": 0.846,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.353,
+     "y": 0.615,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.353,
+     "y": 0.846,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.316,
+     "y": 0.173,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "10 (last frame)",
+   "t": 75.95,
+   "hfov": 28.2,
+   "vfov": 16.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.813,
+     "y": 0.18,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.808,
+     "y": 0.806,
+     "safeStrip": false
+    },
+    "bridge entrance": {
+     "x": 0.515,
+     "y": 0.761,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.247,
+     "y": 0.595,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.247,
+     "y": 0.846,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.353,
+     "y": 0.615,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.353,
+     "y": 0.846,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.316,
+     "y": 0.17,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "11",
+   "t": 79.2,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "A head": {
+     "x": 0.56,
+     "y": 0.367,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.893,
+     "y": 0.427,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "11 (last frame)",
+   "t": 83.95,
+   "hfov": 46.2,
+   "vfov": 27,
+   "landmarks": {
+    "A head": {
+     "x": 0.56,
+     "y": 0.367,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.893,
+     "y": 0.427,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "12",
+   "t": 87.5,
+   "hfov": 33.9,
+   "vfov": 19.5,
+   "landmarks": {
+    "A head": {
+     "x": 0.109,
+     "y": 0.242,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.48,
+     "y": 0.42,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "12 (last frame)",
+   "t": 88.95,
+   "hfov": 33.9,
+   "vfov": 19.5,
+   "landmarks": {
+    "A head": {
+     "x": 0.109,
+     "y": 0.242,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.48,
+     "y": 0.42,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "13",
+   "t": 91.5,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "A head": {
+     "x": 0.428,
+     "y": 0.335,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.43,
+     "y": 0.697,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.577,
+     "y": 0.364,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.576,
+     "y": 0.722,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.754,
+     "y": 0.203,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "13 (last frame)",
+   "t": 95.95,
+   "hfov": 62.7,
+   "vfov": 37.8,
+   "landmarks": {
+    "A head": {
+     "x": 0.446,
+     "y": 0.333,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.447,
+     "y": 0.723,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.557,
+     "y": 0.364,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.556,
+     "y": 0.742,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.754,
+     "y": 0.184,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "14",
+   "t": 98,
+   "hfov": 28.2,
+   "vfov": 16.1,
+   "landmarks": {
+    "corner bldg NW corner": {
+     "x": 0.935,
+     "y": 0.117,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.671,
+     "y": 0.312,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.754,
+     "y": 0.503,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "14 (last frame)",
+   "t": 99.95,
+   "hfov": 28.2,
+   "vfov": 16.1,
+   "landmarks": {
+    "corner bldg NW corner": {
+     "x": 0.935,
+     "y": 0.117,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.671,
+     "y": 0.312,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.754,
+     "y": 0.503,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "15",
+   "t": 101,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.778,
+     "y": 0.2,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.752,
+     "y": 0.815,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.247,
+     "y": 0.604,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.251,
+     "y": 0.826,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.313,
+     "y": 0.623,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.316,
+     "y": 0.828,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.466,
+     "y": 0.287,
+     "safeStrip": false
+    }
+   }
+  },
+  {
+   "shot": "15 (last frame)",
+   "t": 111.95,
+   "hfov": 83.3,
+   "vfov": 53.1,
+   "landmarks": {
+    "lamp head": {
+     "x": 0.668,
+     "y": 0.294,
+     "safeStrip": false
+    },
+    "lamp base": {
+     "x": 0.655,
+     "y": 0.776,
+     "safeStrip": false
+    },
+    "A head": {
+     "x": 0.253,
+     "y": 0.607,
+     "safeStrip": false
+    },
+    "A feet": {
+     "x": 0.257,
+     "y": 0.785,
+     "safeStrip": false
+    },
+    "B head": {
+     "x": 0.307,
+     "y": 0.623,
+     "safeStrip": false
+    },
+    "B feet": {
+     "x": 0.309,
+     "y": 0.787,
+     "safeStrip": false
+    },
+    "moon": {
+     "x": 0.467,
+     "y": 0.255,
+     "safeStrip": false
+    }
+   }
+  }
+ ],
+ "directions": [
+  {
+   "shot": 3,
+   "north": "screen left"
+  },
+  {
+   "shot": 5,
+   "north": "screen left"
+  },
+  {
+   "shot": 6,
+   "north": "screen left"
+  },
+  {
+   "shot": 7,
+   "north": "screen left"
+  },
+  {
+   "shot": 9,
+   "north": "screen left"
+  },
+  {
+   "shot": 11,
+   "north": "screen left"
+  },
+  {
+   "shot": 13,
+   "north": "screen left"
+  }
+ ],
+ "sides": [
+  {
+   "shot": 9,
+   "camX": 2.66,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 10,
+   "camX": -19,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 11,
+   "camX": 3.8,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 12,
+   "camX": 3.45,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 13,
+   "camX": -0.84,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 14,
+   "camX": 4.8,
+   "line": 5.25,
+   "side": "west"
+  },
+  {
+   "shot": 15,
+   "camX": -2.07,
+   "line": 5.25,
+   "side": "west"
+  }
+ ],
+ "cuts": [
+  {
+   "cut": "1 to 2",
+   "subjectGapM": 0,
+   "angleDeg": 32,
+   "sizeRatio": 24.85,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "2 to 3",
+   "subjectGapM": 23.6,
+   "angleDeg": 45,
+   "sizeRatio": 3.97,
+   "verdict": "new subject"
+  },
+  {
+   "cut": "3 to 4",
+   "subjectGapM": 17.4,
+   "angleDeg": 143,
+   "sizeRatio": 1.53,
+   "verdict": "new subject"
+  },
+  {
+   "cut": "4 to 5",
+   "subjectGapM": 2.9,
+   "angleDeg": 125,
+   "sizeRatio": 13.2,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "5 to 6",
+   "subjectGapM": 4.1,
+   "angleDeg": 7,
+   "sizeRatio": 2.85,
+   "verdict": "ok (size step)"
+  },
+  {
+   "cut": "6 to 7",
+   "subjectGapM": 4.6,
+   "angleDeg": 77,
+   "sizeRatio": 1.53,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "7 to 8",
+   "subjectGapM": 3.4,
+   "angleDeg": 73,
+   "sizeRatio": 2.12,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "8 to 9",
+   "subjectGapM": 2.6,
+   "angleDeg": 131,
+   "sizeRatio": 2.52,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "9 to 10",
+   "subjectGapM": 0,
+   "angleDeg": 47,
+   "sizeRatio": 2.65,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "10 to 11",
+   "subjectGapM": 0.7,
+   "angleDeg": 57,
+   "sizeRatio": 4.43,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "11 to 12",
+   "subjectGapM": 1.3,
+   "angleDeg": 126,
+   "sizeRatio": 1.18,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "12 to 13",
+   "subjectGapM": 0.7,
+   "angleDeg": 85,
+   "sizeRatio": 3.53,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "13 to 14",
+   "subjectGapM": 0.5,
+   "angleDeg": 97,
+   "sizeRatio": 5.36,
+   "verdict": "ok (angle)"
+  },
+  {
+   "cut": "14 to 15",
+   "subjectGapM": 0.5,
+   "angleDeg": 98,
+   "sizeRatio": 10.18,
+   "verdict": "ok (angle)"
+  }
+ ]
+}

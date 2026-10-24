@@ -1,0 +1,8 @@
+node_modules/
+dist/
+out/
+.cache/
+*.log
+*.rgb
+*.raw
+films/*/storyboard/index-standalone.html

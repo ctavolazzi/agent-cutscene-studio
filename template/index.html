@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PS1 Film</title>
+<style>
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+#view { position: absolute; inset: 0; margin: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+/* Playback controls: a strip over the bottom of the frame. They fade while the film plays and the pointer rests;
+   capture mode (?capture=1) never shows them, and they are not part of the canvas, so no frame ever contains them. */
+#ui { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 16px 12px; display: none;
+  font: 12px/1.2 ui-monospace, Menlo, Consolas, monospace; color: #e8e2d4;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.75) 45%); transition: opacity 0.4s; }
+#ui.on { display: block; }
+#ui.idle { opacity: 0; }
+#ui .row { display: flex; align-items: center; gap: 12px; }
+#ui button, #ui label { font: inherit; color: inherit; background: none; border: 1px solid rgba(232, 226, 212, 0.4);
+  border-radius: 3px; padding: 4px 9px; cursor: pointer; }
+#ui button:hover, #ui label:hover { border-color: #ffd36b; color: #ffd36b; }
+#ui label input { margin: 0 6px 0 0; vertical-align: -2px; }
+#time { min-width: 7.5em; font-variant-numeric: tabular-nums; }
+#title { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; opacity: 0.8; }
+#scrub { width: 100%; margin: 8px 0 4px; accent-color: #ffd36b; }
+#shots { display: flex; height: 18px; gap: 1px; }
+#shots button { flex: none; min-width: 0; padding: 0; border: 0; border-radius: 0; font-size: 10px;
+  background: rgba(232, 226, 212, 0.14); overflow: hidden; }
+#shots button.now { background: #ffd36b; color: #000; }
+@media (max-width: 640px) { #title { display: none; } #shots button { font-size: 0; } }
+</style>
+</head>
+<body>
+<canvas id="view"></canvas>
+<div id="ui">
+  <input id="scrub" type="range" min="0" value="0" aria-label="Time">
+  <div id="shots" aria-label="Shots"></div>
+  <div class="row" style="margin-top: 8px">
+    <button id="play" type="button">Pause</button>
+    <span id="time">0:00.00</span>
+    <span id="title"></span>
+    <label title="Shot, time and lens burned into the frame (D)"><input id="debug" type="checkbox">Overlay</label>
+  </div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

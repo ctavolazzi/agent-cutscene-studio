@@ -1,0 +1,461 @@
+{
+ "note": "Measured from src/ data and review/round-02 stills by scripts/gate2-measure.js. Screen x is a fraction of the frame width (0 left, 1 right).",
+ "carTimes": {
+  "doors": {
+   "driver": {
+    "open0": 30.5,
+    "open1": 31.1,
+    "close0": 33.9,
+    "close1": 34.5
+   },
+   "passenger": {
+    "open0": 32,
+    "open1": 32.6,
+    "close0": 35,
+    "close1": 35.6
+   }
+  },
+  "lightsOff": [
+   36.2,
+   36.6
+  ]
+ },
+ "parapetTop": 1.15,
+ "shot3": {
+  "panStart": 17.4,
+  "noseVisible": 17.72,
+  "brake": 19.038,
+  "turn0": 20.601,
+  "turn1": 21.987,
+  "minSx": 0.415,
+  "minAt": 17.917,
+  "maxSx": 0.623,
+  "maxAt": 20.75,
+  "endSx": 0.552,
+  "endAt": 21.958,
+  "drift": 0.208,
+  "back": 0.071
+ },
+ "shot8": {
+  "cameraX": 4,
+  "aLeftOfBEveryFrame": true,
+  "closest": {
+   "t": 57.583,
+   "gap": 0.032,
+   "across": 0.34,
+   "aSx": 0.48,
+   "postSx": 0.456
+  },
+  "under": {
+   "gap": 0.04,
+   "from": 56.125,
+   "to": 58.25,
+   "seconds": 2.17
+  },
+  "outline": {
+   "gap": {
+    "t": 57.583,
+    "gap": -0.013
+   },
+   "overlapSeconds": 2.88,
+   "halfWidths": {
+    "A": 0.242,
+    "B": 0.264
+   }
+  },
+  "post": {
+   "insideAFrom": 58.042,
+   "minusHeadAt": [
+    {
+     "t": 54,
+     "dx": -0.035
+    },
+    {
+     "t": 57.5,
+     "dx": -0.024
+    },
+    {
+     "t": 59,
+     "dx": -0.015
+    },
+    {
+     "t": 59.5,
+     "dx": -0.008
+    },
+    {
+     "t": 59.958,
+     "dx": -0.001
+    }
+   ]
+  },
+  "variants": [
+   {
+    "label": "B 0.5 m further back",
+    "move": [
+     0,
+     0.5
+    ],
+    "headGap": {
+     "t": 57.583,
+     "gap": 0.032,
+     "across": 0.34
+    },
+    "outlineGap": {
+     "t": 57.583,
+     "gap": -0.012
+    },
+    "overlapSeconds": 2.67
+   },
+   {
+    "label": "B 0.15 m further across",
+    "move": [
+     -0.15,
+     0
+    ],
+    "headGap": {
+     "t": 57.583,
+     "gap": 0.045,
+     "across": 0.49
+    },
+    "outlineGap": {
+     "t": 57.583,
+     "gap": 0
+    },
+    "overlapSeconds": 0.04
+   },
+   {
+    "label": "B 0.25 m further across",
+    "move": [
+     -0.25,
+     0
+    ],
+    "headGap": {
+     "t": 57.625,
+     "gap": 0.054,
+     "across": 0.59
+    },
+    "outlineGap": {
+     "t": 57.625,
+     "gap": 0.009
+    },
+    "overlapSeconds": 0
+   },
+   {
+    "label": "B 0.35 m further across",
+    "move": [
+     -0.35,
+     0
+    ],
+    "headGap": {
+     "t": 57.542,
+     "gap": 0.062,
+     "across": 0.69
+    },
+    "outlineGap": {
+     "t": 57.583,
+     "gap": 0.017
+    },
+    "overlapSeconds": 0
+   },
+   {
+    "label": "B 0.5 m further across",
+    "move": [
+     -0.5,
+     0
+    ],
+    "headGap": {
+     "t": 57.542,
+     "gap": 0.075,
+     "across": 0.84
+    },
+    "outlineGap": {
+     "t": 57.583,
+     "gap": 0.03
+    },
+    "overlapSeconds": 0
+   }
+  ]
+ },
+ "lamp": {
+  "poolCentre": [
+   4.6,
+   -6
+  ],
+  "poolRadiusTarget": 7,
+  "northIs": "-Z",
+  "rows": [
+   {
+    "label": "A boot lands",
+    "who": "A",
+    "t": 31.8,
+    "at": [
+     1,
+     1.55
+    ],
+    "now": 8.36,
+    "north": 9.74,
+    "south": 7.04
+   },
+   {
+    "label": "B boot lands",
+    "who": "B",
+    "t": 33.2,
+    "at": [
+     3.3,
+     1.55
+    ],
+    "now": 7.66,
+    "north": 9.14,
+    "south": 6.19
+   },
+   {
+    "label": "A at the rail",
+    "who": "A",
+    "t": 64,
+    "at": [
+     5.25,
+     -11.3
+    ],
+    "now": 5.34,
+    "north": 3.86,
+    "south": 6.83
+   },
+   {
+    "label": "B at the rail",
+    "who": "B",
+    "t": 64,
+    "at": [
+     5.25,
+     -10
+    ],
+    "now": 4.05,
+    "north": 2.58,
+    "south": 5.54
+   }
+  ],
+  "postInShots": {
+   "aimedAtLamp": [
+    1,
+    2
+   ],
+   "now": [
+    1,
+    2,
+    3,
+    5,
+    7,
+    8,
+    10,
+    12,
+    14,
+    15
+   ],
+   "south": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    10,
+    14,
+    15
+   ],
+   "gainedSouth": [
+    4,
+    6
+   ],
+   "lostSouth": [
+    12
+   ],
+   "shot4PostDistanceSouth": 2.33
+  }
+ },
+ "shot5Wheel": {
+  "wheel": {
+   "centre": [
+    1.3800000000000003,
+    0.33,
+    0.3999999999999997
+   ],
+   "radius": 0.33,
+   "halfWidth": 0.11
+  },
+  "holdUntil": 34.4,
+  "inFrame": [
+   34.667,
+   37.583
+  ],
+  "truckMetres": 1.3,
+  "variants": [
+   "now",
+   "50mm, 0.5 m back",
+   "50mm, 1.0 m back",
+   "50mm, 1.5 m back"
+  ],
+  "rows": [
+   {
+    "t": 34.4,
+    "distance": 2.25,
+    "now": 0,
+    "50mm, 0.5 m back": 0,
+    "50mm, 1.0 m back": 0,
+    "50mm, 1.5 m back": 0.024
+   },
+   {
+    "t": 35,
+    "distance": 2.07,
+    "now": 0.108,
+    "50mm, 0.5 m back": 0.091,
+    "50mm, 1.0 m back": 0.107,
+    "50mm, 1.5 m back": 0.087
+   },
+   {
+    "t": 35.5,
+    "distance": 1.83,
+    "now": 0.138,
+    "50mm, 0.5 m back": 0.16,
+    "50mm, 1.0 m back": 0.116,
+    "50mm, 1.5 m back": 0.083
+   },
+   {
+    "t": 36,
+    "distance": 1.71,
+    "now": 0.19,
+    "50mm, 0.5 m back": 0.182,
+    "50mm, 1.0 m back": 0.139,
+    "50mm, 1.5 m back": 0.099
+   },
+   {
+    "t": 36.4,
+    "distance": 1.68,
+    "now": 0.143,
+    "50mm, 0.5 m back": 0.126,
+    "50mm, 1.0 m back": 0.138,
+    "50mm, 1.5 m back": 0.107
+   }
+  ],
+  "worstByVariant": {
+   "now": 0.19,
+   "50mm, 0.5 m back": 0.191,
+   "50mm, 1.0 m back": 0.146,
+   "50mm, 1.5 m back": 0.112
+  },
+  "worstAt": {
+   "now": 36,
+   "50mm, 0.5 m back": 35.917,
+   "50mm, 1.0 m back": 36.167,
+   "50mm, 1.5 m back": 36.708
+  },
+  "variant15": {
+   "wheelHeightRatio": [
+    0.68,
+    0.77
+   ],
+   "feetRatio": [
+    0.51,
+    0.57
+   ]
+  }
+ },
+ "levels": [
+  {
+   "label": "shot 5 at 30.5 s",
+   "file": "decisions/t030.500.png",
+   "mean": 1.9,
+   "p99": 14
+  },
+  {
+   "label": "shot 5 at 31.2 s",
+   "file": "decisions/t031.200.png",
+   "mean": 1.7,
+   "p99": 14
+  },
+  {
+   "label": "shot 5 at 31.8 s",
+   "file": "decisions/t031.800.png",
+   "mean": 1.4,
+   "p99": 6
+  },
+  {
+   "label": "shot 5 at 32.6 s",
+   "file": "decisions/t032.600.png",
+   "mean": 1.5,
+   "p99": 9
+  },
+  {
+   "label": "shot 5 at 33.2 s",
+   "file": "decisions/t033.200.png",
+   "mean": 1.5,
+   "p99": 12
+  },
+  {
+   "label": "shot 5 at 34 s",
+   "file": "decisions/t034.000.png",
+   "mean": 1.5,
+   "p99": 12
+  },
+  {
+   "label": "shot 5 at 35 s",
+   "file": "decisions/t035.000.png",
+   "mean": 1.6,
+   "p99": 7
+  },
+  {
+   "label": "shot 5 at 35.5 s",
+   "file": "decisions/t035.500.png",
+   "mean": 4.4,
+   "p99": 94
+  },
+  {
+   "label": "shot 5 at 36 s",
+   "file": "decisions/t036.000.png",
+   "mean": 10.1,
+   "p99": 154
+  },
+  {
+   "label": "shot 5 at 37 s",
+   "file": "decisions/t037.000.png",
+   "mean": 6.7,
+   "p99": 83
+  },
+  {
+   "label": "shot 5 at 38.5 s",
+   "file": "decisions/t038.500.png",
+   "mean": 9.5,
+   "p99": 90
+  },
+  {
+   "label": "shot 5 at 31.8 s, lamp 1.5 m south",
+   "file": "decisions/south-t031.800.png",
+   "mean": 2.5,
+   "p99": 9
+  },
+  {
+   "label": "shot 5 at 33.2 s, lamp 1.5 m south",
+   "file": "decisions/south-t033.200.png",
+   "mean": 2.6,
+   "p99": 19
+  },
+  {
+   "label": "shot 6 middle",
+   "file": "stills/shot-06-mid.png",
+   "mean": 18.1,
+   "p99": 111
+  },
+  {
+   "label": "shot 7 middle",
+   "file": "stills/shot-07-mid.png",
+   "mean": 33.4,
+   "p99": 121
+  },
+  {
+   "label": "shot 9 middle",
+   "file": "stills/shot-09-mid.png",
+   "mean": 20.3,
+   "p99": 125
+  }
+ ]
+}

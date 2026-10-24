@@ -1,0 +1,33 @@
+{
+  "name": "snowy-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Snow, Lamp, Bridge: a silent PS1-style three.js scene exported as MP4 and a self-contained HTML file",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "storyboard": "node scripts/storyboard.js",
+    "storyboard:review": "node scripts/storyboard.js --raster",
+    "check:forbidden": "node scripts/check-forbidden.js",
+    "check:determinism": "node scripts/check-determinism.js",
+    "check:cameras": "node scripts/check-cameras.js",
+    "check": "npm run check:forbidden && npm run build && npm run check:determinism && npm run check:cameras",
+    "test": "vite build && node --test tests/*.test.mjs",
+    "preview": "node scripts/capture.js --profile preview",
+    "stills": "node scripts/stills.js",
+    "export": "npm run build && node scripts/capture.js --profile full",
+    "export:4k": "npm run build && node scripts/capture.js --profile 4k",
+    "verify": "node scripts/verify.js",
+    "finals": "node scripts/finals.js",
+    "review:blockout": "node scripts/blockout-review.js"
+  },
+  "dependencies": {
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "playwright-core": "1.64.1",
+    "vite": "8.3.5",
+    "vite-plugin-singlefile": "2.3.4"
+  }
+}

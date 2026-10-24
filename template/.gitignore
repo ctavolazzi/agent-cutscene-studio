@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.cache/
+*.log
+# raw frame dumps used to re-encode without re-rendering
+*.rgb
+*.raw
+# renders and exports; large files are copied into review/round-NN/ only when small enough to commit
+out/
