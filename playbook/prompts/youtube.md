@@ -24,6 +24,8 @@ link and three hashtags. Use playbook/prompts/youtube.md (Snow, Lamp, Bridge) as
 
 ## Example: Snow, Lamp, Bridge
 
+Published at https://youtu.be/F02fKQvjlJQ.
+
 ```
 A silent 112-second night scene in the style of a PlayStation 1 cutscene: a street lamp in falling snow, a car that pulls up, two people who walk onto a bridge, light a cigarette and watch the moon rise. Every pixel of it was made from code written by an AI.
 

@@ -456,3 +456,7 @@ signed off once the Stage 3 merge passes its checks; no more review pages or pan
   from this film. Nothing that draws a frame changed. One fix: `npm test` now runs `vite build` first, because a fresh
   clone has no `dist/` and the browser tests read `dist/index.html` (found by making a film from the template and
   running its tests straight after `npm ci`).
+
+### Published
+- The director uploaded the film to YouTube with the titled thumbnail: https://youtu.be/F02fKQvjlJQ
+- Actions: linked from this README, the repo's README (the thumbnail links to the video) and playbook/prompts/youtube.md.

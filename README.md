@@ -4,11 +4,13 @@ Short films in the style of PlayStation 1 game cutscenes, made in three.js by an
 a human director. Every frame is a pure function of time, so a film renders identically in the browser and in the
 exported MP4, and every step is checked by tests with planted faults.
 
+[![Snow, Lamp, Bridge](films/snow-lamp-bridge/packaging/thumbnail.jpg)](https://youtu.be/F02fKQvjlJQ)
+
 ## Films
 
-| Film | Length | What happens |
-|---|---|---|
-| [Snow, Lamp, Bridge](films/snow-lamp-bridge/) | 1:52 | A street lamp in falling snow; a car pulls up; two people walk onto a bridge, light a cigarette and watch the moon rise. |
+| Film | Length | Watch | What happens |
+|---|---|---|---|
+| [Snow, Lamp, Bridge](films/snow-lamp-bridge/) | 1:52 | [YouTube](https://youtu.be/F02fKQvjlJQ) | A street lamp in falling snow; a car pulls up; two people walk onto a bridge, light a cigarette and watch the moon rise. |
 
 ## What is here
 

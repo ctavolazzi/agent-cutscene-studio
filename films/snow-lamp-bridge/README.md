@@ -4,6 +4,8 @@ A silent 112-second night scene in a PlayStation 1 style, built in three.js: a s
 that arrives and parks, two people who walk onto a bridge, lean on the railing, light a cigarette and watch a
 crescent moon rise over the river. It ends on the two of them under the lamp.
 
+**Watch it: https://youtu.be/F02fKQvjlJQ**
+
 Made with Claude Code between 2026-10-21 and 2026-10-23, first in a private workbench repo (the paths in PLAN.md and
 the early review rounds still say `_workbench/snowy-bridge/`), then moved here as the first film of agent-cutscene-studio.
 The output files keep their original names (`out/snowy-bridge.mp4`).
