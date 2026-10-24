@@ -583,3 +583,31 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   questions travel with Sound gate 2, the first stop.
 - Gate for this commit: documents only, no code changed since 0b82298 (whose gate passed: 105 film tests, 66 template
   tests, every check); the forbidden-character scan passes on the film, the template and the repo.
+
+### Sound 1.1 to 1.3  The cue catalogue
+- Before: cue times and places typed into the parked layers.
+- Actions (builders with checkers, playbook/workflows/builders-with-checkers.js adapted: one builder in worktree
+  s1-cues, one checker, one fix pass): `actors/car.js` exports SHAPE, DOOR_SIDE, STEER_MAX_DEG, SETTLE, IDLE, doorOpen,
+  steerDeg, settlePitch, idleLift; `world.js` exports X_START and SPEED_W; `actors/people.js` exports dims. Exports only:
+  567 frames hash the same before and after, the built HTML is byte identical, determinism and cameras pass.
+  `src/audio/cues.js`: 148 cues (145 enabled, 3 offered and off, 38 new), every time and place from a picture function,
+  everything else a named designed value or rule (LEVELS, DESIGN, LAW_OF). Steps sound at the rig's contact on the
+  sample grid (0.17 to 20.33 ms before their prints); 63 steps from 64 prints; 10 door cues; the arrival swell from the
+  first instant any part of the car's front is seen (17.47); ticks by a seeded rule ending before the moonlight rises;
+  rig contacts by one rule: the parts within half an internal pixel of their rest, at their depth from the shot's
+  camera (the forearm rests land 9.9 and 7.4 ms before the first frame that shows them; A's hands close on the lighter
+  at 78.069). `tests/cues.test.mjs`: 15 checks.
+- Question 2 measured: the idle shake shows. The car's vertices move up to 1.24 internal px before the PS1 snap and 2 px
+  after, in 110 of 159 frames; renders with and without it differ in 117 frames, up to 255 levels at the car's edge
+  against the beam glow (36.04 to 36.25). So option (b): the engine runs down at 36.2 with the lights, no key click.
+- The checker re-derived every cue on its own (zero mismatches over 1e-6 s or 1 mm) but its 24 planted faults found
+  the tests weak (7 caught): no place checks, a tick test that read its own answer, rule families never checked for
+  completeness, one typed settle tail, a typed 1.8 m height, the law stored as an object, the forearm contact landing
+  21 ms after its frame. All fixed; 35 of 35 planted faults now caught.
+- Open: Sound 1.3's per-shot margins are not all met with one level per cue (shot 8's far steps +0.1 to +2.2 dB and
+  shot 13's drag and exhale +0.5 dB against the +6 dB rule; some midground cloth and the ticks under 0 dB; shot 3's
+  brake pads -4.3 dB). Carried to Sound 2 (perspective, the hold rule) and Sound 5. The parked stems' comparison column
+  is still to do. cues.js still imports surfaceOf from the parked layers/foley.js; moved before Sound 4.
+- Found about my own commits: the six commits before Sound 1 carry a co-author trailer that names a model, against this
+  repo's rule. Rewriting them needs a force push, which was not allowed here; from now on the trailer names no model.
+- Gate: 120 tests pass; forbidden, build, determinism, cameras pass.
