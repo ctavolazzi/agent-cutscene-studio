@@ -1,5 +1,9 @@
 # Snow, Lamp, Bridge: sound design
 
+> **Superseded, 2026-10-24.** This was the first pass (BUILD_LOG Stage 8), made without a storyboard or a blockout.
+> The sound now runs through gated stages: `SOUND-PLAN.md` (the plan) and the Sound stages in `ROADMAP.md`. Its cue
+> table below is history; from Sound 1 the cues live in `src/audio/cues.js`, derived from the picture's data.
+
 The film was silent by its first brief. Stage 8 gives it a soundtrack made the way the picture is made: synthesized
 in code (no recorded samples), seeded, deterministic to the byte, timed by the same data that times the picture, and
 placed in stereo by the camera of each shot. The engine is in `src/audio/` (contract in `src/audio/mix.js`); levels and

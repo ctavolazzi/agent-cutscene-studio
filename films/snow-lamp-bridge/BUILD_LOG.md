@@ -557,3 +557,29 @@ signed off once the Stage 3 merge passes its checks; no more review pages or pan
   plan, storyboard and blockout stages as the picture (Stage S0 on). The 1080p with the S8.3 mix stays as the
   listening copy.
 - Gate for this commit: 105 tests pass; forbidden, build, determinism, cameras pass.
+
+## Sound stages (effects first)
+
+The director, after S8.3: "Sound effects first. Focus only on sound effects. Use the same workflows to plan the sounds
+then do a blockout. I'm sure you can see the preferred workflow evolving and emerging here...no? Did you storyboard the
+sounds like you did the other stuff?" No: Stage 8 went from a cue table straight to finished layers. The sound restarts
+at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages).
+
+### Sound 0  Plan
+- Before: four finished layers with about 20 typed numbers the picture already knows, no storyboard, no blockout.
+- Actions: the research, draft and critique workflow (playbook/workflows/research-draft-critique.js, adapted): five
+  readers (a spotting session measured from the picture's data, an inventory of the sound code, the picture's process
+  mapped onto sound, film sound practice, PS1 audio from cloned primary sources), a draft, three critics (facts, sound
+  and PS1 accuracy, the director's advocate) and a revision. 10 agents. Wrote `SOUND-PLAN.md` and the Sound stages in
+  `ROADMAP.md` (with a correction: Stages 3 to 7 shared round-03, so sound rounds start at round-04). Superseded notes
+  in `SOUND.md`, `playbook/process.md` Stage 5.5, `template/ROADMAP.md` and the root `CLAUDE.md`.
+- Found (measured, details in the plan): the car's arrival is inverted (loudest at 19.0 s, 21.9 m, quieter as it comes
+  in: -23.5 dB at the cut to shot 4); the engine stops at 36.2 s with both people outside and both doors shut; the
+  river plays on the street where no water can be seen; the wind steps at 10 of the 14 cuts because it reads the
+  camera; the tick list in SOUND.md had already drifted (says 75, last tick 71.179); visible actions with no sound (door
+  swings to shut, door stops, getting out, turns in place, cloth on the walk, the shoulders closing in); step contacts
+  lead their print times by 0.2 to 20.3 ms.
+- Decision: you asked for the plan then the blockout, so Sound gates 0 and 1 run on the plan's defaults and their
+  questions travel with Sound gate 2, the first stop.
+- Gate for this commit: documents only, no code changed since 0b82298 (whose gate passed: 105 film tests, 66 template
+  tests, every check); the forbidden-character scan passes on the film, the template and the repo.

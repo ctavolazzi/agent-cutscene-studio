@@ -12,7 +12,8 @@ process, and what each gate package contains, is in the repo's playbook/process.
 4. **Look.** PS1 pass (snap, warp, colour depth, dither), textures, fog, lights tuned, glows. Key stills. Gate 3.
 5. **Animation and effects.** Characters, props, particles, derived details (prints, tracks), playback UI, export,
    verify. Gate 4.
-   Then **Sound** (playbook/process.md, Stage 5.5): SOUND.md with the cue sheet from world.js, one layer per kind of
+   Then **Sound** (superseded 2026-10-24: sound runs through gated stages like the picture; see
+   films/snow-lamp-bridge/SOUND-PLAN.md in the studio repo) (playbook/process.md, Stage 5.5): SOUND.md with the cue sheet from world.js, one layer per kind of
    sound in `src/audio/layers/`, every stem measured, the brief's balance as tests. Gate: the director listens.
 6. **Polish rounds** from notes, each with a fresh review round.
 7. **Final.** Export 1080p and 4K from one build, verify both, stills, thumbnails (checked at 320 px), titled

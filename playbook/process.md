@@ -62,6 +62,11 @@ from the rig's landings, tyre tracks from the car path) so they follow any later
 
 ## Stage 5.5: Sound
 
+> **Superseded, 2026-10-24.** This one-pass method skipped the storyboard and the blockout. Sound now runs through
+> gated stages like the picture (plan, storyboard, blockout, revisions, design, mix, final): see
+> `films/snow-lamp-bridge/SOUND-PLAN.md` and the Sound stages in its `ROADMAP.md`. This section is rewritten from what
+> works once that film's sound reaches Sound 6.
+
 A film has a soundtrack unless the brief asks for silence. It is made the way the picture is: synthesized in code
 (`src/audio/`), seeded, rendered in one pass over the whole film, timed by the same data that times the picture and
 heard from each shot's camera. Snow, Lamp, Bridge is the worked example (its `SOUND.md`, `src/audio/layers/`,

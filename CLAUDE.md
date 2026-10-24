@@ -37,8 +37,9 @@ never added or removed. Data comes from `src/set.js`, `src/world.js` and `src/sh
 
 Each film's `src/audio/` synthesizes its soundtrack from the same timing data as the picture (seeded, one pass,
 heard from each shot's camera); `config.audio` holds every level. `npm run export` renders `out/sound.wav` before the
-capture and muxes it; `npm run verify` checks sync and loudness. Process: `playbook/process.md` Stage 5.5. Worked
-example: `films/snow-lamp-bridge/SOUND.md`.
+capture and muxes it; `npm run verify` checks sync and loudness. Process: sound goes through gated stages like the
+picture (plan, storyboard, blockout, revisions, design, mix, final); `films/snow-lamp-bridge/SOUND-PLAN.md` and its
+`ROADMAP.md` Sound stages are the worked example (playbook Stage 5.5 is superseded until rewritten).
 
 ## Gotchas
 
