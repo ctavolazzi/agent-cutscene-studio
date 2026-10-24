@@ -103,33 +103,57 @@ test('pan width at the frame edge: sin(hfov / 2) for each lens, as SOUND-PLAN 2.
 
 // ---------- the vertical-axis guard ----------
 // A listener 1.5 m up looking north, pitched by `deg`, and sources around the point 7.5 m straight below it (the water
-// under a deck camera, the case SOUND-PLAN 3.5 names): a tiny pitch must not switch the behind loss, a centimetre to
-// either side must not flip the pan, and the guard must be continuous at its edge.
+// under a deck camera, the case SOUND-PLAN 3.5 names): a tiny pitch must not switch the behind loss, straight below or
+// off the axis toward the camera's side (where the pitch carries the source across z = 0) through the cone's inner part,
+// a centimetre to either side must not flip the pan, and the guard must be continuous at its edge. Toward the edge the
+// ramp narrows to meet the hard behind plane outside the cone, where a source at the camera's side switches the whole
+// 2.5 dB on a tiny pitch by the plane's design (SOUND-PLAN 2.1), the axis or not. The bars, 0.05 dB and 1% of the air
+// filter on a 0.1 degree pitch, are starting values far under a just noticeable level change.
 const listener = (deg) => { const a = deg * D2R, f = [0, Math.sin(a), -Math.cos(a)]; return { pos: [0, 1.5, 0], f, r: [1, 0, 0] }; };
 const below = (dx = 0) => [dx, -6, 0];
-function guardProblems() {
+const offAxis = (frac) => { const a = frac * SPATIAL.axisDeg * D2R; return [Math.sin(a) * 7.5, 1.5 - Math.cos(a) * 7.5, 0]; };
+const INNER = [0, 0.1, 0.25, 0.5, 0.75]; // fractions of the cone's angle judged on the pitch bar
+const pitchSwitch = (q, hear = placeAt) => { const up = hear(q, 0, listener(0.05)), down = hear(q, 0, listener(-0.05)); return { db: dbOf(up.gain) - dbOf(down.gain), air: up.hz / down.hz - 1, hz: [up.hz, down.hz] }; };
+function guardProblems(hear = placeAt) {
   const p = [];
-  const up = placeAt(below(), 0, listener(0.05)), down = placeAt(below(), 0, listener(-0.05));
-  if (Math.abs(dbOf(up.gain) - dbOf(down.gain)) > 0.05) p.push(`a 0.1 degree pitch switches ${(dbOf(up.gain) - dbOf(down.gain)).toFixed(2)} dB`);
-  if (Math.abs(up.hz / down.hz - 1) > 0.01) p.push(`a 0.1 degree pitch switches the air filter ${up.hz.toFixed(0)} to ${down.hz.toFixed(0)} Hz`);
-  const l = placeAt(below(-0.01), 0, listener(0.05)), r = placeAt(below(0.01), 0, listener(0.05));
+  for (const frac of INNER) {
+    const s = pitchSwitch(offAxis(frac), hear), at = frac ? `${(frac * SPATIAL.axisDeg).toFixed(1)} degrees off the axis` : 'straight below';
+    if (Math.abs(s.db) > 0.05) p.push(`${at}: a 0.1 degree pitch switches ${s.db.toFixed(3)} dB`);
+    if (Math.abs(s.air) > 0.01) p.push(`${at}: a 0.1 degree pitch switches the air filter ${s.hz[0].toFixed(0)} to ${s.hz[1].toFixed(0)} Hz`);
+  }
+  const l = hear(below(-0.01), 0, listener(0.05)), r = hear(below(0.01), 0, listener(0.05));
   if (Math.abs(r.pan - l.pan) > 0.02) p.push(`2 cm across swings the pan ${l.pan.toFixed(2)} to ${r.pan.toFixed(2)}`);
   // continuity at the cone's edge: a source just inside and just outside it, in front and behind
   const edge = SPATIAL.axisDeg * D2R;
   for (const zs of [1, -1]) {
     const at = (a) => [Math.sin(a) * 0.6 * 7.5, -Math.cos(a) * 7.5 + 1.5, -zs * Math.sin(a) * 0.8 * 7.5];
-    const a = placeAt(at(edge * (1 - 1e-9)), 0, listener(0)), b = placeAt(at(edge * (1 + 1e-9)), 0, listener(0));
+    const a = hear(at(edge * (1 - 1e-9)), 0, listener(0)), b = hear(at(edge * (1 + 1e-9)), 0, listener(0));
     if (Math.abs(a.pan - b.pan) > 1e-6 || Math.abs(dbOf(a.gain) - dbOf(b.gain)) > 1e-6 || Math.abs(a.hz - b.hz) > 1e-3) p.push(`a step at the cone's edge (${zs > 0 ? 'in front' : 'behind'})`);
   }
   return p;
 }
+// The first run's guard, the planted fault off the axis: inside the cone its behind share still switched by w across
+// z = 0 (half the 2.5 dB at half the cone's angle). Rebuilt here from the formula without a guard, as placeAt had it.
+function firstRunGuard(q, t, L) {
+  const o = withAxis(0, () => placeAt(q, t, L)), d = q.map((v, j) => v - L.pos[j]), dist = Math.hypot(...d);
+  const x = d[0] * L.r[0] + d[1] * L.r[1] + d[2] * L.r[2], z = d[0] * L.f[0] + d[1] * L.f[1] + d[2] * L.f[2];
+  const edge = Math.sin(SPATIAL.axisDeg * D2R), s = Math.hypot(x, z) / dist;
+  if (s >= edge) return o;
+  const w = s / edge, b = 0.5 + ((z < 0 ? 1 : 0) - 0.5) * w, un = z < 0 ? [SPATIAL.behindGain, SPATIAL.behindAir] : [1, 1];
+  return { ...o, pan: o.pan * w, gain: o.gain / un[0] * (1 + (SPATIAL.behindGain - 1) * b), hz: o.hz / un[1] * (1 + (SPATIAL.behindAir - 1) * b) };
+}
 
-test('the vertical-axis guard: no behind switch on a tiny pitch, no pan flip a centimetre across, continuous at its edge', () => {
+test('the vertical-axis guard: no behind switch on a tiny pitch in the cone\'s inner part, no pan flip a centimetre across, continuous at its edge', () => {
   assert.deepEqual(guardProblems(), []);
+  const near = [0.99, 1.01].map((frac) => `${(frac * SPATIAL.axisDeg).toFixed(1)} deg ${pitchSwitch(offAxis(frac)).db.toFixed(3)} dB`);
+  console.log(`   a 0.1 degree pitch, off the axis: ${INNER.map((frac) => `${(frac * SPATIAL.axisDeg).toFixed(1)} deg ${pitchSwitch(offAxis(frac)).db.toFixed(3)} dB`).join(', ')}; toward the edge ${near.join(', ')}`);
   // control: the guard removed (a cone of 0 degrees is the formula without it): 2.5 dB and the air filter switch on a
   // 0.1 degree pitch, and the pan swings from one side to the other
-  const off = withAxis(0, guardProblems);
+  const off = withAxis(0, () => guardProblems());
   assert.ok(off.some((x) => x.includes('dB')) && off.some((x) => x.includes('air filter')) && off.some((x) => x.includes('pan')), `control: ${off}`);
+  // control: the first run's guard passes straight below and fails off the axis, 1.25 dB at half the cone's angle
+  const first = guardProblems(firstRunGuard);
+  assert.ok(first.length && first.every((x) => !x.startsWith('straight below')) && first.some((x) => x.startsWith(`${(0.5 * SPATIAL.axisDeg).toFixed(1)} degrees off the axis: a 0.1 degree pitch switches`)), `control: ${first}`);
 });
 
 // Away from the axis the guard is not there: every result equal, bit for bit, to the formula without it, on a sweep of

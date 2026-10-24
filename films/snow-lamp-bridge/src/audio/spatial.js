@@ -40,10 +40,12 @@ export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, ro
   let gain = (refDist / Math.max(refDist, dist)) ** rolloff;
   let hz = Math.max(SPATIAL.minAirHz, 20000 * Math.exp(-dist / SPATIAL.airMeters));
   // Near the vertical axis the azimuth is degenerate: a tiny pitch would flip the pan and switch the behind loss on and
-  // off. Inside the cone the pan shrinks toward the centre and the behind loss toward half, both continuous at its edge.
+  // off. Inside the cone the pan shrinks toward the centre, and the behind share ramps across z = 0 over a band that
+  // narrows from the cone's sine on the axis (1 - w^2) to nothing at its edge, where it meets the hard behind plane that
+  // holds outside the cone: continuous everywhere, and a tiny pitch moves it only a little in the cone's inner half.
   const edge = Math.sin(SPATIAL.axisDeg * Math.PI / 180), s = dist > 0 ? Math.hypot(x, z) / dist : 0;
   if (s < edge) {
-    const w = s / edge, b = 0.5 + ((z < 0 ? 1 : 0) - 0.5) * w;
+    const w = s / edge, b = 0.5 - 0.5 * clamp((dist > 0 ? z / dist : 0) / (edge * (1 - w * w)), -1, 1);
     pan *= w; gain *= 1 + (SPATIAL.behindGain - 1) * b; hz *= 1 + (SPATIAL.behindAir - 1) * b;
   } else if (z < 0) { gain *= SPATIAL.behindGain; hz *= SPATIAL.behindAir; }
   return { pan, gain, hz, dist };
