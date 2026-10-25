@@ -701,3 +701,21 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   the table lacks as its control); `tests/sound-measure.test.mjs` gains 12 tests of the review's measures, each with
   its planted fault. Gate: 229 tests (222 pass, 7 skipped: the parked score, and 4 reel tests with no published
   export in this worktree); forbidden, build, determinism, cameras pass.
+
+#### s2-measure: Sound 2.6 and 2.7, measure.json, the stems, the drift (before)
+- Plan: run `node scripts/sound-review.js --round 05 --measure` at the chosen -23 and commit its outputs:
+  `review/round-05/measure.json`, the listening stems and `stems.json`, and `review/round-05/notes-measure.md`.
+
+#### s2-measure: Sound 2.6 and 2.7, measure.json, the stems, the drift (after)
+- `review/round-05/measure.json` (15 entries; the same bytes on two runs; its mastered render is the same WAV
+  `scripts/sound.js` writes, sha256 610a1d0e...): renderer pass (93 of 93 within 5 ms, worst 2.0 ms); sync fail (20:
+  Sound 1's 12, and 8 instants on their frame's own time read 0.02 to 0.21 ms after it); pan pass (worst 0.101 dB);
+  silence, voices (2 crossfades of a background, intended), density (3 bodies at most), determinism and stems
+  (9.7e-8) pass; phone and mono fail (both latches only below 250 Hz on measured bands); level, ends, loudness,
+  masking (27 of 136 cues at risk per band) and drift (72 of 93 one-shots matched, 18 missing, 102 extra onsets)
+  reported; target pass (-23).
+- Listening stems `review/round-05/stems/` (night, car, A, B; AAC 96 kbps, 0.39 to 1.37 MB; `stems.json`): at the
+  mix's gain, summing to the mix before its limiter within 9.0e-8 of the peak. Measuring stems, 30 float WAVs, in
+  `out/round-05/stems/` (not committed).
+- Notes: `review/round-05/notes-measure.md`. Gate: 229 tests (222 pass, 7 skipped), forbidden, build, determinism,
+  cameras pass.
