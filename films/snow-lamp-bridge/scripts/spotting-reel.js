@@ -1,11 +1,13 @@
 // The spotting reel (SOUND-PLAN 3.16 and 4.3, ROADMAP Sound 1.10): every planned sound as a caption over the finished
 // picture, before any sound exists. Made from the published export, so no frame is re-rendered:
 // - spotting-reel.mp4: the 1080p picture with its video stream copied bit for bit, the review track as a soft mov_text
-//   stream (justified top left), and no audio: the export carries the first-pass mix with the score;
+//   stream (justified top left, its font sized so that no line wraps in a libass player), and no audio: the export
+//   carries the first-pass mix with the score;
 // - spotting-reel-phone.mp4: a silent 480x270 copy, scaled down nearest neighbour to the internal pixels, with the HUD's
 //   shot label in the top strip, the captions burned in their band below it and the step lane under them; nothing is
 //   drawn in the bottom 30 px (checked on every frame before the encode);
-// - captions/: review.vtt (the canonical track), review.srt, review.ass (the burn), sdh.vtt and sdh.srt (Sound 6).
+// - captions/: review.vtt (the canonical track), review.srt, review.ass (the burn), review-soft.ass (the soft copy's
+//   track as encoded), sdh.vtt and sdh.srt (Sound 6).
 // Each MP4 gets a sidecar <file>.json with its ffprobe facts and the caption counts. No clocks, and paths relative to
 // the film, so both MP4s and both sidecars are byte identical across runs.
 // Usage: node scripts/spotting-reel.js [--outdir review/round-04] [--source out/snowy-bridge.mp4]
@@ -16,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { ROOT } from './lib/browser.mjs';
 import { BT709_TAGS, encodeArgs, ffprobe } from './lib/ffmpeg.mjs';
-import { FRAME, SAFE, burnFilter, fontFile, parseVtt, probeSubtitles, reviewTrack, sdhSrt, sdhTrack, sdhVtt, toAss, toSrt, toVtt, topJustify } from './lib/captions.js';
+import { FRAME, SAFE, burnFilter, fontFile, movTextEntries, parseVtt, probeSubtitles, reviewTrack, sdhSrt, sdhTrack, sdhVtt, subtitleStyle, toAss, toSrt, toVtt, topJustify, writeSoftAss } from './lib/captions.js';
 import { videoHash } from './mux.js';
 import { CONFIG } from '../src/config.js';
 import { T_TOTAL } from '../src/world.js';
@@ -54,25 +56,36 @@ export function writeCaptions(dir) {
   return { files, track, sdh };
 }
 
-// The soft copy: the source's video stream copied, a VTT as a mov_text stream justified top left, no audio. Refuses to
-// keep a file whose video stream is not the source's bytes or whose captions do not span the picture.
-export async function softCopy({ source, vtt, out }) {
-  const tmp = partial(out);
+// The soft copy: the source's video stream copied, the VTT as a mov_text stream (ffmpeg's own conversion with its font
+// sized to the picture, written to softAss, or to a temp file beside the partial one) justified top left, no audio.
+// Refuses to keep a file whose video stream is not the source's bytes, that has audio, or whose captions are not one
+// stream spanning the picture at the fitted size.
+export async function softCopy({ source, vtt, out, softAss: keep = null }) {
+  const tmp = partial(out), softAss = keep ?? `${tmp}.soft.ass`;
   rmSync(tmp, { force: true });
-  const args = ['-i', source, '-i', vtt, '-map', '0:v:0', '-map', '1:s:0', '-c:v', 'copy', '-c:s', 'mov_text', '-an',
+  const src = await ffprobe(source);
+  const soft = writeSoftAss(vtt, softAss, { w: src.width, h: src.height });
+  const args = ['-i', source, '-i', softAss, '-map', '0:v:0', '-map', '1:s:0', '-c:v', 'copy', '-c:s', 'mov_text', '-an',
     '-metadata:s:s:0', 'language=eng', '-metadata:s:s:0', 'handler_name=Review captions', '-movflags', '+faststart'];
   ff([...args, tmp], 'soft copy');
-  const justification = topJustify(tmp);
-  const src = await ffprobe(source), probe = await ffprobe(tmp), subtitles = probeSubtitles(tmp);
+  const probe = await ffprobe(tmp), subtitles = probeSubtitles(tmp);
   const md5 = { source: videoHash(source), copy: videoHash(tmp) };
   const problems = ['width', 'height', 'frames', 'r_frame_rate', 'codec', 'pix_fmt', 'color_space'].filter((k) => probe[k] !== src[k]).map((k) => `${k} is ${probe[k]}, want ${src[k]}`);
   if (probe.audioStreams !== 0) problems.push(`${probe.audioStreams} audio streams, want none`);
   if (md5.copy !== md5.source) problems.push('the video stream is not the source\'s bytes');
-  if (subtitles.streams !== 1 || subtitles.codec !== 'mov_text') problems.push(`${subtitles.streams} subtitle streams of ${subtitles.codec}, want one mov_text`);
-  if (!(Math.abs(subtitles.duration - src.frames / fps) <= 1 / fps)) problems.push(`captions last ${subtitles.duration} s, want ${src.frames / fps}`);
+  // an MP4 carries text subtitles only as mov_text (this ffmpeg refuses webvtt there), so one stream is the check
+  if (subtitles.streams !== 1) problems.push(`${subtitles.streams} subtitle streams, want one`);
+  else if (!(Math.abs(subtitles.duration - src.frames / fps) <= 1 / fps)) problems.push(`captions last ${subtitles.duration} s, want ${src.frames / fps}`);
+  let justification = null, style = null;
+  if (subtitles.streams === 1) {
+    justification = topJustify(tmp);
+    style = subtitleStyle(tmp);
+    if (style.size !== soft.size) problems.push(`the soft font size is ${style.size}, want ${soft.size}`);
+  }
   if (problems.length) throw new Error(`soft copy: ${problems.join('; ')} (kept ${tmp})`);
   renameSync(tmp, out);
-  return { args: ['ffmpeg', ...args.map((a) => (a === source || a === vtt ? rel(a) : a)), rel(out)], md5, justification, probe: { ...probe, file: rel(out) }, subtitles };
+  if (!keep) rmSync(softAss);
+  return { args: ['ffmpeg', ...args.map((a) => (a === source || a === softAss ? rel(a) : a)), rel(out)], md5, justification, soft, style, entries: movTextEntries(out), probe: { ...probe, file: rel(out) }, subtitles };
 }
 
 // The bottom SAFE rows of every frame before the encode, as the scale alone leaves them and as the burn leaves them,
@@ -106,14 +119,15 @@ export async function phoneCopy({ source, ass, out, font = fontFile(), from = 0,
 
 export async function spottingReel({ outdir = resolve(ROOT, DEFAULT_OUTDIR), source = resolve(ROOT, DEFAULT_SOURCE), log = console.log } = {}) {
   if (!existsSync(source)) throw new Error(`no published export at ${source}`);
-  const { files, track, sdh } = writeCaptions(resolve(outdir, NAMES.captions));
+  const written = writeCaptions(resolve(outdir, NAMES.captions)), { track, sdh } = written;
+  const files = { ...written.files, softAss: resolve(outdir, NAMES.captions, 'review-soft.ass') }; // softCopy writes it
   const counts = { ...track.stats, sdh: sdh.length };
   log(`captions: ${counts.captions} review captions of ${counts.cues} cues in ${counts.slices} moments, ${counts.ticks} step ticks, at most ${counts.maxLines} lines; ${counts.sdh} SDH captions`);
   const side = (file, o) => writeFileSync(`${file}.json`, `${JSON.stringify({ file: rel(file), source: rel(source), ...o, counts }, null, 1)}\n`);
 
-  const soft = resolve(outdir, NAMES.soft), s = await softCopy({ source, vtt: files.vtt, out: soft });
-  side(soft, { captions: rel(files.vtt), ffmpeg: s.args, videoMd5: s.md5, movTextJustification: s.justification, ffprobe: s.probe, subtitles: s.subtitles });
-  log(`soft: ${rel(soft)}: video copied (${s.md5.copy}), mov_text ${s.subtitles.duration} s, justification ${s.justification.was} to ${s.justification.now}`);
+  const soft = resolve(outdir, NAMES.soft), s = await softCopy({ source, vtt: files.vtt, out: soft, softAss: files.softAss });
+  side(soft, { captions: rel(files.vtt), encoded: rel(files.softAss), ffmpeg: s.args, videoMd5: s.md5, movTextJustification: s.justification, softFont: s.soft, libassStyle: s.style, movText: s.entries, ffprobe: s.probe, subtitles: s.subtitles });
+  log(`soft: ${rel(soft)}: video copied (${s.md5.copy}), mov_text ${s.subtitles.duration} s, justification ${s.justification.was} to ${s.justification.now}, ${s.soft.font} ${s.soft.size} (from ${s.soft.from}; widest line ${s.soft.widestEm} em of ${s.soft.wrapPx} px)`);
 
   const phone = resolve(outdir, NAMES.phone), p = await phoneCopy({ source, ass: files.ass, out: phone });
   side(phone, { burned: rel(files.ass), ffmpeg: p.args, bottomBand: p.band, ffprobe: p.probe });

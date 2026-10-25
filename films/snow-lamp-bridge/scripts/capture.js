@@ -4,8 +4,8 @@
 // Frames run from round(from * fps) to round(to * fps) - 1. The overlay defaults on for preview and off for full and 4k.
 // --audio muxes the soundtrack (scripts/sound.js writes it) as AAC, trimmed to exactly the captured frames.
 // --captions adds a WebVTT track (the review track, scripts/lib/captions.js) as a soft mov_text stream over exactly the
-// captured frames, justified top left; --burn-captions also draws it in the caption band below the HUD strip, with the
-// step lane, and nothing below the band.
+// captured frames, justified top left, its font sized so that no line wraps in a libass player over the captured frame;
+// --burn-captions also draws it in the caption band below the HUD strip, with the step lane, and nothing below the band.
 // Encodes to <name>.partial.<ext>, probes that, and only renames it to <out> (with a sidecar <out>.json) when the probe
 // matches the request, so a failed run never leaves a file at <out>. A probe mismatch keeps the partial file and its
 // sidecar for diagnosis; any other failure removes the partial file.
@@ -18,29 +18,31 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { openScene, ROOT } from './lib/browser.mjs';
 import { AUDIO, encodeArgs, ffprobe, profileSize, PROFILES } from './lib/ffmpeg.mjs';
-import { burnFilter, clipVtt, parseVtt, probeSubtitles, toAss, topJustify } from './lib/captions.js';
+import { burnFilter, clipVtt, parseVtt, probeSubtitles, subtitleStyle, toAss, topJustify, writeSoftAss } from './lib/captions.js';
 import { CONFIG } from '../src/config.js';
 
 export const DEFAULT_OUT = { preview: 'out/preview.mp4', full: 'out/snowy-bridge.mp4', '4k': 'out/snowy-bridge-4k.mp4' };
 const PROGRESS_EVERY = 48;
 
 const partialPath = (p) => { const e = extname(p); return `${p.slice(0, p.length - e.length)}.partial${e}`; };
-const captionFiles = (tmp) => ({ vtt: `${tmp}.captions.vtt`, ass: `${tmp}.captions.ass` });
+const captionFiles = (tmp) => ({ vtt: `${tmp}.captions.vtt`, soft: `${tmp}.captions.soft.ass`, ass: `${tmp}.captions.ass` });
 
-// The encode arguments with the captions added: the clip's cues as a VTT input mapped to mov_text, and with burn, the
-// band drawn after the scale. The page draws the HUD strip itself (the overlay), so the burn leaves it out.
-export function captionArgs(args, { vtt, burn = false, from, to, fps, tmp, audio = false }) {
+// The encode arguments with the captions added: the clip's cues (the VTT clipped, then ffmpeg's ASS of it sized to the
+// output frame) as an input mapped to mov_text, and with burn, the band drawn after the scale. The page draws the HUD
+// strip itself (the overlay), so the burn leaves it out. Returns the arguments and the soft track's facts.
+export function captionArgs(args, { vtt, burn = false, from, to, fps, tmp, audio = false, frame }) {
   const text = readFileSync(vtt, 'utf8'), files = captionFiles(tmp), a = [...args], output = a.pop();
   writeFileSync(files.vtt, clipVtt(text, from, to));
+  const soft = writeSoftAss(files.vtt, files.soft, frame);
   const vf = a.indexOf('-vf');
   if (burn) {
     writeFileSync(files.ass, toAss(parseVtt(text), { from, to, fps, strip: false }));
     a[vf + 1] = `${a[vf + 1]},${burnFilter(files.ass)}`;
   }
-  a.splice(vf, 0, '-i', files.vtt); // after the frames and the soundtrack, so it is input 1, or 2 with a soundtrack
+  a.splice(vf, 0, '-i', files.soft); // after the frames and the soundtrack, so it is input 1, or 2 with a soundtrack
   // with a soundtrack the video and audio are mapped already; otherwise naming the subtitles needs the video named too
   a.push(...(audio ? [] : ['-map', '0:v:0']), '-map', `${audio ? 2 : 1}:s:0`, '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng', '-metadata:s:s:0', 'handler_name=Review captions', output);
-  return a;
+  return { args: a, soft };
 }
 
 export async function capture({ profile, from = 0, to, out, overlay, file, audio = null, captions = null, burnCaptions = false, log = console.log }) {
@@ -66,7 +68,8 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
     mkdirSync(dirname(outPath), { recursive: true });
     for (const p of [tmpPath, `${tmpPath}.json`, ...Object.values(captionFiles(tmpPath))]) rmSync(p, { force: true }); // leftovers of an earlier failed run
     const plain = encodeArgs(profile, res, { fps, res: scene.info.res, out: scene.info.out, output: tmpPath, audio: sound });
-    const args = captions ? captionArgs(plain, { vtt: captions, burn: burnCaptions, from: i0 / fps, to: i1 / fps, fps, tmp: tmpPath, audio: Boolean(audio) }) : plain;
+    const cap = captions ? captionArgs(plain, { vtt: captions, burn: burnCaptions, from: i0 / fps, to: i1 / fps, fps, tmp: tmpPath, audio: Boolean(audio), frame: size }) : null;
+    const args = cap ? cap.args : plain;
     const frameBytes = res.w * res.h * 3;
     log(`capture ${profile}: frames ${i0} to ${i1 - 1} (${n}), ${res.w}x${res.h} to ${size.w}x${size.h}, overlay ${overlay ? 'on' : 'off'}, sound ${audio ?? 'none'}, captions ${captions ? `${captions}${burnCaptions ? ' (soft and burned)' : ' (soft)'}` : 'none'}, ${outPath}`);
 
@@ -115,7 +118,6 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
     const seconds = (performance.now() - tStart) / 1000;
 
     // probe the partial file: the final path only ever holds a file that passed
-    const justification = captions ? topJustify(tmpPath) : null;
     const probe = await ffprobe(tmpPath), subtitles = probeSubtitles(tmpPath);
     const want = { width: size.w, height: size.h, frames: n, r_frame_rate: `${fps}/1`, codec: 'h264', pix_fmt: 'yuv420p', color_space: 'bt709', color_primaries: 'bt709', color_transfer: 'bt709', color_range: 'tv', audioStreams: audio ? 1 : 0, moovFirst: true };
     if (audio) Object.assign(want, { audioCodec: AUDIO.codec, audioRate: AUDIO.sampleRate, audioChannels: AUDIO.channels });
@@ -123,10 +125,16 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
     // the container's duration is the longer stream's; AAC ends on a 1024-sample packet, so allow it one frame
     if (Math.abs(probe.duration - n / fps) > (audio ? 1 : 0.5) / fps) problems.push(`duration is ${probe.duration}, want ${n / fps}`);
     if (audio && !(Math.abs(probe.audioDuration - n / fps) <= 1 / fps)) problems.push(`audio duration is ${probe.audioDuration}, want ${n / fps}`);
-    // the captions: one mov_text stream with captions, no longer than the picture; none without
+    // the captions: one stream (an MP4 carries text subtitles only as mov_text; this ffmpeg refuses webvtt there), no
+    // longer than the picture, at the fitted font size, then justified top left; none without
+    let justification = null, style = null;
     if (subtitles.streams !== (captions ? 1 : 0)) problems.push(`subtitle streams ${subtitles.streams}, want ${captions ? 1 : 0}`);
-    if (captions && subtitles.codec !== 'mov_text') problems.push(`subtitle codec is ${subtitles.codec}, want mov_text`);
-    if (captions && !(subtitles.duration > 0 && subtitles.duration <= n / fps + 1 / fps)) problems.push(`subtitle duration is ${subtitles.duration}, want up to ${n / fps}`);
+    else if (captions) {
+      if (!(subtitles.duration > 0 && subtitles.duration <= n / fps + 1 / fps)) problems.push(`subtitle duration is ${subtitles.duration}, want up to ${n / fps}`);
+      justification = topJustify(tmpPath);
+      style = subtitleStyle(tmpPath);
+      if (style.size !== cap.soft.size) problems.push(`the soft font size is ${style.size}, want ${cap.soft.size}`);
+    }
     const ok = problems.length === 0;
     const file = ok ? outPath : tmpPath;
     if (ok) renameSync(tmpPath, outPath);
@@ -137,7 +145,7 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
       file, profile, from, to, overlay, fps, firstFrame: i0, lastFrame: i1 - 1, frames: n,
       res: scene.info.res, size, seconds: +seconds.toFixed(3), loadSeconds: +loadSeconds.toFixed(3), msPerFrame: +msPerFrame.toFixed(2),
       ffmpeg: ['ffmpeg', ...args.slice(0, -1), file], ffprobe: probe, problems,
-      ...(captions ? { captions: { file: captions, burned: burnCaptions, subtitles, justification } } : {}),
+      ...(captions ? { captions: { file: captions, burned: burnCaptions, subtitles, justification, soft: cap.soft, style } } : {}),
     };
     writeFileSync(`${file}.json`, `${JSON.stringify(sidecar, null, 1)}\n`);
     log(`done: ${n} frames in ${seconds.toFixed(1)} s, ${msPerFrame.toFixed(1)} ms/frame (load ${loadSeconds.toFixed(1)} s)`);

@@ -615,6 +615,11 @@ test('mux.js: a new soundtrack goes into an exported MP4 with the picture untouc
 
 // ---------- captions (ROADMAP Sound 1.10 and 2.8): --captions and --burn-captions ----------
 const captionsLib = () => import('../scripts/lib/captions.js');
+// these two tests write to a folder of this process's own, so parallel runs of the suite never share files; it is
+// removed afterwards unless $CAPTURE_TEST_OUT asks to keep the outputs
+const CAP_OUT = process.env.CAPTURE_TEST_OUT ? resolve(process.env.CAPTURE_TEST_OUT, 'captions') : join(tmpdir(), `snowy-bridge-capture-captions-${process.pid}`);
+after(() => { if (!process.env.CAPTURE_TEST_OUT) rmSync(CAP_OUT, { recursive: true, force: true }); });
+const freshCap = (name) => { const d = resolve(CAP_OUT, name); rmSync(d, { recursive: true, force: true }); mkdirSync(d, { recursive: true }); return d; };
 // every frame of a video as RGB, top row first
 function frames(file) {
   const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 30 });
@@ -628,10 +633,31 @@ function rowDiff(a, b, w, h) {
   for (let i = 0; i < a.length; i++) { const y = Math.floor(i / (w * 3)) % h, d = Math.abs(a[i] - b[i]); if (d > out[y]) out[y] = d; }
   return out;
 }
+// An ffmpeg first on PATH that changes capture's encode (the one call with -c:s mov_text) and runs the real one: drop
+// removes an argument pair, suffix replaces an argument ending in a suffix with a path, append adds text to the file an
+// argument ending in a suffix names, before the encode reads it
+function plantedFfmpeg(dir) {
+  const real = spawnSync('sh', ['-c', 'command -v ffmpeg'], { encoding: 'utf8' }).stdout.trim();
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(resolve(dir, 'plant.cjs'), `const { spawnSync } = require('node:child_process');
+const { appendFileSync } = require('node:fs');
+const p = JSON.parse(process.env.PLANT || '{}');
+let a = process.argv.slice(2);
+if (a.includes('mov_text')) {
+  for (const [x, y] of p.drop ?? []) { const i = a.findIndex((v, k) => v === x && a[k + 1] === y); if (i >= 0) a.splice(i, 2); }
+  for (const [s, path] of p.suffix ?? []) a = a.map((v) => (v.endsWith(s) ? v.slice(0, -s.length) + path : v));
+  for (const [s, text] of p.append ?? []) for (const v of a.filter((x) => x.endsWith(s))) appendFileSync(v, text);
+}
+process.exit(spawnSync(process.env.PLANT_REAL, a, { stdio: 'inherit' }).status ?? 1);
+`);
+  writeFileSync(resolve(dir, 'ffmpeg'), `#!/bin/sh\nexec "${process.execPath}" "${resolve(dir, 'plant.cjs')}" "$@"\n`);
+  chmodSync(resolve(dir, 'ffmpeg'), 0o755);
+  return (plant) => ({ ...process.env, PATH: `${dir}${delimiter}${process.env.PATH}`, PLANT_REAL: real, PLANT: JSON.stringify(plant) });
+}
 
-test('capture.js --captions: the review track as one mov_text stream over exactly the captured frames, top left, with or without a soundtrack', async () => {
-  const { reviewTrack, toVtt, probeSubtitles, subtitleText, movTextJustification } = await captionsLib();
-  const d = fresh('captions');
+test('capture.js --captions: the review track as one mov_text stream over exactly the captured frames, top left, sized not to wrap, with or without a soundtrack', async () => {
+  const { reviewTrack, toVtt, probeSubtitles, subtitleText, subtitleStyle, movTextEntries } = await captionsLib();
+  const d = freshCap('captions');
   const vtt = resolve(d, 'review.vtt');
   writeFileSync(vtt, toVtt(reviewTrack()));
   const page = plantedPage(resolve(d, 'flat.html'));
@@ -644,11 +670,15 @@ test('capture.js --captions: the review track as one mov_text stream over exactl
   assert.ok(Math.abs(s.duration - 2) <= 1 / FPS, `captions last ${s.duration} s, the clip 2 s`);
   const text = subtitleText(file);
   assert.match(text, /^1\n00:00:00,000 --> 00:00:01,000\n[^\n]*street: city, wind/);
-  assert.match(text, /\n2\n00:00:01,000 --> 00:00:02,000\n[^\n]*the car rises out of the quiet \(new\)/);
-  assert.deepEqual(movTextJustification(file), [[0, 0]], 'top left, out of the bottom band');
+  assert.match(text, /\n2\n00:00:01,000 --> 00:00:02,000\n(?:[^\n]+\n)*?[^\n]*the car rises out of the quiet \(new\)/);
   const side = JSON.parse(readFileSync(`${file}.json`, 'utf8'));
   assert.deepEqual(side.problems, []);
   assert.deepEqual([side.captions.file, side.captions.burned, side.captions.subtitles.streams], [vtt, false, 1]);
+  // top left, and the size fitted to the clip's lines over the captured 480x270 frame, in every style record
+  const st = subtitleStyle(file);
+  assert.deepEqual([st.alignment, st.size, st.sizeOverrides], [7, side.captions.soft.size, 0]);
+  assert.deepEqual(side.captions.soft.frame, [W, H]);
+  assert.deepEqual(movTextEntries(file), [{ justification: [0, 0], size: st.size }]);
   assert.ok(readdirSync(d).every((f) => !f.includes('.captions.')), 'the clip\'s caption files are cleaned up');
 
   // with a soundtrack (Sound 2.8): video, AAC and the captions, each its own stream
@@ -680,9 +710,33 @@ test('capture.js --captions: the review track as one mov_text stream over exactl
   assert.match(gone.err, /no captions at/);
 });
 
-test('capture.js --burn-captions: only the caption band changes; a band planted at the bottom fails the same check', async () => {
+test('capture.js --captions: the probe refuses a missing subtitle stream, one that outlasts the clip, or one at the wrong size (planted, F3)', () => {
+  const d = freshCap('captions-plants');
+  const vtt = resolve(d, 'review.vtt');
+  return captionsLib().then(({ reviewTrack, toVtt }) => {
+    writeFileSync(vtt, toVtt(reviewTrack()));
+    const page = plantedPage(resolve(d, 'flat.html')), envFor = plantedFfmpeg(resolve(d, 'bin'));
+    // 31 to 33 s: long lines, so the fitted size is below ffmpeg's default
+    const run = (name, plant) => node('scripts/capture.js', ['--profile', 'preview', '--from', '31', '--to', '33', '--out', resolve(d, `${name}.mp4`), '--file', page, '--captions', vtt], envFor(plant));
+    const good = run('good', {});
+    assert.equal(good.code, 0, `the wrapper alone changes nothing: ${good.err}`);
+    const cases = [
+      ['nosubs', { drop: [['-map', '1:s:0']] }, /subtitle streams 0, want 1/],
+      ['late', { append: [['.captions.soft.ass', 'Dialogue: 0,0:00:09.00,0:00:10.00,Default,,0,0,0,,late\n']] }, /subtitle duration is 10, want up to 2/],
+      ['default-size', { suffix: [['.captions.soft.ass', '.captions.vtt']] }, /the soft font size is 16, want \d+/],
+    ];
+    for (const [name, plant, msg] of cases) {
+      const r = run(name, plant);
+      assert.notEqual(r.code, 0, `${name} must fail`);
+      assert.match(r.err, msg, name);
+      assert.ok(!existsSync(resolve(d, `${name}.mp4`)), `${name}: nothing at the output`);
+    }
+  });
+});
+
+test('capture.js --burn-captions: only the caption band changes, never the HUD strip or the bottom; planted bands fail the same checks', async () => {
   const { reviewTrack, toVtt, toAss, parseVtt, burnFilter, STRIP, LANE, SAFE } = await captionsLib();
-  const d = fresh('burn');
+  const d = freshCap('burn');
   const vtt = resolve(d, 'review.vtt');
   writeFileSync(vtt, toVtt(reviewTrack()));
   const page = plantedPage(resolve(d, 'flat.html'));
@@ -706,7 +760,7 @@ test('capture.js --burn-captions: only the caption band changes; a band planted 
   // a control: the same burn moved into the bottom band, drawn over the soft capture with the same encoder settings
   const ass = toAss(parseVtt(readFileSync(vtt, 'utf8')), { from: 33, to: 35, strip: false });
   const plantedAss = resolve(d, 'planted.ass');
-  writeFileSync(plantedAss, ass.replace(/\\pos\(3,11\)/g, `\\pos(3,${H - SAFE + 4})`));
+  writeFileSync(plantedAss, ass.replace(new RegExp(`\\\\pos\\((\\d+),${STRIP}\\)`, 'g'), `\\pos($1,${H - SAFE + 4})`));
   const planted = resolve(d, 'planted.mp4');
   const args = encodeArgs('preview', { w: W, h: H });
   const codec = args.slice(args.indexOf('-c:v'), args.indexOf('-pix_fmt', args.indexOf('-c:v')));
@@ -716,4 +770,17 @@ test('capture.js --burn-captions: only the caption band changes; a band planted 
   assert.ok(got.inBand > 100, 'the captions are drawn in the band');
   assert.ok(got.below <= 2 && got.bottom <= 2, 'nothing else changes (starting value: 2 levels of encoder rounding; measured 0)');
   assert.ok(bad.bottom > 100, 'control: a line burned into the bottom band shows in the same check');
+  // the HUD strip's rows, before the encode (the band shares the strip's macroblock row, so the encoded rows cannot
+  // tell): the capture's own burn over the soft capture's frames leaves rows 0 to 10 exactly as they were; a burn
+  // planted at y 0 does not (F7 of the review)
+  const strip = (vf) => {
+    const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', soft, '-vf', `${vf ? `${vf},` : ''}crop=${W}:${STRIP}:0:0`, '-f', 'md5', '-'], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout.trim();
+  };
+  const own = resolve(d, 'own.ass'), atTop = resolve(d, 'top.ass');
+  writeFileSync(own, ass);
+  writeFileSync(atTop, ass.replace(new RegExp(`\\\\pos\\((\\d+),${STRIP}\\)`, 'g'), '\\pos($1,0)'));
+  assert.equal(strip(burnFilter(own)), strip(null), 'the burn leaves the HUD strip alone');
+  assert.notEqual(strip(burnFilter(atTop)), strip(null), 'control: a caption burned at y 0 changes the strip');
 });
