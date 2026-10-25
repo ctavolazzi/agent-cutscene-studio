@@ -1047,3 +1047,25 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate: npm test exit 0 (258 tests, 255 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
   hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
   renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-stills: the stills, the arrangement and the contact sheet (before)
+- Plan: `node scripts/sound-review.js --round 05 --stills --sheet` on the committed measure.json (made at 21871c8 on
+  this engine), twice, the second run's files compared byte for byte with the first's; then look at every image at full
+  size and at 390 px, fix what does not read, and add the checks that the committed files are the code's.
+
+#### s2-stills: the stills, the arrangement and the contact sheet (after)
+- `node scripts/sound-review.js --round 05 --stills --sheet`: 25 s of renders (33: the raw mix, its peaks, the master,
+  the 30 group stems), 30 s for the stills, 5 s for the sheet, which rendered nothing. Run twice: all 35 files byte for
+  byte the same. The stills 9.8 MB, the arrangement 1.0 MB, the contact sheet's PNG 6.3 MB.
+- Looked at every image at full size and at 390 px (the contact sheet also as a 390 px page). Fixed from what was seen:
+  the spectrogram's scale (-88 to -22 dB, from the rows' own levels), lane names off the lines, text sizes for the phone
+  (13 to 14 units), a marked label names its person, overlapping and overflowing labels, labels through the
+  arrangement's rings, two wordings on the sheet. Added the label check and the check that the committed files are the
+  code's (11 tests now).
+- What the stills show is in `review/round-05/notes-stills.md`: the tyres fall 4.5 to 44 dB under their prediction
+  through shot 4 (median -10.6 dB) and the engine 3.3 dB (median), where measure.json's loudest windows see -1.3 and
+  -2.8; the beds and the hum agree to 0.4 dB; the latches lose 15 to 16 dB on the phone; silence holds in the five
+  bed-only shots; the 12 sync misses are all foley.
+- Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
+  renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

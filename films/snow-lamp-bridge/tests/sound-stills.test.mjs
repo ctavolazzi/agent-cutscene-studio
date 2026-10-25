@@ -12,13 +12,15 @@
 // - Every image's SVG, the contact sheet and stills.json pass the forbidden-character scan; a planted dash is found.
 // - Two processes draw the same bytes; a planted clock is seen. The session renders nothing twice; a session that does
 //   not keep its renders is seen to.
+// - No label overlaps another or leaves its drawing.
+// - The committed stills.json, stills and contact sheet are these drawings of the committed measure.json.
 // Signals here are synthetic (zeros, a click, seeded noise), so the tests need no blockout render; the session test
 // renders three beds.
 // Run: node --test tests/sound-stills.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -28,6 +30,7 @@ import { T_TOTAL } from '../src/world.js';
 import { reviewTrack } from '../scripts/lib/captions.js';
 import { rasterize } from '../scripts/lib/raster.mjs';
 import { TL } from '../scripts/lib/sound-timeline.js';
+import { textBox, textOverlaps } from '../scripts/lib/sound-map.js';
 import { scan } from '../scripts/check-forbidden.js';
 import { makeSession, sheetStep, stillsStep } from '../scripts/sound-review.js';
 import {
@@ -249,4 +252,77 @@ test('the stills and the sheet render nothing twice on a session; a session that
   const RENDERS = /\b(?:preMaster|renderSoundtrack|renderAll|stemWith|groupStem)\s*\(/;
   for (const [name, src] of [['stillsStep', String(stillsStep)], ['sheetStep', String(sheetStep)], ['sound-stills.js', readFileSync(resolve(ROOT, 'scripts/lib/sound-stills.js'), 'utf8')]]) assert.ok(!RENDERS.test(src), `${name} calls a renderer`);
   assert.ok(RENDERS.test(`${String(stillsStep)}; A.preMaster(cues, config)`), 'control: a step that renders for itself');
+});
+
+// ---------- labels ----------
+// No two labels' boxes overlap (Helvetica's metrics, sound-map.js textBox), none is under `min` (a still's axes'
+// numbers at 11 units, 22 px in its PNG; the arrangement keeps round 04's floor of 9 px, tests/sound-storyboard.test.mjs),
+// none leaves its drawing
+function labelProblems(d, min = 11) {
+  const p = textOverlaps(d).map(([a, b]) => `"${a.str}" covers "${b.str}"`);
+  for (const it of d.items.filter((x) => x.k === 'text')) {
+    if ((it.size ?? 14) < min) p.push(`"${it.str}" at ${it.size}`);
+    const b = textBox(it);
+    if (b.x0 < 0 || b.y0 < 0 || b.x1 > d.w || b.y1 > d.h) p.push(`"${it.str}" leaves the drawing`);
+  }
+  return p;
+}
+test('labels: none overlaps another, none is too small or outside, on every still and the arrangement; a label moved onto another and one at 8 are caught', () => {
+  for (const st of STILLS) assert.deepEqual(labelProblems(st.d), [], `shot ${st.shot.n}`);
+  assert.deepEqual(labelProblems(ARR.d, 9), [], 'the arrangement');
+  const st = buildStill(DATA[4], { measure: MEASURE }), ts = st.d.items.filter((it) => it.k === 'text');
+  Object.assign(ts[ts.length - 1], { x: ts[ts.length - 2].x + 3, y: ts[ts.length - 2].y + 2, anchor: ts[ts.length - 2].anchor });
+  assert.ok(labelProblems(st.d).some((x) => x.includes('covers')), 'control: a label moved onto another');
+  ts[0].size = 8;
+  assert.ok(labelProblems(st.d).some((x) => x.endsWith('at 8')), 'control: a label at 8');
+});
+
+// ---------- the committed files ----------
+// review/round-05's stills.json and contact sheet are this code's output from measure.json: every still listed with
+// its PNG (1200 px wide, the drawing's height), its mapping the drawing's, each marker's x the time mapping of its
+// measured onset within half a device pixel; the contact sheet byte for byte what contactSheetHtml writes, showing
+// the arrangement and every still and linking every measure, stem and decision clip, each file there.
+const pngSize = (file) => { const b = readFileSync(file); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
+function stillsJsonProblems(json, stills, measure) {
+  const p = [], onset = new Map(measure.table.rows.map((x) => [x.cue, x.onset]));
+  if (json.stills.length !== stills.length) p.push(`${json.stills.length} stills listed, ${stills.length} shots`);
+  json.stills.forEach((e, i) => {
+    const st = stills[i], at = `shot ${e.shot}`;
+    if (!st || e.shot !== st.shot.n || e.t0 !== st.shot.start || e.t1 !== st.shot.end) { p.push(`${at}: not shot ${st?.shot.n}`); return; }
+    if (!existsSync(resolve(REVIEW, e.file))) { p.push(`${at}: no ${e.file}`); return; }
+    const sz = pngSize(resolve(REVIEW, e.file));
+    if (sz.w !== STILL.w * SCALE || sz.h !== e.height || e.height !== Math.round(st.height * SCALE)) p.push(`${at}: ${sz.w} by ${sz.h} px, the drawing ${STILL.w * SCALE} by ${Math.round(st.height * SCALE)}`);
+    if (e.x0 !== st.axis.x0 * SCALE || Math.abs(e.pxPerSec - st.axis.pxPerSec * SCALE) > 1e-6) p.push(`${at}: its mapping is not the drawing's`);
+    const want = st.markers.map((m) => m.cue).join(), got = e.markers.map((m) => m.cue).join();
+    if (want !== got) p.push(`${at}: markers ${got}, the drawing's ${want}`);
+    for (const m of e.markers) {
+      if (m.onset !== onset.get(m.cue)) p.push(`${at}: ${m.cue} onset ${m.onset}, measure.json's ${onset.get(m.cue)}`);
+      if (Math.abs(m.x - (e.x0 + (m.onset - e.t0) * e.pxPerSec)) > 0.5) p.push(`${at}: ${m.cue} drawn at x ${m.x}, its onset maps to ${e.x0 + (m.onset - e.t0) * e.pxPerSec}`);
+    }
+  });
+  return p;
+}
+function contactProblems(html, { measure, stills, stems, decisions }) {
+  const p = [], has = (s) => html.includes(s), file = (f) => existsSync(resolve(REVIEW, f));
+  if (!has('src="arrangement.png"') || !file('arrangement.png')) p.push('no arrangement');
+  for (const s of stills) if (!has(`<img src="${s.file}"`) || !file(s.file)) p.push(`no still for shot ${s.shot}`);
+  for (const m of measure.measures) if (!has(`id="m-${m.id}"`)) p.push(`no entry ${m.id}`);
+  if ((html.match(/<details>/g) ?? []).length !== measure.measures.length) p.push('a table not collapsed');
+  for (const b of stems.bodies) if (!has(`href="stems/${b.file}"`) || !file(`stems/${b.file}`)) p.push(`no stem ${b.file}`);
+  for (const o of decisions.options) for (const c of o.clips ?? []) { const f = c.file.replace(/^review\/round-\d+\//, ''); if (!has(`href="${f}"`) || !file(f)) p.push(`no clip ${f}`); }
+  return p;
+}
+test('the committed stills.json, stills and contact sheet are these drawings of measure.json; a marker one pixel off and a still left off the sheet are caught', () => {
+  const json = read('stills.json'), html = readFileSync(resolve(REVIEW, 'contact-sheet.html'), 'utf8'), stems = read('stems/stems.json'), decisions = read('decisions/decisions.json');
+  assert.equal(json.raw, MEASURE.renders.raw.sha256, 'made from this measure.json');
+  assert.deepEqual(stillsJsonProblems(json, STILLS, MEASURE), []);
+  assert.equal(html, contactSheetHtml({ measure: MEASURE, stills: json.stills, stems, decisions }), 'the contact sheet is the code\'s, from the committed files');
+  assert.deepEqual(contactProblems(html, { measure: MEASURE, stills: json.stills, stems, decisions }), []);
+  assert.equal(pngSize(resolve(REVIEW, 'arrangement.png')).w, Math.round(ARR.d.w));
+  const off = structuredClone(json);
+  off.stills[4].markers[7].x += 1;
+  assert.ok(stillsJsonProblems(off, STILLS, MEASURE).some((x) => x.includes(off.stills[4].markers[7].cue)), 'control: a marker one pixel off');
+  const s = json.stills[9], cut = html.replace(new RegExp(`<figure[^\\n]*${s.file}[^\\n]*</figure>\\n`), '');
+  assert.notEqual(cut, html, 'premise: the card was cut');
+  assert.deepEqual(contactProblems(cut, { measure: MEASURE, stills: json.stills, stems, decisions }), [`no still for shot ${s.shot}`], 'control: a still left off the sheet');
 });

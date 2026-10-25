@@ -196,7 +196,7 @@ export function stillLanes(shot, rows, { cues = CUES } = {}) {
   const groups = [...new Set(on.map((x) => x.group))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
   const lane = (key, gs, label, colour) => ({ key, label, colour, groups: gs, cues: rows.filter((x) => gs.includes(x.group)).map((x) => byId.get(x.cue)) });
   const asGroup = (g) => { const c = byId.get(on.find((x) => x.group === g).cue); return lane(g, [g], g, colorOf(c)); };
-  const asBody = (b) => lane(b, groups.filter((g) => bodyOf(g) === b), b === 'night' ? 'the night (all backgrounds and the hum)' : `${b} (all its groups)`, BODY_COLOUR[b]);
+  const asBody = (b) => lane(b, groups.filter((g) => bodyOf(g) === b), b === 'night' ? 'the night (beds and hum)' : `${b} (all groups)`, BODY_COLOUR[b]);
   if (groups.length <= MAX_LANES) return groups.map(asGroup);
   const night = groups.filter((g) => bodyOf(g) === 'night'), rest = groups.filter((g) => bodyOf(g) !== 'night');
   if (rest.length <= MAX_LANES - 1) return [...(night.length ? [asBody('night')] : []), ...rest.map(asGroup)];
@@ -275,7 +275,7 @@ export function buildStill(data, { measure, cues = CUES, w = WORLD, markAt = (ro
   const yAxis = y; y += S.axis;
   const missRows = starts.flatMap((x) => (misses.get(x.cue) ?? []).map((m) => ({ x, m })));
   const missLines = missRows.length ? missRows.flatMap(({ x, m }) => wrapText(`${x.cue} at ${x.onset.toFixed(3)} s, ${m.text}`, S.w - 34, S.text).map((s, i) => ({ s, i, m }))) : wrapText('None: every cue that starts here is inside its renderer, sync and pan bars, and none is flagged by check 14.', S.w - 34, S.text).map((s, i) => ({ s, i, m: null }));
-  const yMiss = y + S.title; y = yMiss + missLines.length * S.line + 10;
+  const yMiss = y + S.title; y = yMiss + missLines.length * S.line + 14;
   const legend = legendLines(measure);
   const yLegend = y + S.title, H = Math.ceil(yLegend + legendHeight(legend) + 12);
   const d = new StillDraw(S.w, H, { bg: INK.bg });
@@ -375,7 +375,7 @@ export function buildStill(data, { measure, cues = CUES, w = WORLD, markAt = (ro
   });
 
   // ---- the pan meter: left at the top (round 04's lanes), the balance on the spatializer's equal-power scale
-  title(yPan, 'PAN, LEFT AT THE TOP: white line the mix, measured; cues filled measured, hollow predicted');
+  title(yPan, 'PAN, LEFT AT THE TOP: the mix white; each cue filled measured, hollow predicted');
   strip(yPan, S.pan);
   const py = (db) => yPan + ((panOfBalance(db) + 1) / 2) * S.pan;
   for (const db of [-20, -10, -3, 0, 3, 10, 20]) d.line([[x0, py(db)], [x1, py(db)]], { stroke: db === 0 ? '#5d6a8a' : INK.grid, sw: 0.8, dash: db === 0 || Math.abs(db) === 10 ? undefined : [2, 3] });
@@ -403,7 +403,7 @@ export function buildStill(data, { measure, cues = CUES, w = WORLD, markAt = (ro
 
   // ---- the misses, by name
   title(yMiss, 'OFF THEIR BAR IN THIS SHOT (red), FLAGGED BY CHECK 14 (violet): measure.json');
-  missLines.forEach(({ s, i, m }, k) => L.fixed(i ? 22 : 8, yMiss + 6 + k * S.line, s, { size: S.text, fill: m === null ? INK.text : m.bar ? INK.miss : INK.phone }));
+  missLines.forEach(({ s, i, m }, k) => L.fixed(i ? 22 : 8, yMiss + 10 + k * S.line, s, { size: S.text, fill: m === null ? INK.text : m.bar ? INK.miss : INK.phone }));
 
   // ---- the legend
   title(yLegend, 'WHAT IS MEASURED AND WHAT IS PREDICTED');
@@ -421,9 +421,9 @@ function legendLines(measure) {
     { kind: 'marks', text: 'A number by a dot: measured minus predicted, where they differ by 1 dB or more. Red: off its bar (the renderer\'s onset, sync with its frame, or pan); the red bracket runs from the onset to the frame that shows its event. Violet: flagged by check 14 (phone and mono). Glyph shapes are the families\' (round 04); A orange, B blue, the night and the car white (the reel\'s).' },
   ].map((x) => ({ ...x, lines: wrapText(x.text, STILL.w - 40, STILL.text) }));
 }
-const legendHeight = (legend) => legend.reduce((s, x) => s + x.lines.length * STILL.line + 6, 0) + 40;
+const legendHeight = (legend) => legend.reduce((s, x) => s + x.lines.length * STILL.line + 6, 0) + 44;
 function drawLegend(d, L, legend, y0) {
-  let y = y0 + 6;
+  let y = y0 + 10;
   for (const x of legend) {
     const sx = 8;
     if (x.kind === 'measured') { d.line([[sx, y - 4], [sx + 18, y - 4]], { stroke: INK.measured, sw: 1.6 }); d.circle(sx + 9, y + 8, 2.2, { fill: INK.measured }); }
@@ -497,8 +497,9 @@ export function buildArrangement({ measure, envelopes, cues = CUES, w = WORLD, m
     if (!e) continue;
     for (const rn of runs(e.ts.map(X), e.db.map((v) => (v === null ? null : dbY(ln, v))), e.ts)) d.line(rn.pts, { stroke: INK.measured, sw: 1.1, strokeOp: 0.95, role: 'measured-level', lane: ln.source, ts: rn.ts });
   }
-  // every voiced cue's measured onset: a filled triangle in the reel's colour, its tip on the lane's floor
-  const markers = [];
+  // every voiced cue's measured onset: a filled triangle in the reel's colour, its tip on the lane's floor; a marked
+  // one's ring is kept clear of every label, its own named after all the rings are down
+  const markers = [], named = [];
   for (const x of measure.table.rows) {
     const ln = lanes.find((l) => l.source === x.group), c = byId.get(x.cue);
     if (!ln || !c || x.onset === null) continue;
@@ -510,8 +511,10 @@ export function buildArrangement({ measure, envelopes, cues = CUES, w = WORLD, m
     d.circle(xm, y + 3, 8, { stroke: ink, sw: 1.8 });
     d.line([[xm, ln.envTop], [xm, y]], { stroke: ink, sw: 1, strokeOp: 0.7 });
     for (const m of ms.filter((q) => q.kind === 'sync' && q.frame !== null && q.frame !== undefined)) d.line([[xm, y + 12], [X(m.frame), y + 12]], { stroke: INK.miss, sw: 2 });
-    L.place(xm, y + 3, ms.map((m) => m.text.replace(/^sync: /, 'sync ').replace(/^phone and mono: /, 'phone: ')).join('; '), { size: 11, weight: 700, fill: ink }, { r: 9, cands: [[11, 0, 'e'], [11, 12, 'e'], [-11, 0, 'w'], [11, -12, 'e'], [-11, 12, 'w'], [11, 24, 'e'], [-11, -12, 'w'], [-11, 24, 'w'], [11, -24, 'e'], [-11, -24, 'w']], leader: false, chip: true });
+    L.block({ x0: xm - 10, x1: xm + 10, y0: y - 7, y1: y + 13 });
+    named.push({ xm, y, ink, str: ms.map((m) => m.text.replace(/^sync: /, 'sync ').replace(/^phone and mono: /, 'phone: ')).join('; ') });
   }
+  for (const { xm, y, ink, str } of named) L.place(xm, y + 3, str, { size: 11, weight: 700, fill: ink }, { r: 9, cands: [[11, 0, 'e'], [11, 12, 'e'], [-11, 0, 'w'], [11, -12, 'e'], [-11, 12, 'w'], [11, 24, 'e'], [-11, -12, 'w'], [-11, 24, 'w'], [11, -24, 'e'], [-11, -24, 'w']], leader: false, chip: true });
   // the silence windows: what measure.json's silence measure found inside each
   const sil = measure.measures.find((m) => m.id === 'silence');
   for (const b of bedOnlyWindows(w)) {
@@ -524,7 +527,7 @@ export function buildArrangement({ measure, envelopes, cues = CUES, w = WORLD, m
   L.fixed(16, y0 - 14, 'LOUDNESS OF THE MASTERED MIX, measured (measure.json series): momentary (400 ms) white, short-term (3 s) blue, LUFS, each reading at its window\'s middle', { size: 12, weight: 700, fill: '#8794b3' });
   d.rect(TL.left, y0, w.T_TOTAL * TL.pxPerS, h, { fill: INK.box, stroke: INK.grid, sw: 1 });
   for (const s of w.SHOTS) d.line([[X(s.start), y0], [X(s.start), y0 + h]], { stroke: shotColor(s.n), strokeOp: 0.35, sw: 1 });
-  for (const v of [LOUD.hi, -20, measure.targetLufs, -30, -40, LOUD.lo]) {
+  for (const v of [LOUD.hi, measure.targetLufs, -30, -40, LOUD.lo]) {
     d.line([[TL.left, ly(v)], [TL.left + w.T_TOTAL * TL.pxPerS, ly(v)]], { stroke: v === measure.targetLufs ? INK.dim : INK.grid, sw: 0.8, dash: v === measure.targetLufs ? [4, 3] : undefined });
     L.fixed(TL.left - 6, ly(v) + 4, `${v}${v === measure.targetLufs ? ' (target)' : ''}`, { size: 11, fill: INK.dim, anchor: 'end' });
   }
@@ -601,8 +604,8 @@ export function contactSheetHtml({ measure, stills, stems, decisions }) {
   const cell = (v) => (v === null || v === undefined ? '' : typeof v === 'boolean' ? (v ? 'yes' : 'no') : typeof v === 'number' ? (Number.isInteger(v) ? String(v + 0) : String(v)) : esc(v));
   const table = (m) => `<details><summary>${m.rows.length} row${m.rows.length === 1 ? '' : 's'}</summary><div class="scroll"><table><tr>${m.columns.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>${m.rows.map((r) => `<tr>${m.columns.map((c) => `<td>${cell(r[c])}</td>`).join('')}</tr>`).join('')}</table></div></details>`;
   const entries = measure.measures.slice().sort((a, b) => a.n - b.n).map((m) => `<section class="entry" id="m-${esc(m.id)}"><h3>${m.n}. ${esc(m.name)} <span class="chip ${esc(m.status)}">${esc(m.status)}</span></h3>
-<p><b>Bar:</b> ${esc(m.bar)}${m.starting ? ' <span class="dim">(a starting value)</span>' : ''}</p><p><b>Source:</b> ${esc(m.source)}</p><p class="summary">${esc(m.summary)}</p>${table(m)}</section>`).join('\n');
-  const cards = stills.map((s) => `<figure style="--c:${shotColor(s.shot)}"><a href="${esc(s.file)}"><img src="${esc(s.file)}" alt="Audio still, shot ${s.shot}"></a><figcaption><b>${s.shot}</b> ${esc(s.title)}: ${fmtT(s.t0)} to ${fmtT(s.t1)} s, ${s.markers.length} onsets${s.markers.some((m) => m.misses.length) ? `, ${s.markers.filter((m) => m.misses.length).length} marked` : ''}</figcaption></figure>`).join('\n');
+<p><b>Bar:</b> ${esc(m.bar)}${m.starting && !/starting value/.test(m.bar) ? ' <span class="dim">(a starting value)</span>' : ''}</p><p><b>Source:</b> ${esc(m.source)}</p><p class="summary">${esc(m.summary)}</p>${table(m)}</section>`).join('\n');
+  const cards = stills.map((s) => `<figure style="--c:${shotColor(s.shot)}"><a href="${esc(s.file)}"><img src="${esc(s.file)}" alt="Audio still, shot ${s.shot}"></a><figcaption><b>${s.shot}</b> ${esc(s.title)}: ${fmtT(s.t0)} to ${fmtT(s.t1)} s, ${s.markers.length} onset${s.markers.length === 1 ? '' : 's'}${s.markers.some((m) => m.misses.length) ? `, ${s.markers.filter((m) => m.misses.length).length} marked` : ''}</figcaption></figure>`).join('\n');
   const stemList = stems.bodies.map((b) => `<li><a href="stems/${esc(b.file)}">stems/${esc(b.file)}</a>: ${b.cues.length} cues, ${b.lufs} LUFS (float), ${(b.bytes / 1e6).toFixed(2)} MB</li>`).join('');
   const clipList = decisions.options.filter((o) => o.clips?.length).map((o) => `<li><b>${esc(o.id)}</b>: ${esc(o.question)}<ul>${o.clips.map((c) => { const f = c.file.replace(/^review\/round-\d+\//, ''); return `<li><a href="${esc(f)}">${esc(f)}</a> (${c.seconds} s)</li>`; }).join('')}</ul></li>`).join('');
   const counts = ['pass', 'fail', 'report'].map((k) => `${measure.measures.filter((m) => m.status === k).length} ${k}`).join(', ');
