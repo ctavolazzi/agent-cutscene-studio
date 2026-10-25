@@ -644,3 +644,15 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Report: 14 of 15 checks pass or report; sync finds 12 cues off their frame (6 scuffs, 6 cloth moves timed from keys),
   carried to Sound 3.
 - Gate for this commit: 205 tests (202 pass, 3 skipped: the parked score, each with its printed reason); forbidden, build, determinism, cameras pass.
+
+### Sound 2.5 to 2.12  Measurement, the options, then the review set (before)
+
+- Plan: two builders in parallel worktrees, each followed by a checker and a fix pass. `s2-measure` takes Sound 2.5
+  to 2.7 (the measurement tooling with planted faults, `scripts/sound-review.js --measure`, `measure.json`, the stems,
+  the blockout loudness target chosen by measurement, the design-layer drift). `s2-options` takes Sound 2.12 (the four
+  options rendered and measured, with clips). Then the audio stills and the arrangement sheet (Sound 2.9) on top of
+  `measure.json`, the preview (2.8), and the independent panel (2.10).
+- Found before starting: at the -16 LUFS target the blockout's limiter takes up to 11.2 dB off shot 5 (30.4 s) and
+  10.3 dB off shot 4, 960753 samples limited (raw mix -22.2 LUFS, peak 9.2 dB over the ceiling after gain). Measured
+  levels and onsets in the master would be the limiter's, so the measurements read the stems before the master, and
+  the blockout's own target is chosen by measurement (SOUND-PLAN 3.18 keeps integrated loudness at or under -16).
