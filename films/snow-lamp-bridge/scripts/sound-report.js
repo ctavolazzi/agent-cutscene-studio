@@ -131,7 +131,8 @@ const frontSeen = (t) => {
   const k = carAt(t), h = k.heading * D2R;
   return k.present && [-1, 0, 1].some((s) => screenState({ camera, blockers: () => SET_BLOCKERS }, pseudo, [k.x + Math.sin(h) * CAR.length / 2 + Math.cos(h) * s * CAR.width / 2, (SHAPE.body.y0 + SHAPE.body.y1) / 2, k.z - Math.cos(h) * CAR.length / 2 + Math.sin(h) * s * CAR.width / 2], t).state === 'on');
 };
-function syncRule(c) {
+// Exported for scripts/sound-review.js, which judges the same events on the measured onsets (Sound 2.6).
+export function syncRule(c) {
   if (!c.enabled || c.category === 'bg') return null;
   const part = c.id.split('.')[3];
   switch (c.family) {

@@ -14,7 +14,7 @@ import { parseArgs } from 'node:util';
 import { CONFIG } from '../src/config.js';
 import { atStage, layerNames, renderSoundtrack } from '../src/audio/index.js';
 import { LEVEL } from '../src/audio/layers/blockout/timbre.js';
-import { normalize } from '../src/audio/loudness.js';
+import { normalize, targetOf } from '../src/audio/loudness.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { mulberry32, hashString } from '../src/prng.js';
 import { SHOTS } from '../src/shots.js';
@@ -44,8 +44,9 @@ export function limiterByShot(raw, out, sr, shots = SHOTS, windowSec = LEVEL.win
   });
 }
 
-// The sidecar names the stage and the parked layers, so verify.js can render the same soundtrack again (check 5), and
-// what the limiter took off each shot. The raw mix is normalized here exactly as renderAll would, so the bytes match.
+// The sidecar names the stage, the parked layers and the loudness target the stage normalizes to, so verify.js can
+// render the same soundtrack again (check 5), and what the limiter took off each shot. The raw mix is normalized here
+// exactly as renderAll would, so the bytes match.
 export function renderToWav({ out = resolve(ROOT, 'out/sound.wav'), stage, parked, only = null, raw = false, reverb = true, spectrogram = false, log = console.log } = {}) {
   const config = atStage(CONFIG, { stage, parked });
   const r = renderSoundtrack(config, { only, reverb, normalize: false });
@@ -56,7 +57,7 @@ export function renderToWav({ out = resolve(ROOT, 'out/sound.wav'), stage, parke
   writeFileSync(out, bytes);
   const report = {
     file: out, sr: r.sr, seconds: r.left.length / r.sr, stage: config.audio.stage, parked: config.audio.parked,
-    layers: layerNames(config, only), only: only ?? null, raw, reverb, sha256: createHash('sha256').update(bytes).digest('hex'), stats,
+    layers: layerNames(config, only), only: only ?? null, raw, reverb, targetLufs: raw ? null : targetOf(config.audio), sha256: createHash('sha256').update(bytes).digest('hex'), stats,
     limiter: before ? limiterByShot(before, r, r.sr) : null,
   };
   if (spectrogram) {
@@ -67,7 +68,7 @@ export function renderToWav({ out = resolve(ROOT, 'out/sound.wav'), stage, parke
   }
   writeFileSync(`${out}.json`, `${JSON.stringify(report, null, 1)}\n`);
   const worst = report.limiter?.reduce((m, x) => (x.maxDb > m.maxDb ? x : m));
-  log(`sound: ${report.seconds.toFixed(2)} s at ${r.sr} Hz, stage ${report.stage} (${report.layers.join(', ')}; parked ${report.parked.join(', ') || 'none'})${stats ? `, ${stats.lufs} LUFS, peak ${stats.peakDb} dBFS (gain ${stats.gainDb} dB, ${stats.limitedSamples} samples limited, at most ${worst.maxDb} dB, shot ${worst.shot} at ${worst.at} s)` : ' (raw)'}, ${out}`);
+  log(`sound: ${report.seconds.toFixed(2)} s at ${r.sr} Hz, stage ${report.stage} (${report.layers.join(', ')}; parked ${report.parked.join(', ') || 'none'})${stats ? `, ${stats.lufs} LUFS (target ${report.targetLufs}), peak ${stats.peakDb} dBFS (gain ${stats.gainDb} dB, ${stats.limitedSamples} samples limited, at most ${worst.maxDb} dB, shot ${worst.shot} at ${worst.at} s)` : ' (raw)'}, ${out}`);
   return report;
 }
 

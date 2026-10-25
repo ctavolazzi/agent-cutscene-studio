@@ -48,9 +48,9 @@ export const CONFIG = {
   // Tyre tracks (src/fx/tracks.js, look stage): the road's snow pressed down to wet asphalt.
   tracks: { color: '#3a3f48', opacity: 0.85 },
 
-  // The soundtrack (src/audio/, Stage 8). Rendered in one pass at `sr`, then normalized to `targetLufs` integrated
-  // with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades match the
-  // picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
+  // The soundtrack (src/audio/, Stage 8). Rendered in one pass at `sr`, then normalized to its stage's `targetLufs`
+  // integrated with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades
+  // match the picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
   audio: {
     // The sound's stage (SOUND-PLAN 4.4), as `stage` is the picture's: 'blockout' (placeholders at the cue times,
     // src/audio/layers/blockout/, Sound 2 and 3) or 'design' (the first-pass layers below, kept as they are until
@@ -58,7 +58,12 @@ export const CONFIG = {
     stage: 'blockout',
     parked: ['score'],
     sr: 48000,
-    targetLufs: -16,
+    // The integrated loudness each stage is normalized to (src/audio/loudness.js targetOf). The design stage keeps the
+    // first pass's -16 LUFS, so its render stays byte identical; the blockout's is chosen by measurement (Sound 2.6:
+    // scripts/sound-review.js, the 'target' entry of review/round-05/measure.json): the loudest target, in 0.5 dB
+    // steps down from -16, at which the limiter takes no more than 1 dB off any 400 ms window. Measured: -23 (its worst
+    // window 0.63 dB, the car arriving in shot 4; -22.5 loses 1.06 dB there). SOUND-PLAN 3.18: at or under -16.
+    targetLufs: { blockout: -23, design: -16 },
     ceilingDb: -2.0,
     masterHighpassHz: 35,
     fadeIn: 3,

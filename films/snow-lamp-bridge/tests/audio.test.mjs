@@ -16,12 +16,12 @@ import { T_TOTAL } from '../src/world.js';
 import { mulberry32 } from '../src/prng.js';
 import { STAGES, atStage, buildLayers, layerNames, renderSoundtrack } from '../src/audio/index.js';
 import { renderAll } from '../src/audio/mix.js';
-import { integratedLufs, normalize, samplePeak } from '../src/audio/loudness.js';
+import { integratedLufs, normalize, samplePeak, targetOf } from '../src/audio/loudness.js';
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
 import { limiterByShot, renderToWav } from '../scripts/sound.js';
-import { LEGACY_SOUND, madeBy } from '../scripts/verify.js';
+import { LEGACY_SOUND, LEGACY_TARGET_LUFS, madeAtOf, madeBy, staleSound } from '../scripts/verify.js';
 
 const SR = CONFIG.audio.sr;
 const dir = mkdtempSync(join(tmpdir(), 'audio-test-'));
@@ -82,11 +82,21 @@ test('normalize lands on the target and holds every sample under the ceiling', (
   assert.ok(st.peakBeforeLimitDb > 0, `the test signal really needed limiting (${st.peakBeforeLimitDb} dB)`);
 });
 
-test('the finished soundtrack: -16 LUFS integrated and a true peak at or under -1.5 dBTP (ffmpeg)', () => {
+// The target is per stage since Sound 2.6 (config.audio.targetLufs): the default stage's is read, not typed
+test('the finished soundtrack: its stage\'s target integrated and a true peak at or under -1.5 dBTP (ffmpeg)', () => {
   const m = master();
   const ref = ffmpegLoudness(m.left, m.right);
-  assert.ok(Math.abs(ref.I - CONFIG.audio.targetLufs) <= 0.2, `integrated ${ref.I}`);
+  assert.ok(Math.abs(ref.I - targetOf(CONFIG.audio)) <= 0.2, `integrated ${ref.I}, target ${targetOf(CONFIG.audio)}`);
   assert.ok(ref.TP <= -1.5, `true peak ${ref.TP}`);
+});
+
+test('the target per stage: each stage reads its own, the design stage -16; one number is used as it is; a stage without one is refused', () => {
+  assert.equal(targetOf(atStage(CONFIG, { stage: 'design' }).audio), -16, 'the first pass, byte identical (SOUND-PLAN 4.4)');
+  assert.ok(targetOf(atStage(CONFIG, { stage: 'blockout' }).audio) <= -16, 'at or under -16 (SOUND-PLAN 3.18)');
+  assert.equal(targetOf({ targetLufs: -20, stage: 'anything' }), -20);
+  // controls: a stage the table does not name, and a target that is not a number
+  assert.throws(() => targetOf({ targetLufs: { design: -16 }, stage: 'blockout' }), /no loudness target for the blockout stage/);
+  assert.throws(() => targetOf({ targetLufs: { blockout: '-16' }, stage: 'blockout' }), /no loudness target/);
 });
 
 test('placement: a source to the camera\'s right pans right, behind is quieter and darker, far is quieter', () => {
@@ -206,6 +216,7 @@ test('sidecar: scripts/sound.js names the stage, the parked and the built layers
   assert.deepEqual([side.stage, side.parked, side.layers], ['design', CONFIG.audio.parked, ['ambience']]);
   assert.equal(side.renderSeconds, undefined, 'render time is not written: it differs every run');
   assert.equal(side.limiter, null, 'a raw render is not limited');
+  assert.equal(side.targetLufs, null, 'nor normalized to a target');
 });
 
 test('sidecar: the limiter report finds the shot the limiter acts in, by how much, and nothing elsewhere', () => {
@@ -218,6 +229,27 @@ test('sidecar: the limiter report finds the shot the limiter acts in, by how muc
   const r = limiterByShot(raw, out, sr, shots, 0.1);
   assert.deepEqual([r[0].maxDb, r[1].shot, r[1].at], [0, 2, 3]);
   assert.ok(Math.abs(r[1].maxDb - 20 * Math.log10(2)) < 0.01, `${r[1].maxDb} dB`);
+});
+
+// The target a WAV was made at (Sound 2.6): its sidecar names it; one from before the per-stage target names none and
+// was made at -16, whatever its stage. Check 5 says so when that is not the stage's target today. Planted: a blockout
+// sidecar from before the target (a stage, no targetLufs), which a bare mismatch would leave unexplained.
+test('verify check 5: a WAV made at another target than its stage\'s today says so; a sidecar from before the per-stage target was made at -16', () => {
+  const old = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, stage: 'blockout', parked: ['score'], layers: ['bg', 'hard', 'foley'], sha256: 'x', stats: {} };
+  const made = madeBy(old), target = targetOf(atStage(CONFIG, made).audio);
+  assert.equal(madeAtOf(old), LEGACY_TARGET_LUFS);
+  assert.notEqual(target, LEGACY_TARGET_LUFS, 'the blockout\'s target moved');
+  assert.match(staleSound('out/sound.wav', made, madeAtOf(old), target), new RegExp(`made at the blockout stage, parked score, at -16 LUFS where the stage's target is now ${target}\\)`));
+  // a sidecar naming its target is read as written: at today's target nothing is said of it, at another it is
+  assert.equal(madeAtOf({ ...old, targetLufs: target }), target);
+  assert.doesNotMatch(staleSound('out/sound.wav', made, target, target), /LUFS/);
+  assert.match(staleSound('out/sound.wav', made, -20, target), new RegExp(`at -20 LUFS where the stage's target is now ${target}`));
+  // the S8.3 sidecar (no stage, no target) was made at -16 by the design stage, whose target is still -16: no note
+  const s83 = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, layers: 'all', renderSeconds: 11.86, sha256: 'f80b1542', stats: {} };
+  assert.doesNotMatch(staleSound('out/sound.wav', madeBy(s83), madeAtOf(s83), targetOf(atStage(CONFIG, madeBy(s83)).audio)), /LUFS/);
+  // a raw render names no target, and no sidecar is unknown: neither is said to be made at a target
+  assert.deepEqual([madeAtOf({ ...old, targetLufs: null }), madeAtOf(null)], [null, null]);
+  assert.doesNotMatch(staleSound('out/sound.wav', made, null, target), /LUFS/);
 });
 
 test('verify check 5: a sidecar without stage or parked was made before the stage switch, score in', () => {
