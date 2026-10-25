@@ -17,8 +17,12 @@ import { atStage } from '../src/audio/index.js';
 import { placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { mulberry32 } from '../src/prng.js';
-import { FPS } from '../src/world.js';
-import { syncRule } from '../scripts/sound-report.js';
+import { FPS, T_TOTAL } from '../src/world.js';
+import { buildInput, syncRule } from '../scripts/sound-report.js';
+import {
+  densityEntry, determinismEntry, driftEntry, driftTol, levelEntry, makeSession, maskingAndPhone, measureGroup, panEntry,
+  rendererEntry, silenceEntry, stemsEntry, syncEntry, targetEntry, targetSweep, voicesEntry,
+} from '../scripts/sound-review.js';
 import {
   THIRD_OCTAVES, balanceDb, bandLevels, energyBlocks, foldDown, limiterLoss, loudestWindow, matchOnsets, matchOneToOne,
   measuredDensity, momentary, onsets, preMaster, preciseOnsets, predictedBalanceDb, segment, shortTerm, soundingEnd, syncOf, thirdOctaveBank,
@@ -252,4 +256,143 @@ test('measured density: groups sounding together are counted, within 6 dB of the
   // control: the engine 4 dB under the steps joins them
   const loud = [groups[0], groups[1], mk('car:engine', 'car', 0.2, 0, 1, null)];
   assert.equal(measuredDensity(loud, { step, window: 0.1, recent: 0.1, db: 6, total })[50].bodies, 3);
+});
+
+// ---------- the review's measures (scripts/sound-review.js), each with its planted fault ----------
+// On a few voice groups of the real blockout (one session, each stem rendered once) or on small made-up signals.
+const session = makeSession({ log: () => {} });
+const INPUT = buildInput();
+const nearest = (e, d, tol) => ({ pairs: matchOnsets(e, d).filter((x) => Math.abs(x.diff) <= tol), missed: [], extra: [] });
+const failing = (e) => e.rows.filter((x) => x.ok === false).map((x) => x.cue ?? x.note);
+
+test('renderer measure: steps, ticks and a door pass; a step 6 ms late, a ghost cue and an onset where no cue sounds fail', () => {
+  assert.equal(rendererEntry(['A:feet', 'car:engine-bay', 'car:door:driver'].map((g) => measureGroup(session, g))).status, 'pass');
+  const c = byId('foley.feet.A.05');
+  assert.deepEqual(failing(rendererEntry([measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [moveBy(c, 0.006)]) })])), [c.id]);
+  // a ghost cue 3 ms after a real tick, never rendered: one to one leaves it without an onset; nearest match does not
+  const real = byId('hard.tick.car.03'), ghost = { ...real, id: 'hard.tick.car.ghost', sync: real.sync + 0.003, t0: real.t0 + 0.003, t1: real.t1 + 0.003 };
+  const both = [...own(real.source), ghost].sort((a, b) => a.t0 - b.t0);
+  assert.deepEqual(failing(rendererEntry([measureGroup(session, real.source, { own: both })])), [ghost.id]);
+  assert.equal(rendererEntry([measureGroup(session, real.source, { own: both, match: nearest })]).status, 'pass', 'control: nearest match passes the ghost');
+  // a step rendered where no cue of the group sounds (the cue list does not know it)
+  const stray = moveBy(byId('foley.feet.A.02'), 0.7);
+  assert.deepEqual([...new Set(failing(rendererEntry([measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [byId('foley.feet.A.02'), stray]) })])))], ['an onset where no cue of its group sounds']);
+});
+
+test('sync measure: a step one frame late against its picture event fails, where it passed on time', () => {
+  const c = byId('foley.feet.A.05'), real = syncEntry(measureGroup(session, 'A:feet').rows, INPUT);
+  assert.equal(real.rows.find((x) => x.cue === c.id).ok, true);
+  const late = syncEntry(measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [moveBy(c, 1 / FPS)]) }).rows, INPUT);
+  const row = late.rows.find((x) => x.cue === c.id);
+  assert.deepEqual([late.status, row.ok, row.cueOk], ['fail', false, true]);
+  assert.match(row.note, /ms after its frame$/);
+});
+
+test('pan measure: the driver\'s door passes; swapped channels fail every one of its cues', () => {
+  const rows = measureGroup(session, 'car:door:driver').rows, stem = session.group('car:door:driver');
+  assert.equal(panEntry(rows, () => stem).status, 'pass');
+  const swapped = panEntry(rows, () => ({ ...stem, left: stem.right, right: stem.left }));
+  assert.deepEqual(failing(swapped), rows.map((x) => x.c.id));
+});
+
+test('silence measure: B\'s steps start in no bed-only window; a step planted in shot 12 is found there', () => {
+  assert.equal(silenceEntry([measureGroup(session, 'B:feet')], INPUT).status, 'pass');
+  const step = byId('foley.feet.B.20'), s12 = INPUT.silence.windows.find((w) => /shot 12/.test(w.name)), at = (s12.t0 + s12.t1) / 2;
+  const planted = { ...step, id: 'foley.feet.B.planted', sync: at, t0: at, t1: at + step.t1 - step.t0 };
+  const e = silenceEntry([measureGroup(session, 'B:feet', { stem: groupOf('B:feet', [step, planted]) })], INPUT);
+  assert.equal(e.status, 'fail');
+  assert.deepEqual([...new Set(e.rows.filter((x) => x.onset !== null).map((x) => `${x.window}: ${x.group}`))], [`${s12.name}: B:feet`]);
+});
+
+test('voices measure: the measured spans pass; a voice running into the next of its group is a cut; 25 at once is too many', () => {
+  const rows = ['A:feet', 'car:intake', 'car:door:driver'].flatMap((g) => measureGroup(session, g).rows);
+  assert.equal(voicesEntry(rows, INPUT).status, 'pass');
+  const i = rows.findIndex((x) => x.c.id === 'foley.feet.A.05'), next = rows[i + 1];
+  const into = rows.map((x, k) => (k === i ? { ...x, end: next.onset + 0.01 } : x));
+  assert.deepEqual(voicesEntry(into, INPUT).rows.filter((x) => x.kind === 'cut').map((x) => [x.cue, x.other]), [[next.c.id, 'foley.feet.A.05']]);
+  // the place change: the street's wind and the bridge's overlap inside the crossfade, on purpose; overlapping longer,
+  // they are a cut
+  const wind = measureGroup(session, 'bg:wind').rows, fade = voicesEntry(wind, INPUT);
+  assert.deepEqual([fade.status, fade.rows.filter((x) => x.kind === 'crossfade').map((x) => x.cue)], ['pass', ['bg.wind.bridge.bed']]);
+  const longer = voicesEntry(wind.map((x) => (x.c.id === 'bg.wind.street.bed' ? { ...x, end: x.end + 0.1 } : x)), INPUT);
+  assert.deepEqual([longer.status, longer.rows.filter((x) => x.kind === 'cut').map((x) => x.cue)], ['fail', ['bg.wind.bridge.bed']]);
+  // 25 groups sounding at once, each a voice of its own
+  const many = Array.from({ length: 25 }, (_, k) => ({ c: { ...byId('hard.tick.car.03'), id: `planted.${k}`, source: `planted:${k}`, t0: 1, t1: 2 }, onset: 1, end: 2 }));
+  assert.equal(voicesEntry(many, INPUT).status, 'fail');
+});
+
+test('density measure: three bodies sounding together pass; a fourth body at the same moment fails', () => {
+  const mk = (id, source, person) => {
+    const l = new Float32Array(SR * 3);
+    for (let i = SR; i < 2 * SR; i++) l[i] = 0.1 * Math.sin(i * 0.3);
+    return { g: source, stem: { sr: SR, left: l, right: l }, rows: [{ c: { ...byId('foley.feet.A.05'), id, source, person, category: 'foley' }, onset: 1 }] };
+  };
+  const three = [mk('a', 'A:feet', 'A'), mk('b', 'B:feet', 'B'), mk('c', 'car:door:driver', null)];
+  assert.equal(densityEntry(three, INPUT).status, 'pass');
+  assert.equal(densityEntry([...three, mk('d', 'C:feet', 'C')], INPUT).status, 'fail');
+});
+
+// a made-up story cue for the phone and masking measures: the first step (it has an SDH caption), its samples a tone
+const storyOf = (hz, sign = 1, masker = 0) => {
+  const c = CUES.find((x) => x.family === 'feet' && x.sdh !== null), n = Math.round(c.t1 * SR) + SR, l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = Math.round(c.t0 * SR); i < Math.round(c.t1 * SR); i++) { l[i] = 0.1 * Math.sin(2 * Math.PI * hz * i / SR); r[i] = sign * l[i]; }
+  const stem = { sr: SR, left: l, right: r }, pre = { sr: SR, left: Float32Array.from(l), right: Float32Array.from(r) }, rng = mulberry32(5);
+  for (let i = 0; i < n; i++) { const v = masker * (rng() * 2 - 1); pre.left[i] += v; pre.right[i] += v; }
+  const row = { c, src: stem, window: loudestWindow(stem, c.t0, c.t1), spanEnd: c.t1 };
+  return maskingAndPhone([row], { pre, stemOf: () => stem, groups: [c.source], input: { ...INPUT, cues: [c] }, streetDb: -30, predicted: new Map() });
+};
+test('phone and mono measure: a 1 kHz story cue passes; one at 120 Hz lives only below 250 Hz, an anti-phase one only in the side', () => {
+  assert.equal(storyOf(1000).phone.status, 'pass');
+  assert.deepEqual(storyOf(120).phone.rows.map((x) => x.flag), ['only below 250 Hz']);
+  assert.deepEqual(storyOf(1000, -1).phone.rows.map((x) => x.flag), ['only in the side channel']);
+  assert.equal(storyOf(120).phone.status, 'fail');
+});
+
+test('masking measure: a cue alone stands out in its band; under loud broadband noise it is at risk', () => {
+  const alone = storyOf(1000).masking.rows[0], noisy = storyOf(1000, 1, 1).masking.rows[0];
+  assert.deepEqual([alone.atRisk, alone.bestBand], [false, 1000]);
+  assert.equal(noisy.atRisk, true);
+});
+
+test('determinism and stems measures: the same render twice passes, one changed sample fails; a group left out of the sum fails', () => {
+  const a = groupOf('A:feet'), b = groupOf('A:feet');
+  assert.equal(determinismEntry(a, b).status, 'pass');
+  const c = { ...b, left: Float32Array.from(b.left) }; c.left[1000] += 1e-7;
+  assert.equal(determinismEntry(a, c).status, 'fail');
+  const two = ['A:feet', 'B:feet'], pre = preMaster([...quiet, ...CUES.filter((x) => two.includes(x.source) && x.voices > 0)]);
+  assert.equal(stemsEntry(two, (g) => session.group(g), pre).status, 'pass');
+  assert.equal(stemsEntry(['A:feet'], (g) => session.group(g), pre).status, 'fail');
+});
+
+test('level measure: a tick planted 6 dB louder is measured 6 dB louder, and so is its prediction', () => {
+  const g = 'car:engine-bay', c = byId('hard.tick.car.03'), loud = { ...c, level: c.level + 6 };
+  const beds = { sr: SR, left: new Float32Array(Math.round(T_TOTAL * SR)), right: new Float32Array(Math.round(T_TOTAL * SR)) }, hear = (x, t) => INPUT.hear(x, t, 'camera');
+  const at = (rows) => levelEntry(rows, { streetDb: -30, beds, hear }).rows.find((x) => x.cue === c.id);
+  const real = at(measureGroup(session, g).rows), planted = at(measureGroup(session, g, { stem: groupOf(g, [loud]), own: own(g).map((x) => (x.id === c.id ? loud : x)) }).rows);
+  assert.ok(Math.abs(planted.overStreetDb - real.overStreetDb - 6) < 0.01, `${planted.overStreetDb} against ${real.overStreetDb}`);
+  assert.ok(Math.abs(planted.predictedDb - real.predictedDb - 6) < 1e-6 && Math.abs(planted.diffDb - real.diffDb) < 0.01);
+});
+
+test('loudness target: the loudest target whose 400 ms windows lose at most 1 dB is chosen; configured louder, the measure fails', () => {
+  // a quiet bed and a loud second of 1 ms pulses every 50 ms: at the louder targets the limiter holds every pulse and,
+  // releasing over 120 ms, never recovers between them (a pumped second); at the quieter ones it leaves them alone
+  const n = 6 * SR, rng = mulberry32(11), raw = { sr: SR, left: new Float32Array(n), right: new Float32Array(n) };
+  for (let i = 0; i < n; i++) { const t = i / SR, pulse = t >= 2 && t < 3 && (i % (SR / 20)) < SR / 1000; raw.left[i] = pulse ? 0.2 : 0.005 * (rng() * 2 - 1); raw.right[i] = pulse ? 0.2 : 0.005 * (rng() * 2 - 1); }
+  const sweep = targetSweep({ raw, peaks: null, audio: BLOCKOUT.audio, street: raw, hush: [4, 6] });
+  const first = sweep.rows.findIndex((x) => x.meets);
+  assert.ok(first > 0, 'the louder targets pump the loud second');
+  assert.equal(sweep.chosen, sweep.rows[first]);
+  assert.ok(sweep.rows.slice(0, first).every((x) => x.worstWindowDb > 1) && sweep.rows[first].worstWindowDb <= 1);
+  assert.equal(sweep.rows[sweep.rows.length - 1].limitedSamples, 0, 'the sweep runs until nothing is limited');
+  assert.equal(targetEntry(sweep, sweep.chosen.target).status, 'pass');
+  assert.equal(targetEntry(sweep, sweep.chosen.target + 0.5).status, 'fail', 'control: a target louder than the rule allows');
+});
+
+test('drift measure: a design onset 30 ms late reads +30 ms, one not played is missing, an onset with no cue is extra', () => {
+  const tick = byId('hard.tick.car.03'), cues = [1, 2, 3].map((t, k) => ({ ...tick, id: `drift.${k}`, sync: t, t0: t, t1: t + 0.06 }));
+  const n = 5 * SR, l = new Float32Array(n);
+  for (const t of [1.03, 2, 4]) for (let i = 0; i < 0.005 * SR; i++) l[Math.round(t * SR) + i] = 0.5 * Math.sin(i);
+  const part = { name: 'ticks', plays: (c) => c.family === 'tick' }, e = driftEntry(cues, () => ({ sr: SR, left: l, right: l }), [part]);
+  assert.deepEqual(e.rows.map((x) => [x.cue, x.status, x.driftMs === null ? null : Math.round(x.driftMs)]), [['drift.0', 'matched', 30], ['drift.1', 'matched', 0], ['drift.2', 'missing', null], [null, 'extra', null]]);
+  assert.equal(driftTol([1, 2, 3]), 0.5); assert.ok(Math.abs(driftTol([1, 1.2]) - 0.1) < 1e-12);
 });

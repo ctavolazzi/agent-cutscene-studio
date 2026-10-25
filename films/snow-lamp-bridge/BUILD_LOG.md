@@ -678,3 +678,26 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   sample and 6 ms late fails the bar; a ghost onset one to one against nearest match; a cue 50 ms short; a step one
   frame late fails sync; swapped channels; one hop out of step against ffmpeg; an RBJ biquad as a third octave; a
   pumped window against a limited click; anti-phase in mono; a louder engine joining the density).
+
+#### s2-measure: Sound 2.6, scripts/sound-review.js and a target per stage (before)
+- Plan: `config.audio.targetLufs` per stage (the design stage stays -16 and byte identical), read by
+  `loudness.js targetOf` in `normalize`, so renderSoundtrack, renderAll, `scripts/sound.js`, the player's worker and
+  `verify.js` check 5 all follow the stage; the sidecar names its target. `scripts/sound-review.js --measure`: one
+  session, the 15 measures of SOUND-PLAN 4.5 into `review/round-05/measure.json`, the stems, the sweep.
+
+#### s2-measure: Sound 2.6, scripts/sound-review.js and a target per stage (after)
+- `config.audio.targetLufs` is `{ blockout: -23, design: -16 }`; `loudness.js targetOf` reads it in `normalize` (which
+  also takes the source's true-peak envelope when the caller has it); the sidecar of `scripts/sound.js` names its
+  target; `verify.js` check 5 reports the target and says when a WAV was made at another. The design stage with the
+  score unparked still renders sha256 f80b1542... (checked).
+- The sweep (the raw blockout at -22.19 LUFS, normalized from -16 down in 0.5 dB steps): at -16 the worst 400 ms
+  window loses 7.94 dB at 28.3 s (shot 4, the car arriving at full drive with the swell), 960753 samples limited;
+  -22.5 still loses 1.06 dB there; -23 loses 0.63 dB at worst (worst sample 2.52 dB at 30.44, the driver's unlatch),
+  23145 samples limited, true peak -2 dBTP, the street background in the hush -31.47 LUFS momentary. Every quieter
+  target meets the rule too. So the blockout's target is -23.
+- `scripts/sound-review.js --measure`: one session (the raw render twice, the mix before the master, 30 voice-group
+  stems, 18 cues rendered alone, the bodies, the design parts), 15 entries; 4.5 min alone on 4 CPUs.
+- Tests: `tests/audio.test.mjs` reads the default stage's target instead of -16 and checks targetOf (with a stage
+  the table lacks as its control); `tests/sound-measure.test.mjs` gains 12 tests of the review's measures, each with
+  its planted fault. Gate: 229 tests (222 pass, 7 skipped: the parked score, and 4 reel tests with no published
+  export in this worktree); forbidden, build, determinism, cameras pass.

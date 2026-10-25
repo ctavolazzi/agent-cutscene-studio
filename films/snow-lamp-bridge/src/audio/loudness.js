@@ -113,13 +113,25 @@ export function limit(left, right, ceiling, sr = 48000, attackMs = 2, releaseMs 
   return { reducedSamples: reduced };
 }
 
-// Set the integrated loudness to `targetLufs`, then hold every sample under `ceilingDb`. Limiting loud transients
-// takes their energy out of the measurement, so the gain is corrected and the limiter run again (a few passes at most,
-// each from the unlimited signal) until the limited result reads the target. Works in place. Returns what it did.
-export function normalize(left, right, { targetLufs, ceilingDb }, sr = 48000, passes = 4) {
+// The integrated loudness an audio config is normalized to: `targetLufs` as one number, or one per stage
+// (config.audio.targetLufs) read at the config's stage. A stage with no target is refused.
+export function targetOf({ targetLufs, stage }) {
+  const t = typeof targetLufs === 'number' ? targetLufs : targetLufs?.[stage];
+  if (!Number.isFinite(t)) throw new Error(`no loudness target for the ${stage} stage (config.audio.targetLufs)`);
+  return t;
+}
+
+// Set the integrated loudness to the config's target (targetOf), then hold every sample under `ceilingDb`. Limiting
+// loud transients takes their energy out of the measurement, so the gain is corrected and the limiter run again (a few
+// passes at most, each from the unlimited signal) until the limited result reads the target. Works in place. `peaks`
+// is the signal's true-peak envelope, when the caller already has it (the review's sweep normalizes one render to many
+// targets); computed here otherwise. Returns what it did.
+export function normalize(left, right, audio, sr = 48000, passes = 4, peaks = null) {
+  const targetLufs = targetOf(audio), { ceilingDb } = audio;
   const before = integratedLufs(left, right, sr);
   if (!Number.isFinite(before)) return { lufsBefore: before, gainDb: 0, peakBeforeLimitDb: -Infinity, limitedSamples: 0, passes: 0, lufs: before, peakDb: -Infinity };
-  const srcL = Float32Array.from(left), srcR = Float32Array.from(right), peaks = truePeakEnvelope(srcL, srcR);
+  const srcL = Float32Array.from(left), srcR = Float32Array.from(right);
+  peaks ??= truePeakEnvelope(srcL, srcR);
   let gainDb = targetLufs - before, lufs = before, peakBefore = 0, lim = null, pass = 0;
   while (pass < passes) {
     pass++;

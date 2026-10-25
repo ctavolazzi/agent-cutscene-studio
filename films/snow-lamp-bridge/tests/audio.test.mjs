@@ -16,7 +16,7 @@ import { T_TOTAL } from '../src/world.js';
 import { mulberry32 } from '../src/prng.js';
 import { STAGES, atStage, buildLayers, layerNames, renderSoundtrack } from '../src/audio/index.js';
 import { renderAll } from '../src/audio/mix.js';
-import { integratedLufs, normalize, samplePeak } from '../src/audio/loudness.js';
+import { integratedLufs, normalize, samplePeak, targetOf } from '../src/audio/loudness.js';
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
@@ -82,11 +82,21 @@ test('normalize lands on the target and holds every sample under the ceiling', (
   assert.ok(st.peakBeforeLimitDb > 0, `the test signal really needed limiting (${st.peakBeforeLimitDb} dB)`);
 });
 
-test('the finished soundtrack: -16 LUFS integrated and a true peak at or under -1.5 dBTP (ffmpeg)', () => {
+// The target is per stage since Sound 2.6 (config.audio.targetLufs): the default stage's is read, not typed
+test('the finished soundtrack: its stage\'s target integrated and a true peak at or under -1.5 dBTP (ffmpeg)', () => {
   const m = master();
   const ref = ffmpegLoudness(m.left, m.right);
-  assert.ok(Math.abs(ref.I - CONFIG.audio.targetLufs) <= 0.2, `integrated ${ref.I}`);
+  assert.ok(Math.abs(ref.I - targetOf(CONFIG.audio)) <= 0.2, `integrated ${ref.I}, target ${targetOf(CONFIG.audio)}`);
   assert.ok(ref.TP <= -1.5, `true peak ${ref.TP}`);
+});
+
+test('the target per stage: each stage reads its own, the design stage -16; one number is used as it is; a stage without one is refused', () => {
+  assert.equal(targetOf(atStage(CONFIG, { stage: 'design' }).audio), -16, 'the first pass, byte identical (SOUND-PLAN 4.4)');
+  assert.ok(targetOf(atStage(CONFIG, { stage: 'blockout' }).audio) <= -16, 'at or under -16 (SOUND-PLAN 3.18)');
+  assert.equal(targetOf({ targetLufs: -20, stage: 'anything' }), -20);
+  // controls: a stage the table does not name, and a target that is not a number
+  assert.throws(() => targetOf({ targetLufs: { design: -16 }, stage: 'blockout' }), /no loudness target for the blockout stage/);
+  assert.throws(() => targetOf({ targetLufs: { blockout: '-16' }, stage: 'blockout' }), /no loudness target/);
 });
 
 test('placement: a source to the camera\'s right pans right, behind is quieter and darker, far is quieter', () => {
@@ -206,6 +216,7 @@ test('sidecar: scripts/sound.js names the stage, the parked and the built layers
   assert.deepEqual([side.stage, side.parked, side.layers], ['design', CONFIG.audio.parked, ['ambience']]);
   assert.equal(side.renderSeconds, undefined, 'render time is not written: it differs every run');
   assert.equal(side.limiter, null, 'a raw render is not limited');
+  assert.equal(side.targetLufs, null, 'nor normalized to a target');
 });
 
 test('sidecar: the limiter report finds the shot the limiter acts in, by how much, and nothing elsewhere', () => {
