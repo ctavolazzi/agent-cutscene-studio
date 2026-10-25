@@ -18,7 +18,16 @@ export function listenerAt(t) {
   return { pos: c.pos, f, r };
 }
 
-export const SPATIAL = { refDist: 1.5, airMeters: 60, minAirHz: 1800, behindGain: 0.75, behindAir: 0.45 };
+// axisDeg: the cone round the listener's vertical axis where the azimuth is degenerate (below). A starting value: the
+// closest any placed sound comes to that axis today is 28 degrees (the lamp's hum from shot 4's camera), parked layers
+// and cues.js alike, so the guard changes nothing in today's mix (tests/spatial.test.mjs).
+export const SPATIAL = { refDist: 1.5, airMeters: 60, minAirHz: 1800, behindGain: 0.75, behindAir: 0.45, axisDeg: 10 };
+
+// The sine of a source's angle from the listener's vertical axis (the camera's up): 0 straight above or below it.
+export function axisSine(p, L) {
+  const d = sub(p, L.pos), dist = Math.hypot(d[0], d[1], d[2]);
+  return dist > 0 ? Math.hypot(dot(d, L.r), dot(d, L.f)) / dist : 0;
+}
 
 // How a source at world point p sounds from the listener: pan -1..1, gain, and a lowpass cutoff in Hz. `refDist` and
 // `rolloff` set the distance law, gain = (refDist / dist) ^ rolloff past refDist: 1 is the physical law (6 dB a
@@ -27,10 +36,18 @@ export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, ro
   const d = sub(p, L.pos), dist = Math.hypot(d[0], d[1], d[2]);
   const x = dot(d, L.r), z = dot(d, L.f);
   const flat = Math.hypot(x, z) || 1;
-  const pan = clamp(x / flat, -1, 1);
+  let pan = clamp(x / flat, -1, 1);
   let gain = (refDist / Math.max(refDist, dist)) ** rolloff;
   let hz = Math.max(SPATIAL.minAirHz, 20000 * Math.exp(-dist / SPATIAL.airMeters));
-  if (z < 0) { gain *= SPATIAL.behindGain; hz *= SPATIAL.behindAir; }
+  // Near the vertical axis the azimuth is degenerate: a tiny pitch would flip the pan and switch the behind loss on and
+  // off. Inside the cone the pan shrinks toward the centre, and the behind share ramps across z = 0 over a band that
+  // narrows from the cone's sine on the axis (1 - w^2) to nothing at its edge, where it meets the hard behind plane that
+  // holds outside the cone: continuous everywhere, and a tiny pitch moves it only a little in the cone's inner half.
+  const edge = Math.sin(SPATIAL.axisDeg * Math.PI / 180), s = dist > 0 ? Math.hypot(x, z) / dist : 0;
+  if (s < edge) {
+    const w = s / edge, b = 0.5 - 0.5 * clamp((dist > 0 ? z / dist : 0) / (edge * (1 - w * w)), -1, 1);
+    pan *= w; gain *= 1 + (SPATIAL.behindGain - 1) * b; hz *= 1 + (SPATIAL.behindAir - 1) * b;
+  } else if (z < 0) { gain *= SPATIAL.behindGain; hz *= SPATIAL.behindAir; }
   return { pan, gain, hz, dist };
 }
 
