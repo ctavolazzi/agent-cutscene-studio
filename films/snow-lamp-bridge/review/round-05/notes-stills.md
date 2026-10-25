@@ -63,7 +63,9 @@ from (SOUND-PLAN 1.2 and 4.7).
   group stems), 30 s for the 15 stills, 5 s for the sheet, which rendered nothing (the session's memo). Run twice, all
   35 files (15 PNG and 15 SVG, the arrangement's PNG and SVG, the contact sheet's HTML and PNG, stills.json) came out
   byte for byte the same. Sizes: the stills 0.56 to 0.90 MB each (9.8 MB), the arrangement 1.0 MB, the contact sheet's
-  PNG 6.3 MB (1500 by 12177 px), its HTML 0.2 MB.
+  PNG 6.3 MB (1500 by 12177 px), its HTML 0.2 MB. `--measure --stills --sheet` in one call (4.4 minutes for the
+  measure): the stills and the sheet logged "rendered: nothing", and every committed file, measure.json and the stems
+  included, came out byte for byte as committed.
 
 ## Looked at, and what was fixed before committing
 

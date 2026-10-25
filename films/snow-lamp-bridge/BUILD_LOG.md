@@ -1069,3 +1069,10 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
   hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
   renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-stills: the steps in one call
+- `node scripts/sound-review.js --round 05 --measure --stills --sheet`: the measure in 263 s, then the stills and the
+  sheet, each logging "rendered for them: nothing"; `git status` clean after it (measure.json, the stems, the stills,
+  the arrangement and the contact sheet all byte for byte as committed). The note is added to notes-stills.md.
+- Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped); npm run check exit 0 (forbidden 0 hits, determinism
+  0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
