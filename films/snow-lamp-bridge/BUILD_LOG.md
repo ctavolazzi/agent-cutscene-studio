@@ -1118,3 +1118,20 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Images: `node scripts/sound-review.js --round 05 --stills --sheet` twice, all 36 outputs byte for byte the same;
   looked at whole and in crops (shots 1, 3, 5, 8, 9, 13 and 15, the arrangement, the contact sheet). The design stage
   with the score unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+- Gate before commit e88cc83: npm test exit 0 (271 tests, 268 pass, 0 fail, 3 skipped: the parked score; both
+  rebuild tests ran on the recorded Chromium); npm run check exit 0 (forbidden 0 hits, determinism 0 of 62 differ,
+  cameras 191 comparisons, worst 2.00e-15).
+
+#### s2-stills: the notes after the checker's findings (before)
+- Plan: rewrite `review/round-05/notes-stills.md` for the new drawings and checks: the hum's lines measured per shot
+  (F4), the bridge wind's span mean (F5), the five unplaced beds, the onsets at one moment now seen, the mutation run,
+  and a table of the findings and what was done.
+
+#### s2-stills: the notes after the checker's findings (after)
+- `review/round-05/notes-stills.md`: the hum's 120 and 240 Hz rows measured on each still's own rows (each row's median
+  over the shot against the rows 3 to 6 away): 3.7 to 5.1 and 5.4 to 15.8 dB over their neighbours in shots 1 and 4 to
+  15, under one 3 dB colour step in shots 2 (1.0 and 0.6 dB) and 3 (2.3 and -1.4 dB); the bridge wind's mean over
+  54.025 to 111.975 s 1.05 dB under its prediction; the checks table (22 tests over two files), the mutation table,
+  the second look at the images, and the findings F1 to F7 with what was done.
+- Gate: npm test exit 0 (271 tests, 268 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
