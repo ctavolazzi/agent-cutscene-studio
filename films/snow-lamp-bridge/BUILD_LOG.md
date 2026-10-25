@@ -802,3 +802,18 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   lag and an error of a tenth of each sample as 101 and -20.00 dB, a signal against itself lag 0 and no error.
 - Gate: 232 tests (225 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
   unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-measure: verify check 5's target, and SOUND.md (before)
+- Plan: `madeAtOf(sidecar)` reads the target a WAV was made at (a sidecar from before the per-stage target names none:
+  -16), and `staleSound` words check 5's problem with it, so a blockout WAV made at -16 says so; a test with that
+  planted sidecar and its controls. SOUND.md's two "-16 LUFS" lines say the target is per stage.
+
+#### s2-measure: verify check 5's target, and SOUND.md (after)
+- `scripts/verify.js`: `LEGACY_TARGET_LUFS` (-16), `madeAtOf`, `staleSound`; check 5 uses them, so a blockout WAV
+  whose sidecar predates the per-stage target reads "made at the blockout stage, parked score, at -16 LUFS where the
+  stage's target is now -23". The S8.3 sidecar (no stage, no target: the design stage, still -16) gets no note.
+- `tests/audio.test.mjs`: one test, the planted pre-target sidecar and its controls (a named target, today's or
+  another; a raw render; no sidecar; the S8.3 sidecar). SOUND.md: the normalization and the loudness check name the
+  target per stage.
+- Gate: 233 tests (226 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
+  unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

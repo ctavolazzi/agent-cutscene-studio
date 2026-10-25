@@ -28,8 +28,10 @@ rather than realistic. Never harsh: nothing clips, nothing clicks at a cut.
 - `src/audio/events.js` schedules one-shots (`{ t, dur, place, make, law }`), each with its own voice and spatializer
   only while it sounds, and `grains()` builds crunches and crackles from seeded decaying ticks with the first at 0.
 - Buses `amb`, `fx`, `music` (levels in `config.audio.buses`), a reverb send per layer, master highpass at 35 Hz, the
-  picture's 3 s fade in and a 1.5 s fade out, then normalization to -16 LUFS integrated under a -2 dBFS ceiling on the
-  true peak (4x oversampled), corrected and limited again until the limited mix reads the target.
+  picture's 3 s fade in and a 1.5 s fade out, then normalization to its stage's integrated target
+  (`config.audio.targetLufs`: -16 LUFS for the design stage, -23 for the blockout, chosen by measurement at Sound 2.6)
+  under a -2 dBFS ceiling on the true peak (4x oversampled), corrected and limited again until the limited mix reads
+  the target.
 - Seeded randomness: `ctx.rngFor('audio:<layer>:<what>')`. No `Math.random`, no clocks.
 - Raw levels: write each layer so its loudest moments peak around -12 to -6 dBFS raw at a close camera; the mix pass
   sets the final balance with the bus and layer gains.
@@ -103,8 +105,9 @@ is low-passed near 9 kHz (the feel of 22 kHz samples) and sent to the reverb.
 `tests/audio.test.mjs` (the engine) and `tests/sound-layers.test.mjs` (the layers):
 
 - Determinism: two renders give the same bytes; another seed gives another soundtrack.
-- Loudness: the meter agrees with ffmpeg's ebur128 within 0.2 LU; the master lands at -16 LUFS; the true peak (ffmpeg)
-  is at or under -1.5 dBTP; normalize holds the target on a signal with bursts that need limiting.
+- Loudness: the meter agrees with ffmpeg's ebur128 within 0.2 LU; the master lands at its stage's target (`targetOf`:
+  -23 LUFS for the default blockout stage, -16 for the design stage); the true peak (ffmpeg) is at or under -1.5 dBTP;
+  normalize holds the target on a signal with bursts that need limiting.
 - Timing: the settle, every door and the key, every footstep (per person, so A's and B's never mask each other), the
   lighter and every bell note start within one frame (1/24 s) of their cue in their layer's stem; the same schedule
   three frames early does not match.

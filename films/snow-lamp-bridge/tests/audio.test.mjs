@@ -21,7 +21,7 @@ import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
 import { limiterByShot, renderToWav } from '../scripts/sound.js';
-import { LEGACY_SOUND, madeBy } from '../scripts/verify.js';
+import { LEGACY_SOUND, LEGACY_TARGET_LUFS, madeAtOf, madeBy, staleSound } from '../scripts/verify.js';
 
 const SR = CONFIG.audio.sr;
 const dir = mkdtempSync(join(tmpdir(), 'audio-test-'));
@@ -229,6 +229,27 @@ test('sidecar: the limiter report finds the shot the limiter acts in, by how muc
   const r = limiterByShot(raw, out, sr, shots, 0.1);
   assert.deepEqual([r[0].maxDb, r[1].shot, r[1].at], [0, 2, 3]);
   assert.ok(Math.abs(r[1].maxDb - 20 * Math.log10(2)) < 0.01, `${r[1].maxDb} dB`);
+});
+
+// The target a WAV was made at (Sound 2.6): its sidecar names it; one from before the per-stage target names none and
+// was made at -16, whatever its stage. Check 5 says so when that is not the stage's target today. Planted: a blockout
+// sidecar from before the target (a stage, no targetLufs), which a bare mismatch would leave unexplained.
+test('verify check 5: a WAV made at another target than its stage\'s today says so; a sidecar from before the per-stage target was made at -16', () => {
+  const old = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, stage: 'blockout', parked: ['score'], layers: ['bg', 'hard', 'foley'], sha256: 'x', stats: {} };
+  const made = madeBy(old), target = targetOf(atStage(CONFIG, made).audio);
+  assert.equal(madeAtOf(old), LEGACY_TARGET_LUFS);
+  assert.notEqual(target, LEGACY_TARGET_LUFS, 'the blockout\'s target moved');
+  assert.match(staleSound('out/sound.wav', made, madeAtOf(old), target), new RegExp(`made at the blockout stage, parked score, at -16 LUFS where the stage's target is now ${target}\\)`));
+  // a sidecar naming its target is read as written: at today's target nothing is said of it, at another it is
+  assert.equal(madeAtOf({ ...old, targetLufs: target }), target);
+  assert.doesNotMatch(staleSound('out/sound.wav', made, target, target), /LUFS/);
+  assert.match(staleSound('out/sound.wav', made, -20, target), new RegExp(`at -20 LUFS where the stage's target is now ${target}`));
+  // the S8.3 sidecar (no stage, no target) was made at -16 by the design stage, whose target is still -16: no note
+  const s83 = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, layers: 'all', renderSeconds: 11.86, sha256: 'f80b1542', stats: {} };
+  assert.doesNotMatch(staleSound('out/sound.wav', madeBy(s83), madeAtOf(s83), targetOf(atStage(CONFIG, madeBy(s83)).audio)), /LUFS/);
+  // a raw render names no target, and no sidecar is unknown: neither is said to be made at a target
+  assert.deepEqual([madeAtOf({ ...old, targetLufs: null }), madeAtOf(null)], [null, null]);
+  assert.doesNotMatch(staleSound('out/sound.wav', made, null, target), /LUFS/);
 });
 
 test('verify check 5: a sidecar without stage or parked was made before the stage switch, score in', () => {

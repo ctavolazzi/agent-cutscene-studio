@@ -13,7 +13,8 @@
 //    information, not a pass or fail: in software WebGL it says nothing about a real GPU.
 // 5. sound: the WAV is the soundtrack the code makes today at the stage and parking its sidecar names (rendered again,
 //    byte for byte, normalized to that stage's target; a sidecar without them was made before the stage switch, score
-//    in; one naming another target than its stage's today is reported as made at it), and the MP4's decoded audio is
+//    in; one made at another target than its stage's today is reported as made at it, a sidecar from before the
+//    per-stage target as made at -16), and the MP4's decoded audio is
 //    that WAV: in sync to a millisecond in three windows spread over the film, correlated 0.95 or more, the same
 //    loudness within 0.3 LU, a true peak at or under -1 dBTP.
 // Usage: node scripts/verify.js [--file out/snowy-bridge.mp4] [--profile full|4k] [--html dist/index.html]
@@ -84,6 +85,20 @@ export function madeBy(sidecar, config = CONFIG) {
   if (!sidecar) return { stage: config.audio.stage, parked: config.audio.parked, made: 'no sidecar: the config as it is' };
   if (!('stage' in sidecar) || !('parked' in sidecar)) return { ...LEGACY_SOUND, parked: [...LEGACY_SOUND.parked] };
   return { stage: sidecar.stage, parked: sidecar.parked, made: `at the ${sidecar.stage} stage, parked ${sidecar.parked.join(', ') || 'none'}` };
+}
+
+// Every WAV made before the per-stage target (Sound 2.6) was normalized to -16 LUFS, whatever its stage
+export const LEGACY_TARGET_LUFS = -16;
+// The loudness target a WAV was normalized to, from its sidecar: the one it names (null for a raw render);
+// LEGACY_TARGET_LUFS for a sidecar from before the per-stage target, which names none; null without a sidecar
+export function madeAtOf(sidecar) {
+  if (!sidecar) return null;
+  return 'targetLufs' in sidecar ? sidecar.targetLufs : LEGACY_TARGET_LUFS;
+}
+// Check 5's problem for a WAV that is not the soundtrack the code makes now: how it was made, and the target it was
+// made at when that is not its stage's target today
+export function staleSound(audio, made, madeAt, target) {
+  return `${audio} (made ${made.made}${madeAt !== null && madeAt !== target ? `, at ${madeAt} LUFS where the stage's target is now ${target}` : ''}) is not the soundtrack the code makes now at that stage: run node scripts/sound.js and export again`;
 }
 
 // ffmpeg's EBU R128 meter on a file: { I, TP }
@@ -160,12 +175,12 @@ export async function verify({ file, profile, html, audio = null, log = console.
     // 5. sound
     if (audio && probe.audioStreams === 1) {
       const side = `${audio}.json`, sidecar = existsSync(side) ? JSON.parse(readFileSync(side, 'utf8')) : null, made = madeBy(sidecar);
-      const target = targetOf(atStage(CONFIG, made).audio), madeAt = sidecar?.targetLufs ?? null;
+      const target = targetOf(atStage(CONFIG, made).audio), madeAt = madeAtOf(sidecar);
       const now = renderSoundtrack(atStage(CONFIG, made));
       const bytes = encodeWav(now.left, now.right, now.sr, mulberry32((CONFIG.seed ^ hashString('audio:dither')) >>> 0));
       const digest = (b) => createHash('sha256').update(b).digest('hex');
       const current = digest(bytes) === digest(readFileSync(audio));
-      if (!current) fail('sound', `${audio} (made ${made.made}${madeAt !== null && madeAt !== target ? `, at ${madeAt} LUFS where the stage's target is now ${target}` : ''}) is not the soundtrack the code makes now at that stage: run node scripts/sound.js and export again`);
+      if (!current) fail('sound', staleSound(audio, made, madeAt, target));
       const wav = decodeAudio(audio), mp4 = decodeAudio(file);
       const sync = SOUND_BAR.windows.map(([a, b]) => ({ window: [a * total, b * total], ...alignment(wav, mp4, { i0: Math.round(a * total * wav.sr), i1: Math.round(b * total * wav.sr) }) }));
       for (const w of sync) {
