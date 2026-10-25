@@ -49,6 +49,7 @@ import { hashString, mulberry32 } from '../src/prng.js';
 import { SHOTS, shotAt } from '../src/shots.js';
 import { carTimes, FPS, T_TOTAL } from '../src/world.js';
 import * as A from './lib/audio-analysis.mjs';
+import { alignment, decodeAudio } from './lib/ffmpeg.mjs';
 import { allocate, maskingBed, safeBand } from './lib/sound-checks.js';
 import { buildInput, syncRule } from './sound-report.js';
 
@@ -88,6 +89,22 @@ export const minGapOf = (own, flam = DESIGN.STEP.flam) => Math.max(flam, Math.mi
 // The body a voice group belongs to, for the listening stems: the night (the backgrounds and the lamp's hum), or the
 // group's own first word (car, A, B), so the stems are what the voice groups really give
 export const bodyOf = (source) => (source.startsWith('bg:') || source === 'lamp' ? 'night' : source.split(':')[0]);
+
+// Parts against the whole they should sum to (a group's cues alone and its stem, the voice groups and the mix before
+// the master, the bodies and the raw mix): the largest difference in either channel over the whole's peak, and where
+// (s); and the difference's power under the whole's, in dB. A part may be shorter than the whole (zeros after it).
+export function sumAgainst(parts, whole) {
+  const n = whole.left.length, L = new Float64Array(n), R = new Float64Array(n);
+  for (const p of parts) for (let i = 0; i < Math.min(n, p.left.length); i++) { L[i] += p.left[i]; R[i] += p.right[i]; }
+  let worst = 0, peak = 0, at = 0, e = 0, w = 0;
+  for (let i = 0; i < n; i++) {
+    const dl = L[i] - whole.left[i], dr = R[i] - whole.right[i], d = Math.max(Math.abs(dl), Math.abs(dr));
+    if (d > worst) { worst = d; at = i; }
+    peak = Math.max(peak, Math.abs(whole.left[i]), Math.abs(whole.right[i]));
+    e += dl * dl + dr * dr; w += whole.left[i] * whole.left[i] + whole.right[i] * whole.right[i];
+  }
+  return { worst, peak, ratio: peak > 0 ? worst / peak : worst > 0 ? Infinity : 0, at: at / whole.sr, errorDb: e > 0 ? 10 * Math.log10(e / (w || 1e-30)) : -Infinity };
+}
 
 // ---------- the session: every render once ----------
 // The first sample that is not zero of a render, in seconds (null when silent)
@@ -154,13 +171,7 @@ function sumCheck(session, g, rendered, stem) {
       for (const c of list) { const a = session.renderAlone(c); for (let i = 0; i < left.length; i++) { left[i] += k * a.left[i]; right[i] += k * a.right[i]; } }
     }
   }
-  let worst = 0, peak = 0, at = 0;
-  for (let i = 0; i < stem.left.length; i++) {
-    const d = Math.max(Math.abs(stem.left[i] - left[i]), Math.abs(stem.right[i] - right[i]));
-    if (d > worst) { worst = d; at = i; }
-    peak = Math.max(peak, Math.abs(stem.left[i]), Math.abs(stem.right[i]));
-  }
-  return { worst, peak, ratio: peak > 0 ? worst / peak : worst > 0 ? Infinity : 0, at: at / stem.sr };
+  return sumAgainst([{ left, right }], stem);
 }
 
 // Each voiced cue of group g as the cue list has it (`own`), measured before the master:
@@ -378,16 +389,8 @@ export function determinismEntry(a, b) {
 
 // 13 the stems against the mix: every voice group alone, summed, equals the mix before the master stage
 export function stemsEntry(groups, stemOf, pre) {
-  const n = pre.left.length, sum = [new Float64Array(n), new Float64Array(n)];
-  for (const g of groups) { const s = stemOf(g); for (let i = 0; i < n; i++) { sum[0][i] += s.left[i]; sum[1][i] += s.right[i]; } }
-  let worst = 0, peak = 0, at = 0;
-  for (let i = 0; i < n; i++) {
-    const d = Math.max(Math.abs(sum[0][i] - pre.left[i]), Math.abs(sum[1][i] - pre.right[i]));
-    if (d > worst) { worst = d; at = i; }
-    peak = Math.max(peak, Math.abs(pre.left[i]), Math.abs(pre.right[i]));
-  }
-  const ratio = peak > 0 ? worst / peak : 0;
-  return entry('stems', 13, 'Stems against the mix', `The ${groups.length} voice groups rendered alone before the master, summed, against the whole blockout before the master: the largest difference in either channel over the mix's peak`, `Within ${bar('sumRatio')} of the peak`, BARS.sumRatio.source, BARS.sumRatio.starting, ratio <= BARS.sumRatio.v ? 'pass' : 'fail', `worst ${ratio.toExponential(2)} of the peak at ${r(at / pre.sr, 4)} s`, ['groups', 'worst', 'peak', 'ratio', 'at'], [{ groups: groups.length, worst: Number(worst.toExponential(3)), peak: r(peak, 6), ratio: Number(ratio.toExponential(3)), at: r(at / pre.sr, 6) }]);
+  const { worst, peak, ratio, at } = sumAgainst(groups.map(stemOf), pre);
+  return entry('stems', 13, 'Stems against the mix', `The ${groups.length} voice groups rendered alone before the master, summed, against the whole blockout before the master: the largest difference in either channel over the mix's peak`, `Within ${bar('sumRatio')} of the peak`, BARS.sumRatio.source, BARS.sumRatio.starting, ratio <= BARS.sumRatio.v ? 'pass' : 'fail', `worst ${ratio.toExponential(2)} of the peak at ${r(at, 4)} s`, ['groups', 'worst', 'peak', 'ratio', 'at'], [{ groups: groups.length, worst: Number(worst.toExponential(3)), peak: r(peak, 6), ratio: Number(ratio.toExponential(3)), at: r(at, 6) }]);
 }
 
 // ---------- 14 the drift of the parked design layers (Sound 2.7) ----------
@@ -473,9 +476,10 @@ export const compactJson = (o) => `${JSON.stringify(o, null, 1).replace(/\[\s+((
 const fileName = (source) => source.replace(/[^A-Za-z0-9]+/g, '-');
 
 // The listening stems (Sound 2.6, for the director): one per body, the full render of its voice groups (reverb and the
-// master chain in) at the mastered mix's own gain and unlimited, so the stems sum to the mix before its limiter; AAC
-// at LISTEN.bitrate (the export's codec, scripts/lib/ffmpeg.mjs AUDIO, at a third of its rate), bit-exact flags so
-// the same samples give the same file.
+// master chain in) at the mastered mix's own gain and unlimited, so the float stems sum to the mix before its limiter;
+// AAC at LISTEN.bitrate (the export's codec, scripts/lib/ffmpeg.mjs AUDIO, at a third of its rate), bit-exact flags so
+// the same samples give the same file. The AAC files do not sum exactly: each is measured against its float stem
+// (codingError), and their decoded sum against the mix.
 export const LISTEN = Object.freeze({ codec: 'aac', bitrate: '96k', sampleRate: 48000, channels: 2 });
 function encodeAac(wav, m4a) {
   const p = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', wav, '-c:a', LISTEN.codec, '-b:a', LISTEN.bitrate, '-ar', String(LISTEN.sampleRate), '-ac', String(LISTEN.channels), '-map_metadata', '-1', '-fflags', '+bitexact', '-flags:a', '+bitexact', m4a], { encoding: 'utf8' });
@@ -486,23 +490,37 @@ function meterOf(path) {
   const d = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path], { encoding: 'utf8' });
   return { I: Number(/I:\s+(-?[\d.]+) LUFS/.exec(p.stderr)?.[1]), TP: Number(/Peak:\s+(-?[\d.]+) dBFS/.exec(p.stderr)?.[1]), seconds: Number(d.stdout.trim()) };
 }
+// The listening stems' bodies, each { name, render }: the full render of its voice groups before normalization
+export const listeningBodies = (session) => [...new Set(session.groups.map(bodyOf))].map((name) => ({ name, render: session.renderOf(`body:${name}`, (c) => bodyOf(c.source) === name) }));
+// How far a decoded file is from the float signal it was encoded from: the lag (samples, the decoded later is
+// positive) that best aligns them over the signal's loudest second (ffmpeg.mjs alignment, within LAG_MAX), the decoded
+// file moved back by it, and the error's power under the signal's, both channels, in dB
+const LAG_MAX = 2048; // two AAC frames: more than the encoder's priming, which the decoder trims
+export function codingError(float, decoded) {
+  const w = A.loudestWindow(float, 0, float.left.length / float.sr, 1), i0 = A.idx(w.t, float.sr), i1 = Math.min(float.left.length, i0 + float.sr);
+  const { lag } = alignment(float, decoded, { i0, i1, maxLag: LAG_MAX });
+  const back = (x) => Float32Array.from(float.left, (_, i) => x[i + lag] ?? 0), aligned = { sr: float.sr, left: back(decoded.left), right: back(decoded.right) };
+  return { lag, aligned, errorDb: sumAgainst([aligned], float).errorDb };
+}
 export function listeningStems(session, { round, gainDb, targetLufs, reviewDir, outDir, log = () => {} }) {
-  const bodies = [...new Set(session.groups.map(bodyOf))], g = 10 ** (gainDb / 20), raw = session.raw(), n = raw.left.length;
-  const sum = [new Float64Array(n), new Float64Array(n)], out = [];
+  const g = 10 ** (gainDb / 20), raw = session.raw(), bodies = listeningBodies(session), decoded = [], out = [];
   mkdirSync(resolve(reviewDir, 'stems'), { recursive: true }); mkdirSync(resolve(outDir, 'listen'), { recursive: true });
-  for (const b of bodies) {
-    const s = session.renderOf(`body:${b}`, (c) => bodyOf(c.source) === b), left = Float32Array.from(s.left, (x) => x * g), right = Float32Array.from(s.right, (x) => x * g);
-    for (let i = 0; i < n; i++) { sum[0][i] += s.left[i]; sum[1][i] += s.right[i]; }
+  for (const { name: b, render: s } of bodies) {
+    const left = Float32Array.from(s.left, (x) => x * g), right = Float32Array.from(s.right, (x) => x * g);
     const wav = resolve(outDir, 'listen', `${b}.wav`), m4a = resolve(reviewDir, 'stems', `${b}.m4a`);
     writeFileSync(wav, encodeFloatWav(left, right, s.sr));
     encodeAac(wav, m4a);
-    const bytes = readFileSync(m4a), meter = meterOf(m4a), own = session.voiced.filter((c) => bodyOf(c.source) === b);
-    out.push({ name: b, file: `${b}.m4a`, sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length, seconds: r(meter.seconds, 3), lufs: r(integratedLufs(left, right, s.sr), 2), peakDb: r(A.db(samplePeak(left, right)), 2), aac: { lufs: meter.I, truePeakDb: meter.TP }, groups: [...new Set(own.map((c) => c.source))], cues: own.map((c) => c.id) });
-    log(`  stem ${b}: ${own.length} cues, ${(bytes.length / 1e6).toFixed(2)} MB, ${meter.I} LUFS`);
+    const bytes = readFileSync(m4a), meter = meterOf(m4a), own = session.voiced.filter((c) => bodyOf(c.source) === b), err = codingError({ sr: s.sr, left, right }, decodeAudio(m4a, s.sr));
+    decoded.push(err.aligned);
+    out.push({ name: b, file: `${b}.m4a`, sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length, seconds: r(meter.seconds, 3), lufs: r(integratedLufs(left, right, s.sr), 2), peakDb: r(A.db(samplePeak(left, right)), 2), aac: { lufs: meter.I, truePeakDb: meter.TP, lagSamples: err.lag, errorDb: r(err.errorDb, 2) }, groups: [...new Set(own.map((c) => c.source))], cues: own.map((c) => c.id) });
+    log(`  stem ${b}: ${own.length} cues, ${(bytes.length / 1e6).toFixed(2)} MB, ${meter.I} LUFS, the AAC's coding error ${(-err.errorDb).toFixed(2)} dB under its float stem (lag ${err.lag})`);
   }
-  let worst = 0, peak = 0;
-  for (let i = 0; i < n; i++) { worst = Math.max(worst, Math.abs(sum[0][i] - raw.left[i]), Math.abs(sum[1][i] - raw.right[i])); peak = Math.max(peak, Math.abs(raw.left[i]), Math.abs(raw.right[i])); }
-  return { round, stage: session.config.audio.stage, gainDb, targetLufs, codec: LISTEN.codec, bitrate: LISTEN.bitrate, note: 'each body at the mastered mix\'s own gain, unlimited: the stems sum to the mix before its limiter (sumRatio: the largest difference over the raw mix\'s peak); lufs and peakDb are the float signal\'s, aac the encoded file\'s (ffmpeg ebur128)', sumRatio: Number((worst / peak).toExponential(3)), bodies: out };
+  const float = sumAgainst(bodies.map((x) => x.render), raw), aac = sumAgainst(decoded, { sr: raw.sr, left: Float32Array.from(raw.left, (x) => x * g), right: Float32Array.from(raw.right, (x) => x * g) });
+  return {
+    round, stage: session.config.audio.stage, gainDb, targetLufs, codec: LISTEN.codec, bitrate: LISTEN.bitrate,
+    note: 'each body at the mastered mix\'s own gain, unlimited. The float stems (out/round-NN/listen/*.wav) sum to the mix before its limiter: sumRatio is their largest difference over the raw mix\'s peak. The AAC files are coded, so they do not: aacSum is their decoded sum against that mix at the same gain (the largest difference over its peak, where, and the error\'s power under the mix\'s), and each body\'s aac.errorDb its own coding error under its float stem (aac.lagSamples the lag that aligns them). lufs and peakDb are the float signal\'s, aac.lufs and aac.truePeakDb the encoded file\'s (ffmpeg ebur128)',
+    sumRatio: Number(float.ratio.toExponential(3)), aacSum: { ratio: r(aac.ratio, 4), at: r(aac.at, 4), errorDb: r(aac.errorDb, 2) }, bodies: out,
+  };
 }
 
 // ---------- the step: --measure ----------

@@ -782,3 +782,23 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate: 231 tests (224 pass, 7 skipped: the parked score, and 4 reel tests with no published export in this
   worktree); forbidden, build, determinism, cameras pass. The design stage with the score unparked renders sha256
   f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-measure: the listening stems, float and AAC (before)
+- Plan: one helper for every sum against a whole (`sumAgainst`: the group sums, the stems entry, the bodies), which
+  also gives the difference's power under the whole's. The listening stems: the float bodies' sum against the raw mix
+  as before, a test of it with a body left out; each AAC file decoded and measured against its float stem (the lag
+  that aligns them, the coding error in dB), and the decoded files' sum against the mix, all in stems.json, so the
+  notes say what holds for which.
+
+#### s2-measure: the listening stems, float and AAC (after)
+- `sumAgainst` (largest difference over the whole's peak, where, and the error's power in dB) now serves the group
+  sums, the stems entry and the bodies. `listeningBodies`, `codingError` (the lag by ffmpeg.mjs `alignment` over the
+  loudest second, then the error) and stems.json's `aac.lagSamples`, `aac.errorDb` and `aacSum`.
+- Measured (scratch, the same m4a bytes as committed): the float bodies sum to the raw mix within 9.0e-8 of its peak;
+  every AAC file aligns at lag 0; coding error under its float stem night 9.61 dB, car 17.59, A 17.68, B 15.60; the
+  decoded files summed against the mix differ by up to 0.380 of its peak (at 30.44 s, the driver's unlatch), the error
+  13.03 dB under the mix. So the sum holds for the float stems, not the files the director gets.
+- Test: the four bodies sum within the stems bar and each one left out fails; codingError reads a planted 101-sample
+  lag and an error of a tenth of each sample as 101 and -20.00 dB, a signal against itself lag 0 and no error.
+- Gate: 232 tests (225 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
+  unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

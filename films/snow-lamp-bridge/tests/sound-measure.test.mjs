@@ -23,8 +23,9 @@ import { mulberry32 } from '../src/prng.js';
 import { FPS, T_TOTAL } from '../src/world.js';
 import { buildInput, syncRule } from '../scripts/sound-report.js';
 import {
-  densityEntry, determinismEntry, driftEntry, driftTol, levelEntry, makeSession, maskingAndPhone, measureGroup, panEntry,
-  readLagSec, rendererEntry, silenceEntry, stemsEntry, syncEntry, targetEntry, targetSweep, voicesEntry,
+  BARS, codingError, densityEntry, determinismEntry, driftEntry, driftTol, levelEntry, listeningBodies, makeSession, maskingAndPhone,
+  measureGroup, panEntry, readLagSec, rendererEntry, silenceEntry, stemsEntry, sumAgainst, syncEntry, targetEntry, targetSweep,
+  voicesEntry,
 } from '../scripts/sound-review.js';
 import {
   THIRD_OCTAVES, balanceDb, bandLevels, energyBlocks, foldDown, limiterLoss, loudestWindow, matchOnsets, matchOneToOne,
@@ -437,6 +438,25 @@ test('determinism and stems measures: the same render twice passes, one changed 
   const two = ['A:feet', 'B:feet'], pre = preMaster([...quiet, ...CUES.filter((x) => two.includes(x.source) && x.voices > 0)]);
   assert.equal(stemsEntry(two, (g) => session.group(g), pre).status, 'pass');
   assert.equal(stemsEntry(['A:feet'], (g) => session.group(g), pre).status, 'fail');
+});
+
+// The listening stems: one full render per body (reverb in), at the mix's gain, so they sum to the raw mix. That
+// holds for the float bodies the AAC files are encoded from, not for the files (round 05's checker: their decoded
+// sum is 12.6 dB of coding error under the mix), so the float sum is the bar and the files' error is measured
+// (codingError). Planted: a body left out of the sum; a "decoded" signal 101 samples late with noise 20 dB down.
+test('listening stems: the float bodies sum to the raw mix within the stems bar, one left out does not; the coding error reads its lag and level', () => {
+  const bodies = listeningBodies(session), raw = session.raw();
+  assert.deepEqual(bodies.map((b) => b.name).sort(), ['A', 'B', 'car', 'night']);
+  const all = sumAgainst(bodies.map((b) => b.render), raw);
+  assert.ok(all.ratio <= BARS.sumRatio.v, `the four bodies: ${all.ratio}`);
+  for (const b of bodies) assert.ok(sumAgainst(bodies.filter((x) => x !== b).map((x) => x.render), raw).ratio > BARS.sumRatio.v, `control: without ${b.name}`);
+  // the planted "decoded" file: the signal 101 samples late, each sample off by a tenth of itself (an error 20 dB down)
+  const src = steppedNoise(4, 9), rng = mulberry32(13), n = src.left.length;
+  const coded = (x) => Float32Array.from({ length: n + 101 }, (_, i) => (i < 101 ? 0 : x[i - 101] * (1 + 0.1 * (rng() < 0.5 ? -1 : 1))));
+  const e = codingError(src, { sr: SR, left: coded(src.left), right: coded(src.right) });
+  assert.equal(e.lag, 101);
+  assert.ok(Math.abs(e.errorDb + 20) < 0.1, `error ${e.errorDb.toFixed(2)} dB`);
+  assert.ok(codingError(src, src).errorDb === -Infinity && codingError(src, src).lag === 0, 'control: the signal against itself');
 });
 
 test('level measure: a tick planted 6 dB louder is measured 6 dB louder, and so is its prediction', () => {
