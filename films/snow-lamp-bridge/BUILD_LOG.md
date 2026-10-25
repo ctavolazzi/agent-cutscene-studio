@@ -738,3 +738,34 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate: npm test exit 0 (218 tests, 211 pass, 0 fail, 7 skipped, the same 7 as before); npm run check exit 0
   (forbidden 0 hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the
   score unparked f80b1542... and the default render 6f9c4925..., as before.
+
+#### s2-options: F3, F4 and F5, the options script (before)
+- Before: decisions.json measures the muffle with Sound 1's hidden state only, which counts a car's own body; the
+  listener set shares one limiter curve driven by B's steps; two comments in scripts/sound-options.js do not match.
+- Plan: `occlusionFrom(..., { ownBodies: false })` leaves out the boxes sound-report.js marks `own`; the muffle is
+  measured with both hidden states ('set', its B, and 'all', Sound 1's), its rows split by blocker and the engine
+  clip by part (the rise, the intake behind building SE at full level, the intake in view); clips for both at the
+  engine, the set's at the car. `masterOf` gains `still`, one static gain under A's with no limiter, for the listener
+  set; every clip reports what its master takes off A in 10 ms windows. Tests: the set's state against Sound 1's
+  frame for frame, the switches with it, the still master. Then the script rerun with clips.
+
+#### s2-options: F3, F4 and F5, the options script (after)
+- Actions: lib `occlusionFrom` takes `ownBodies` and records whether each frame's blocker is the cue's own body;
+  `muffleRow` splits by blocker; `masterOf` gains `still`; `coherenceOf` (the engine's coherence, now in
+  decisions.json, F9). The script measures the muffle by the set (B, 14 cues) and by Sound 1's rule (19), clips both
+  at the engine and the set's at the car body, masters the listener set through one static gain 12.01 dB under A's
+  with no limiter, and reports each clip's A against today's master in 10 ms windows. Header and CLIP_SEC comments
+  fixed (F5). Tests: the set's hidden state is Sound 1's less the own-body frames, frame for frame; each switch by
+  the set; the still master; coherenceOf. Planted on copies: occlusionFrom ignoring `ownBodies` and the still gain from
+  A alone each fail one test of the file (13 pass); a coherence ignoring where a render starts fails its test.
+- Rerun `node scripts/sound-options.js --round 05` (4.5 min): 12 clips of 7 s (9.3 MB with decisions.json), each
+  moment's clips with identical decoded video. Engine clip, B against A, by the set: -1.33 dB (volume), -1.00 (swap);
+  by Sound 1's rule -2.19, -2.56. By part: the rise -1.78/-0.85 under both; the intake behind building SE at full
+  level -4.59/-1.71 under both; the intake in view -0.41/-0.76 by the set, -1.55/-3.41 by Sound 1's rule. The car
+  moment moved to 28.250 s (the door cues are no longer hidden): -0.11/-0.12 dB by the set. The listener clip: +6.37
+  dB; the shared curve would have taken 1 dB or more off its A in 107 of 700 windows (worst -8.68), the still master
+  takes none; today's limiter takes 1 dB or more in 11 (worst -4.45). The muffle and pan clips' A: at most 2 of 700
+  windows 1 dB or more under today's master (worst -1.11).
+- Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). Default render 6f9c4925... and `a.wav` the
+  same bytes; the design stage with the score unparked f80b1542... (S8.3).

@@ -43,16 +43,22 @@ export const SWITCHES = Object.freeze({
 // ---------- the hidden state, from the picture ----------
 // Every placed voiced cue's hidden state as Sound 1's onScreen check judges it (sound-checks.js screenState with the
 // film's blockers): on each frame the cue covers, its rendered point (where it starts for an 'onset' placement, where
-// it is for a tracked one) through that frame's camera, hidden when a blocker lies between them. Returns
+// it is for a tracked one) through that frame's camera, hidden when a blocker lies between them. With `ownBodies`
+// false a source's own body does not hide its own sounds: the boxes sound-report.js marks `own` (the car's body and
+// cabin, for the car's own sounds) are left out, so a cue is hidden only by the set or by another body. That is the
+// muffle's question (is something in the way), and the plan's case, the engine behind building SE; true is Sound 1's
+// question (is the point seen), whose check 2 the hidden state then matches. Returns
 //   occlusion(c): null for a cue never hidden, else t -> whether the frame on screen at t hides it (before its first
 //                 frame, the first one's state), the function src/audio/index.js makeContext takes
-//   hidden:       id -> { f0, hid: [bool per frame], by: [blocker or null per frame] } for each cue hidden on any frame
-export function occlusionFrom(input, cues = CUES) {
-  const fps = input.fps, hidden = new Map();
+//   hidden:       id -> { f0, hid: [bool per frame], by: [blocker or null per frame], own: [whether that blocker is the
+//                 cue's own body, per frame] } for each cue hidden on any frame
+export function occlusionFrom(input, cues = CUES, { ownBodies = true } = {}) {
+  const fps = input.fps, hidden = new Map(), seen = ownBodies ? input : { ...input, blockers: (c, t) => input.blockers(c, t).filter((b) => !b.own) };
   for (const c of voicedPlaced(cues)) {
     const p0 = c.placement === 'onset' ? c.place(c.t0) : null, frames = framesOf(c, fps, input.total);
-    const states = frames.map((f) => screenState(input, c, p0 ?? c.place(f / fps), f / fps));
-    if (states.some((s) => s.state === 'hidden')) hidden.set(c.id, { f0: frames[0], hid: states.map((s) => s.state === 'hidden'), by: states.map((s) => s.blocker ?? null) });
+    const states = frames.map((f) => screenState(seen, c, p0 ?? c.place(f / fps), f / fps));
+    const own = (s, f) => Boolean(s.blocker && seen.blockers(c, f / fps).find((b) => b.name === s.blocker)?.own);
+    if (states.some((s) => s.state === 'hidden')) hidden.set(c.id, { f0: frames[0], hid: states.map((s) => s.state === 'hidden'), by: states.map((s) => s.blocker ?? null), own: states.map((s, j) => own(s, frames[j])) });
   }
   const occlusion = (c) => {
     const h = hidden.get(c.id);
@@ -60,14 +66,14 @@ export function occlusionFrom(input, cues = CUES) {
   };
   return { occlusion, hidden };
 }
-// The stretches of its span a cue is hidden, [{ t0, t1, by }], from occlusionFrom's entry for it
+// The stretches of its span a cue is hidden, [{ t0, t1, by, own }], from occlusionFrom's entry for it
 export function hiddenSpans(c, h, fps) {
   const out = [];
   h.hid.forEach((yes, j) => {
     if (!yes) return;
     const a = j === 0 ? c.t0 : Math.max(c.t0, (h.f0 + j) / fps), b = Math.min(c.t1, (h.f0 + j + 1) / fps), last = out[out.length - 1];
     if (b <= a) return;
-    if (last && Math.abs(last.t1 - a) < 1e-9 && last.by === h.by[j]) last.t1 = b; else out.push({ t0: a, t1: b, by: h.by[j] });
+    if (last && Math.abs(last.t1 - a) < 1e-9 && last.by === h.by[j]) last.t1 = b; else out.push({ t0: a, t1: b, by: h.by[j], own: h.own[j] });
   });
   return out;
 }
@@ -133,6 +139,19 @@ export function balanceOf(x, t0, t1) {
 export function centroidOf(x, stretches) {
   const off = x.i0 / x.sr;
   return centroidHz(averageSpectrum(x, stretches.map(([t0, t1]) => [t0 - off, t1 - off])));
+}
+// How coherently some cue renders add over [t0, t1) of the film (both channels): the power of their sum over the sum of
+// their powers. 1 for uncorrelated sources (noise), up to the number of renders for equal ones in phase (2 for a pair),
+// under 1 where they partly cancel. The engine's placeholder buzzes share one saw and one rpm track (SOUND-PLAN 4.4)
+export function coherenceOf(xs, t0, t1) {
+  const sr = xs[0].sr, a = Math.round(t0 * sr), b = Math.round(t1 * sr);
+  let sum = 0, each = 0;
+  for (let i = a; i < b; i++) for (const ch of ['left', 'right']) {
+    let s = 0;
+    for (const x of xs) { const k = i - x.i0, v = k >= 0 && k < x[ch].length ? x[ch][k] : 0; s += v; each += v * v; }
+    sum += s * s;
+  }
+  return sum / (each || 1);
 }
 // Two renders of one cue differ in any sample
 export const differs = (a, b) => a.left.length !== b.left.length || a.left.some((v, i) => v !== b.left[i]) || a.right.some((v, i) => v !== b.right[i]);
@@ -209,13 +228,18 @@ export function firstPoint(levelAt, total = T_TOTAL) {
 
 // ---------- the measurements per option ----------
 // Option 1, per hidden cue: the level difference while hidden and over its whole window, the loudest 100 ms, and the
-// spectral centroid while hidden, A and B
+// spectral centroid while hidden, A and B; then the same while hidden split by blocker (`byBlocker`: the set's, or the
+// cue's own body, which only Sound 1's rule counts)
 export function muffleRow(c, a, b, spans, h) {
   const framesBy = Object.fromEntries([...new Set(h.by.filter(Boolean))].sort().map((k) => [k, h.by.filter((x) => x === k).length]));
   framesBy.frames = h.hid.length;
   const st = spans.map((s) => [s.t0, s.t1]), hiddenA = levelDb(a, st), hiddenB = levelDb(b, st), ca = centroidOf(a, st), cb = centroidOf(b, st);
+  const byBlocker = [...new Set(spans.map((s) => s.by))].sort().map((by) => {
+    const part = spans.filter((s) => s.by === by), ps = part.map((s) => [s.t0, s.t1]), la = levelDb(a, ps);
+    return { by, own: part[0].own, frames: framesBy[by], hiddenSec: r(ps.reduce((x, [u, v]) => x + v - u, 0), 3), from: r(part[0].t0, 3), to: r(part[part.length - 1].t1, 3), levelHiddenA: r(la), dHiddenDb: r(levelDb(b, ps) - la) };
+  });
   return {
-    cue: c.id, family: c.family, shot: shotOf(c.t0), t0: r(c.t0, 3), t1: r(c.t1, 3), framesBy,
+    cue: c.id, family: c.family, shot: shotOf(c.t0), t0: r(c.t0, 3), t1: r(c.t1, 3), framesBy, byBlocker,
     hiddenSec: r(st.reduce((s, [x, y]) => s + y - x, 0), 3), from: r(spans[0].t0, 3), to: r(spans[spans.length - 1].t1, 3), by: [...new Set(spans.map((s) => s.by))].join(', '),
     levelHiddenA: r(hiddenA), dHiddenDb: r(hiddenB - hiddenA), dCueDb: r(levelDb(b, [[c.t0, c.t1]]) - levelDb(a, [[c.t0, c.t1]])),
     dLoudestDb: r(loudestDb(b, c.t0, c.t1) - loudestDb(a, c.t0, c.t1)),
@@ -251,7 +275,11 @@ export function listenerRow(c, a, b, predicted, floorDb = 20) {
 // and one gain curve: the limiter's, from the loudest of them at each sample, so every mix of the set goes through
 // the same gain sample for sample (B over A is the option and nothing else) and none passes the ceiling. Where a B
 // is louder than A at a peak, that curve also turns A down there: `extra` says how much and where, against A's own.
-// Returns { stats, out, joint(raws) -> { mixes, extra: { samples, maxDb, at } } }.
+// `still(raws)` masters a set through one static gain and no limiter: A's gain lowered by the most any mix of the set
+// passes the ceiling at it (on the limiter's own true-peak estimate), so no mix is limited anywhere, B over A is the
+// option at every sample and neither has a gain that moves in time; the cost is level, `belowDb` under A's master.
+// Returns { stats, out, joint(raws) -> { mixes, extra: { samples, maxDb, at } }, still(raws) -> { mixes, gainDb,
+// belowDb, at } }.
 export function masterOf(rawA, { targetLufs, ceilingDb }, passes = 4) {
   const { sr } = rawA, n = rawA.left.length, peaks = truePeakEnvelope(rawA.left, rawA.right), before = integratedLufs(rawA.left, rawA.right, sr);
   const curveOf = (env, g) => { const c = new Float64Array(n).fill(1); return { c, limited: limit(c, new Float64Array(n).fill(1), dbToGain(ceilingDb), sr, undefined, undefined, env, g).reducedSamples }; };
@@ -278,7 +306,13 @@ export function masterOf(rawA, { targetLufs, ceilingDb }, passes = 4) {
     for (let i = 0; i < n; i++) if (c[i] < own.c[i]) { samples++; if (c[i] / own.c[i] < worst) { worst = c[i] / own.c[i]; at = i / sr; } }
     return { mixes: raws.map((x) => run(x, g, c)), extra: { samples, maxDb: r(-20 * Math.log10(worst), 2), at: r(at, 3) } };
   };
-  return { stats: { lufsBefore: r(before, 3), gainDb: r(20 * Math.log10(g), 3), limitedSamples: own.limited, passes: pass, lufs: r(lufs, 3) }, out, joint };
+  const still = (raws) => {
+    let top = 0, at = null;
+    for (const x of raws) { const e = x === rawA ? peaks : truePeakEnvelope(x.left, x.right); for (let i = 0; i < n; i++) if (e[i] > top) { top = e[i]; at = i / sr; } }
+    const s = Math.min(g, dbToGain(ceilingDb) / top), ones = new Float64Array(n).fill(1);
+    return { mixes: raws.map((x) => run(x, s, ones)), gainDb: r(20 * Math.log10(s), 3), belowDb: r(20 * Math.log10(g / s), 2), at: r(at, 3) };
+  };
+  return { stats: { lufsBefore: r(before, 3), gainDb: r(20 * Math.log10(g), 3), limitedSamples: own.limited, passes: pass, lufs: r(lufs, 3) }, out, joint, still };
 }
 // The largest difference in dB a level listener makes to a cue's law gain over its span, on the block grid the
 // spatializer reads it on (spatial.js placeAt with and without `levelAt`): 0 when both listeners give it the same gain

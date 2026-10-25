@@ -1,12 +1,12 @@
 {
  "file": "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4",
  "profile": "preview",
- "from": 28.6667,
- "to": 35.6667,
+ "from": 28.25,
+ "to": 35.25,
  "overlay": true,
  "fps": 24,
- "firstFrame": 688,
- "lastFrame": 855,
+ "firstFrame": 678,
+ "lastFrame": 845,
  "frames": 168,
  "res": {
   "w": 480,
@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 14.061,
- "loadSeconds": 0.826,
- "msPerFrame": 83.69,
+ "seconds": 8.618,
+ "loadSeconds": 0.673,
+ "msPerFrame": 51.3,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",
@@ -36,9 +36,9 @@
   "-i",
   "pipe:0",
   "-ss",
-  "28.666666666666668",
+  "28.25",
   "-to",
-  "35.666666666666664",
+  "35.25",
   "-i",
   "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/out/round-05/options/muffle-volume.wav",
   "-vf",
@@ -97,8 +97,8 @@
   "audioRate": 48000,
   "audioChannels": 2,
   "audioDuration": 7,
-  "bitRate": 599181,
-  "size": 524284,
+  "bitRate": 610506,
+  "size": 534193,
   "moovFirst": true
  },
  "problems": []

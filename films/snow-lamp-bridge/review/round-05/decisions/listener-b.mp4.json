@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 13.447,
- "loadSeconds": 0.799,
- "msPerFrame": 80.04,
+ "seconds": 8.118,
+ "loadSeconds": 0.524,
+ "msPerFrame": 48.32,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",
@@ -97,8 +97,8 @@
   "audioRate": 48000,
   "audioChannels": 2,
   "audioDuration": 7,
-  "bitRate": 1002044,
-  "size": 876789,
+  "bitRate": 995444,
+  "size": 871014,
   "moovFirst": true
  },
  "problems": []

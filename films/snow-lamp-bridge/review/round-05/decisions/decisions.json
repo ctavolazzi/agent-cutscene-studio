@@ -16,22 +16,30 @@
   "lufs": -16.033,
   "ceilingDb": -2,
   "targetLufs": -16,
-  "what": "the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option's set of mixes then goes through A's gain and one limiter curve, from the loudest of the set at each sample, so B over A is the option alone and nothing passes the ceiling",
+  "what": "the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option's set of mixes then goes through A's gain and one limiter curve from the loudest of the set at each sample (joint), or through one static gain low enough that none is limited (still, the characters' listener), so B over A is the option alone and nothing passes the ceiling",
   "sets": {
    "muffle": {
-    "samples": 222002,
-    "maxDb": 1.47,
+    "how": "joint",
+    "samples": 272259,
+    "maxDb": 1.5,
     "at": 35.386
    },
    "sync-pan": {
+    "how": "joint",
     "samples": 98907,
     "maxDb": 0.5,
     "at": 61.725
    },
    "listener": {
-    "samples": 474980,
-    "maxDb": 9.94,
-    "at": 56.94
+    "how": "still",
+    "gainDb": -4.11,
+    "belowDb": 12.01,
+    "at": 34.501,
+    "jointWould": {
+     "samples": 474980,
+     "maxDb": 9.94,
+     "at": 56.94
+    }
    }
   }
  },
@@ -46,7 +54,7 @@
   },
   "a-muffle": {
    "file": "out/round-05/options/a-muffle.wav",
-   "sha256": "b03bcd448664b956d0bdbd5acf7dce803c207238eb9848de9b1cbce4ab3e2577",
+   "sha256": "ffa8b47919dfd87e30588d3e59feb3822f6a6ddf7e55c012fecf0f6c720e764e",
    "over": {
     "samples": 0,
     "peakDb": -2
@@ -54,7 +62,7 @@
   },
   "muffle-volume": {
    "file": "out/round-05/options/muffle-volume.wav",
-   "sha256": "92c2f21c17338239cceb23b03cae098d8c986dbc0080f4d78f6bcfcc43ebf7b8",
+   "sha256": "d49a0f9259636d0f0aec2d6ad83ce2a610fd46e5642892051e36a4e4b22b65db",
    "over": {
     "samples": 0,
     "peakDb": -2
@@ -62,7 +70,23 @@
   },
   "muffle-swap": {
    "file": "out/round-05/options/muffle-swap.wav",
-   "sha256": "c2191a60b0c0b4e102d85fff2261aedc1d9ab9ace453db6d38cc8641377f3062",
+   "sha256": "cae0826d6e0be6fd7b0be73935cad1ec2562ccb4b1c82fc24a0c86e7915720e9",
+   "over": {
+    "samples": 0,
+    "peakDb": -2
+   }
+  },
+  "muffle-volume-all": {
+   "file": "out/round-05/options/muffle-volume-all.wav",
+   "sha256": "13de666f206ed5648c74b2cc9b0b45464ad12a3458ad4f1968551b0e986bb49c",
+   "over": {
+    "samples": 0,
+    "peakDb": -2
+   }
+  },
+  "muffle-swap-all": {
+   "file": "out/round-05/options/muffle-swap-all.wav",
+   "sha256": "6439dab59b68771db1cd8b9763f31e88c8e97204c79b9cd8e17ca665776ae839",
    "over": {
     "samples": 0,
     "peakDb": -2
@@ -86,18 +110,18 @@
   },
   "a-listener": {
    "file": "out/round-05/options/a-listener.wav",
-   "sha256": "dd79ec1d95cab889d4f99fcc5c09c11dff79370cee7aca18de358253f08fb5e5",
+   "sha256": "23c6b79db1a7b8c9ce51b0391ca94bc55770acfc159e0b35b47632954a1ee82a",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.826
    }
   },
   "listener": {
    "file": "out/round-05/options/listener.wav",
-   "sha256": "dc27da0dbcb61d7203c1a31cec49e1ce7d250a7fa895e47ff4e5cbfcc5a415aa",
+   "sha256": "93c6722e64ff10df5d501f96eb88bdad703a2974bc070011d78ef7cc11c3f058",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.003
    }
   }
  },
@@ -105,7 +129,7 @@
   {
    "id": "muffle",
    "question": "ROADMAP gate 2, question 3: the muffle on the hidden engine, done the PS1 way",
-   "definition": "While the picture hides a placed cue's source (Sound 1's onScreen judgement: its rendered point through the frame's camera, a blocker between them), the voice is muffled, the PS1 way: volume, its volume drops by dropDb; swap, it crossfades to a copy of itself through a fixed lowpass, the pre-filtered sample a PS1 bank would hold (two voices in step while it is hidden). The hidden state is read per block and the muffle follows it over rampSec. It names every cue hidden on any frame it covers; the engine is the plan's case",
+   "definition": "While the picture hides a placed cue's source (its rendered point through the frame's camera, a blocker between them, as Sound 1's onScreen check judges it), the voice is muffled, the PS1 way: volume, its volume drops by dropDb; swap, it crossfades to a copy of itself through a fixed lowpass, the pre-filtered sample a PS1 bank would hold (two voices in step while it is hidden). The hidden state is read per block and the muffle follows it over rampSec. It names every cue hidden on any frame it covers; the engine is the plan's case. Two hidden states: set (B, the plan's) and all (Sound 1's rule, for comparison)",
    "starting": {
     "dropDb": {
      "v": 6,
@@ -120,909 +144,2603 @@
      "why": "the backgrounds' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click, and done 8 ms into the frame after the one whose state changed"
     }
    },
-   "named": 19,
-   "summary": {
-    "volume": {
-     "engine": {
-      "cues": 2,
-      "largestHiddenDb": -6,
-      "largestCentroidOct": 0,
-      "atOrOverBar": 2
+   "variants": {
+    "set": {
+     "what": "hidden by the set or by another body: a car's own body does not hide its own sounds (the plan's muffle, the engine behind building SE; the cabin and getting out stay hidden by the car, as sounds inside it)",
+     "named": 14,
+     "summary": {
+      "volume": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -6
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -6
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 12,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 12
+       }
+      },
+      "swap": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -1.92,
+        "largestCentroidOct": -0.139,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -1.92
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -1.91
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 12,
+        "largestHiddenDb": -58.78,
+        "largestCentroidOct": -1.605,
+        "atOrOverBar": 12
+       }
+      }
      },
-     "others": {
-      "cues": 17,
-      "largestHiddenDb": -6,
-      "largestCentroidOct": 0,
-      "atOrOverBar": 17
+     "swapVoices": {
+      "peak": 15,
+      "at": 28.381,
+      "film": 12,
+      "filmAt": 33.312,
+      "limit": 24
+     },
+     "moves": {
+      "volume": {
+       "named": 14,
+       "moved": 14,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      },
+      "swap": {
+       "named": 14,
+       "moved": 14,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      }
+     },
+     "rows": {
+      "volume": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.28,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.625,
+        "from": 14,
+        "to": 18.625,
+        "by": "building SE",
+        "levelHiddenA": -2.28,
+        "dHiddenDb": -6,
+        "dCueDb": -0.36,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -6,
+        "dCueDb": -0.19,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6,
+        "dCueDb": -0.56,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 961,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6,
+        "dCueDb": -0.87,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 964,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5974,
+        "centroidB": 5974,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5972,
+        "centroidB": 5972,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 6003,
+        "centroidB": 6003,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1449,
+        "centroidB": 1449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1469,
+        "centroidB": 1469,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -6,
+        "dCueDb": -5.37,
+        "dLoudestDb": -4.36,
+        "centroidA": 1443,
+        "centroidB": 1443,
+        "dCentroidOct": 0
+       }
+      ],
+      "swap": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.28,
+          "dHiddenDb": -1.92
+         }
+        ],
+        "hiddenSec": 4.625,
+        "from": 14,
+        "to": 18.625,
+        "by": "building SE",
+        "levelHiddenA": -2.28,
+        "dHiddenDb": -1.92,
+        "dCueDb": -0.17,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 571,
+        "dCentroidOct": -0.138
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -1.91
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.09,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 570,
+        "dCentroidOct": -0.139
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6.05
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6.05,
+        "dCueDb": -0.57,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 838,
+        "dCentroidOct": -0.198
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6.13
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6.13,
+        "dCueDb": -0.89,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 842,
+        "dCentroidOct": -0.195
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -57.98
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -57.98,
+        "dCueDb": -57.98,
+        "dLoudestDb": -57.98,
+        "centroidA": 5974,
+        "centroidB": 2204,
+        "dCentroidOct": -1.438
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -56.72
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -56.72,
+        "dCueDb": -56.72,
+        "dLoudestDb": -56.72,
+        "centroidA": 5972,
+        "centroidB": 1963,
+        "dCentroidOct": -1.605
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -58.78
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -58.78,
+        "dCueDb": -58.78,
+        "dLoudestDb": -58.78,
+        "centroidA": 6003,
+        "centroidB": 2123,
+        "dCentroidOct": -1.5
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -2.97
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -2.97,
+        "dCueDb": -2.97,
+        "dLoudestDb": -2.97,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -12.77
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -12.77,
+        "dCueDb": -12.77,
+        "dLoudestDb": -12.65,
+        "centroidA": 1449,
+        "centroidB": 1045,
+        "dCentroidOct": -0.471
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -12.64
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -12.64,
+        "dCueDb": -12.64,
+        "dLoudestDb": -12.59,
+        "centroidA": 1469,
+        "centroidB": 1042,
+        "dCentroidOct": -0.495
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -12.7
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -12.7,
+        "dCueDb": -10.35,
+        "dLoudestDb": -6.46,
+        "centroidA": 1443,
+        "centroidB": 1051,
+        "dCentroidOct": -0.457
+       }
+      ]
      }
     },
-    "swap": {
-     "engine": {
-      "cues": 2,
-      "largestHiddenDb": -1.95,
-      "largestCentroidOct": -0.142,
-      "atOrOverBar": 2
+    "all": {
+     "what": "Sound 1's onScreen rule (storyboard check 2): hidden by any blocker, a car's own body counted for its own sounds (the exhaust behind the rear bumper, the passenger door behind the car), for comparison",
+     "named": 19,
+     "summary": {
+      "volume": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -6
+           },
+           {
+            "by": "car body",
+            "own": true,
+            "frames": 229,
+            "from": 18.625,
+            "to": 29,
+            "dHiddenDb": -5.98
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -6
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 17,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 17
+       }
+      },
+      "swap": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -1.95,
+        "largestCentroidOct": -0.142,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -1.92
+           },
+           {
+            "by": "car body",
+            "own": true,
+            "frames": 229,
+            "from": 18.625,
+            "to": 29,
+            "dHiddenDb": -1.95
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -1.91
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 17,
+        "largestHiddenDb": -58.78,
+        "largestCentroidOct": -1.605,
+        "atOrOverBar": 14
+       }
+      }
      },
-     "others": {
-      "cues": 17,
-      "largestHiddenDb": -58.78,
-      "largestCentroidOct": -1.605,
-      "atOrOverBar": 14
+     "swapVoices": {
+      "peak": 15,
+      "at": 28.381,
+      "film": 12,
+      "filmAt": 33.312,
+      "limit": 24
+     },
+     "moves": {
+      "volume": {
+       "named": 19,
+       "moved": 19,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      },
+      "swap": {
+       "named": 19,
+       "moved": 19,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      }
+     },
+     "rows": {
+      "volume": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "car body": 229,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.28,
+          "dHiddenDb": -6
+         },
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 229,
+          "hiddenSec": 9.542,
+          "from": 18.625,
+          "to": 29,
+          "levelHiddenA": 3.52,
+          "dHiddenDb": -5.98
+         }
+        ],
+        "hiddenSec": 14.167,
+        "from": 14,
+        "to": 29,
+        "by": "building SE, car body",
+        "levelHiddenA": 2.33,
+        "dHiddenDb": -5.99,
+        "dCueDb": -5.29,
+        "dLoudestDb": -2.96,
+        "centroidA": 632,
+        "centroidB": 632,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -6,
+        "dCueDb": -0.19,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6,
+        "dCueDb": -0.56,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 961,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6,
+        "dCueDb": -0.87,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 964,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5974,
+        "centroidB": 5974,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5972,
+        "centroidB": 5972,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 6003,
+        "centroidB": 6003,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.unlatch",
+        "family": "door",
+        "shot": 5,
+        "t0": 31.94,
+        "t1": 32,
+        "framesBy": {
+         "car body": 1,
+         "frames": 1
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 1,
+          "hiddenSec": 0.06,
+          "from": 31.94,
+          "to": 32,
+          "levelHiddenA": 11.41,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.06,
+        "from": 31.94,
+        "to": 32,
+        "by": "car body",
+        "levelHiddenA": 11.41,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1886,
+        "centroidB": 1886,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.swing-open",
+        "family": "door",
+        "shot": 5,
+        "t0": 32,
+        "t1": 32.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 32,
+          "to": 32.6,
+          "levelHiddenA": -4.51,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 32,
+        "to": 32.6,
+        "by": "car body",
+        "levelHiddenA": -4.51,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 449,
+        "centroidB": 449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.stop",
+        "family": "door",
+        "shot": 5,
+        "t0": 32.6,
+        "t1": 32.8,
+        "framesBy": {
+         "car body": 5,
+         "frames": 5
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 5,
+          "hiddenSec": 0.2,
+          "from": 32.6,
+          "to": 32.8,
+          "levelHiddenA": -1.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.2,
+        "from": 32.6,
+        "to": 32.8,
+        "by": "car body",
+        "levelHiddenA": -1.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 340,
+        "centroidB": 340,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1449,
+        "centroidB": 1449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1469,
+        "centroidB": 1469,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -6,
+        "dCueDb": -5.37,
+        "dLoudestDb": -4.36,
+        "centroidA": 1443,
+        "centroidB": 1443,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.swing-shut",
+        "family": "door",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 35,
+          "to": 35.6,
+          "levelHiddenA": -6.86,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 35,
+        "to": 35.6,
+        "by": "car body",
+        "levelHiddenA": -6.86,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 719,
+        "centroidB": 719,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.latch",
+        "family": "door",
+        "shot": 5,
+        "t0": 35.6,
+        "t1": 35.85,
+        "framesBy": {
+         "car body": 2,
+         "frames": 6
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 2,
+          "hiddenSec": 0.108,
+          "from": 35.6,
+          "to": 35.708,
+          "levelHiddenA": 6.64,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.108,
+        "from": 35.6,
+        "to": 35.708,
+        "by": "car body",
+        "levelHiddenA": 6.64,
+        "dHiddenDb": -6,
+        "dCueDb": -5.98,
+        "dLoudestDb": -6,
+        "centroidA": 200,
+        "centroidB": 200,
+        "dCentroidOct": 0
+       }
+      ],
+      "swap": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "car body": 229,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.28,
+          "dHiddenDb": -1.92
+         },
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 229,
+          "hiddenSec": 9.542,
+          "from": 18.625,
+          "to": 29,
+          "levelHiddenA": 3.52,
+          "dHiddenDb": -1.95
+         }
+        ],
+        "hiddenSec": 14.167,
+        "from": 14,
+        "to": 29,
+        "by": "building SE, car body",
+        "levelHiddenA": 2.33,
+        "dHiddenDb": -1.95,
+        "dCueDb": -1.81,
+        "dLoudestDb": -1.93,
+        "centroidA": 632,
+        "centroidB": 573,
+        "dCentroidOct": -0.142
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -1.91
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.09,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 570,
+        "dCentroidOct": -0.139
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6.05
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6.05,
+        "dCueDb": -0.57,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 838,
+        "dCentroidOct": -0.198
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6.13
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6.13,
+        "dCueDb": -0.89,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 842,
+        "dCentroidOct": -0.195
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -57.98
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -57.98,
+        "dCueDb": -57.98,
+        "dLoudestDb": -57.98,
+        "centroidA": 5974,
+        "centroidB": 2204,
+        "dCentroidOct": -1.438
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -56.72
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -56.72,
+        "dCueDb": -56.72,
+        "dLoudestDb": -56.72,
+        "centroidA": 5972,
+        "centroidB": 1963,
+        "dCentroidOct": -1.605
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -58.78
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -58.78,
+        "dCueDb": -58.78,
+        "dLoudestDb": -58.78,
+        "centroidA": 6003,
+        "centroidB": 2123,
+        "dCentroidOct": -1.5
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.unlatch",
+        "family": "door",
+        "shot": 5,
+        "t0": 31.94,
+        "t1": 32,
+        "framesBy": {
+         "car body": 1,
+         "frames": 1
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 1,
+          "hiddenSec": 0.06,
+          "from": 31.94,
+          "to": 32,
+          "levelHiddenA": 11.41,
+          "dHiddenDb": -21.62
+         }
+        ],
+        "hiddenSec": 0.06,
+        "from": 31.94,
+        "to": 32,
+        "by": "car body",
+        "levelHiddenA": 11.41,
+        "dHiddenDb": -21.62,
+        "dCueDb": -21.62,
+        "dLoudestDb": -21.62,
+        "centroidA": 1886,
+        "centroidB": 1464,
+        "dCentroidOct": -0.365
+       },
+       {
+        "cue": "hard.door.passenger.swing-open",
+        "family": "door",
+        "shot": 5,
+        "t0": 32,
+        "t1": 32.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 32,
+          "to": 32.6,
+          "levelHiddenA": -4.51,
+          "dHiddenDb": -0.49
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 32,
+        "to": 32.6,
+        "by": "car body",
+        "levelHiddenA": -4.51,
+        "dHiddenDb": -0.49,
+        "dCueDb": -0.49,
+        "dLoudestDb": -0.4,
+        "centroidA": 449,
+        "centroidB": 446,
+        "dCentroidOct": -0.008
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -2.97
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -2.97,
+        "dCueDb": -2.97,
+        "dLoudestDb": -2.97,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.stop",
+        "family": "door",
+        "shot": 5,
+        "t0": 32.6,
+        "t1": 32.8,
+        "framesBy": {
+         "car body": 5,
+         "frames": 5
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 5,
+          "hiddenSec": 0.2,
+          "from": 32.6,
+          "to": 32.8,
+          "levelHiddenA": -1.04,
+          "dHiddenDb": -0.18
+         }
+        ],
+        "hiddenSec": 0.2,
+        "from": 32.6,
+        "to": 32.8,
+        "by": "car body",
+        "levelHiddenA": -1.04,
+        "dHiddenDb": -0.18,
+        "dCueDb": -0.18,
+        "dLoudestDb": -0.18,
+        "centroidA": 340,
+        "centroidB": 340,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -12.77
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -12.77,
+        "dCueDb": -12.77,
+        "dLoudestDb": -12.65,
+        "centroidA": 1449,
+        "centroidB": 1045,
+        "dCentroidOct": -0.471
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -12.64
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -12.64,
+        "dCueDb": -12.64,
+        "dLoudestDb": -12.59,
+        "centroidA": 1469,
+        "centroidB": 1042,
+        "dCentroidOct": -0.495
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -12.7
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -12.7,
+        "dCueDb": -10.35,
+        "dLoudestDb": -6.46,
+        "centroidA": 1443,
+        "centroidB": 1051,
+        "dCentroidOct": -0.457
+       },
+       {
+        "cue": "hard.door.passenger.swing-shut",
+        "family": "door",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 35,
+          "to": 35.6,
+          "levelHiddenA": -6.86,
+          "dHiddenDb": -3.2
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 35,
+        "to": 35.6,
+        "by": "car body",
+        "levelHiddenA": -6.86,
+        "dHiddenDb": -3.2,
+        "dCueDb": -3.2,
+        "dLoudestDb": -3.63,
+        "centroidA": 719,
+        "centroidB": 709,
+        "dCentroidOct": -0.019
+       },
+       {
+        "cue": "hard.door.passenger.latch",
+        "family": "door",
+        "shot": 5,
+        "t0": 35.6,
+        "t1": 35.85,
+        "framesBy": {
+         "car body": 2,
+         "frames": 6
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 2,
+          "hiddenSec": 0.108,
+          "from": 35.6,
+          "to": 35.708,
+          "levelHiddenA": 6.64,
+          "dHiddenDb": -0.03
+         }
+        ],
+        "hiddenSec": 0.108,
+        "from": 35.6,
+        "to": 35.708,
+        "by": "car body",
+        "levelHiddenA": 6.64,
+        "dHiddenDb": -0.03,
+        "dCueDb": -0.03,
+        "dLoudestDb": -0.03,
+        "centroidA": 200,
+        "centroidB": 200,
+        "dCentroidOct": -0.001
+       }
+      ]
      }
     }
    },
-   "swapVoices": {
-    "peak": 15,
-    "at": 28.381,
-    "film": 12,
-    "filmAt": 33.312,
-    "limit": 24
-   },
-   "moves": {
-    "volume": {
-     "named": 19,
-     "moved": 19,
-     "stray": [],
-     "still": [],
-     "mix": {
-      "samples": 0,
-      "first": null
-     }
+   "beyondSet": [
+    {
+     "cue": "hard.engine.car.exhaust",
+     "frames": 229,
+     "by": "car body"
     },
-    "swap": {
-     "named": 19,
-     "moved": 19,
-     "stray": [],
-     "still": [],
-     "mix": {
-      "samples": 0,
-      "first": null
-     }
+    {
+     "cue": "hard.door.passenger.unlatch",
+     "frames": 1,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.swing-open",
+     "frames": 15,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.stop",
+     "frames": 5,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.swing-shut",
+     "frames": 15,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.latch",
+     "frames": 2,
+     "by": "car body"
     }
-   },
-   "rows": {
-    "volume": [
-     {
-      "cue": "hard.engine.car.exhaust",
-      "family": "engine",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 111,
-       "car body": 229,
-       "frames": 360
-      },
-      "hiddenSec": 14.167,
-      "from": 14,
-      "to": 29,
-      "by": "building SE, car body",
-      "levelHiddenA": 2.33,
-      "dHiddenDb": -5.99,
-      "dCueDb": -5.29,
-      "dLoudestDb": -2.96,
-      "centroidA": 632,
-      "centroidB": 632,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.engine.car.intake",
-      "family": "engine",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 93,
-       "frames": 360
-      },
-      "hiddenSec": 3.875,
-      "from": 14,
-      "to": 17.875,
-      "by": "building SE",
-      "levelHiddenA": -0.35,
-      "dHiddenDb": -6,
-      "dCueDb": -0.19,
-      "dLoudestDb": 0,
-      "centroidA": 628,
-      "centroidB": 628,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.tyres.car.front",
-      "family": "tyres",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 94,
-       "frames": 360
-      },
-      "hiddenSec": 3.917,
-      "from": 14,
-      "to": 17.917,
-      "by": "building SE",
-      "levelHiddenA": -8.14,
-      "dHiddenDb": -6,
-      "dCueDb": -0.56,
-      "dLoudestDb": 0,
-      "centroidA": 961,
-      "centroidB": 961,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.tyres.car.rear",
-      "family": "tyres",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 107,
-       "frames": 360
-      },
-      "hiddenSec": 4.458,
-      "from": 14,
-      "to": 18.458,
-      "by": "building SE",
-      "levelHiddenA": -7.71,
-      "dHiddenDb": -6,
-      "dCueDb": -0.87,
-      "dLoudestDb": -0.07,
-      "centroidA": 964,
-      "centroidB": 964,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.cabin.car.handbrake",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 29.7,
-      "t1": 30.1,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 29.7,
-      "to": 30.1,
-      "by": "car body",
-      "levelHiddenA": -3.31,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 5974,
-      "centroidB": 5974,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.cabin.A.belt",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 30,
-      "t1": 30.4,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 30,
-      "to": 30.4,
-      "by": "car body",
-      "levelHiddenA": -3.26,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 5972,
-      "centroidB": 5972,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.unload.A.slide",
-      "family": "unload",
-      "shot": 5,
-      "t0": 30.9,
-      "t1": 31.8,
-      "framesBy": {
-       "car body": 10,
-       "frames": 22
-      },
-      "hiddenSec": 0.433,
-      "from": 30.9,
-      "to": 31.333,
-      "by": "car body",
-      "levelHiddenA": -3.28,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.cabin.B.belt",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 31.5,
-      "t1": 31.9,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 31.5,
-      "to": 31.9,
-      "by": "car body",
-      "levelHiddenA": -4.37,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 6003,
-      "centroidB": 6003,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.unload.A.rise",
-      "family": "unload",
-      "shot": 5,
-      "t0": 31.8,
-      "t1": 32.4,
-      "framesBy": {
-       "car body": 14,
-       "frames": 14
-      },
-      "hiddenSec": 0.6,
-      "from": 31.8,
-      "to": 32.4,
-      "by": "car body",
-      "levelHiddenA": -4.7,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.unlatch",
-      "family": "door",
-      "shot": 5,
-      "t0": 31.94,
-      "t1": 32,
-      "framesBy": {
-       "car body": 1,
-       "frames": 1
-      },
-      "hiddenSec": 0.06,
-      "from": 31.94,
-      "to": 32,
-      "by": "car body",
-      "levelHiddenA": 11.41,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 1886,
-      "centroidB": 1886,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.swing-open",
-      "family": "door",
-      "shot": 5,
-      "t0": 32,
-      "t1": 32.6,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 32,
-      "to": 32.6,
-      "by": "car body",
-      "levelHiddenA": -4.51,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 449,
-      "centroidB": 449,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.unload.B.slide",
-      "family": "unload",
-      "shot": 5,
-      "t0": 32.2,
-      "t1": 33.2,
-      "framesBy": {
-       "car body": 24,
-       "frames": 24
-      },
-      "hiddenSec": 1,
-      "from": 32.2,
-      "to": 33.2,
-      "by": "car body",
-      "levelHiddenA": -8.06,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.stop",
-      "family": "door",
-      "shot": 5,
-      "t0": 32.6,
-      "t1": 32.8,
-      "framesBy": {
-       "car body": 5,
-       "frames": 5
-      },
-      "hiddenSec": 0.2,
-      "from": 32.6,
-      "to": 32.8,
-      "by": "car body",
-      "levelHiddenA": -1.04,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 340,
-      "centroidB": 340,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.unload.B.rise",
-      "family": "unload",
-      "shot": 5,
-      "t0": 33.2,
-      "t1": 33.8,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 33.2,
-      "to": 33.8,
-      "by": "car body",
-      "levelHiddenA": -5.79,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "foley.moves.B.walk1",
-      "family": "moves",
-      "shot": 5,
-      "t0": 33.8,
-      "t1": 34.6,
-      "framesBy": {
-       "car body": 19,
-       "frames": 19
-      },
-      "hiddenSec": 0.8,
-      "from": 33.8,
-      "to": 34.6,
-      "by": "car body",
-      "levelHiddenA": 1.69,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 1449,
-      "centroidB": 1449,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "foley.moves.B.turn1",
-      "family": "moves",
-      "shot": 5,
-      "t0": 34.6,
-      "t1": 35,
-      "framesBy": {
-       "car body": 9,
-       "frames": 9
-      },
-      "hiddenSec": 0.4,
-      "from": 34.6,
-      "to": 35,
-      "by": "car body",
-      "levelHiddenA": -0.04,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 1469,
-      "centroidB": 1469,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "foley.moves.B.turn2",
-      "family": "moves",
-      "shot": 5,
-      "t0": 35,
-      "t1": 35.7,
-      "framesBy": {
-       "car body": 14,
-       "frames": 17
-      },
-      "hiddenSec": 0.583,
-      "from": 35,
-      "to": 35.583,
-      "by": "car body",
-      "levelHiddenA": 0.71,
-      "dHiddenDb": -6,
-      "dCueDb": -5.37,
-      "dLoudestDb": -4.36,
-      "centroidA": 1443,
-      "centroidB": 1443,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.swing-shut",
-      "family": "door",
-      "shot": 5,
-      "t0": 35,
-      "t1": 35.6,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 35,
-      "to": 35.6,
-      "by": "car body",
-      "levelHiddenA": -6.86,
-      "dHiddenDb": -6,
-      "dCueDb": -6,
-      "dLoudestDb": -6,
-      "centroidA": 719,
-      "centroidB": 719,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.latch",
-      "family": "door",
-      "shot": 5,
-      "t0": 35.6,
-      "t1": 35.85,
-      "framesBy": {
-       "car body": 2,
-       "frames": 6
-      },
-      "hiddenSec": 0.108,
-      "from": 35.6,
-      "to": 35.708,
-      "by": "car body",
-      "levelHiddenA": 6.64,
-      "dHiddenDb": -6,
-      "dCueDb": -5.98,
-      "dLoudestDb": -6,
-      "centroidA": 200,
-      "centroidB": 200,
-      "dCentroidOct": 0
-     }
+   ],
+   "coherence": {
+    "t0": 14,
+    "t1": 21,
+    "buzzes": [
+     "hard.engine.car.exhaust",
+     "hard.engine.car.intake"
     ],
-    "swap": [
-     {
-      "cue": "hard.engine.car.exhaust",
-      "family": "engine",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 111,
-       "car body": 229,
-       "frames": 360
-      },
-      "hiddenSec": 14.167,
-      "from": 14,
-      "to": 29,
-      "by": "building SE, car body",
-      "levelHiddenA": 2.33,
-      "dHiddenDb": -1.95,
-      "dCueDb": -1.81,
-      "dLoudestDb": -1.93,
-      "centroidA": 632,
-      "centroidB": 573,
-      "dCentroidOct": -0.142
+    "all": {
+     "volume": {
+      "buzzes": 1.633,
+      "all": 1.52
      },
-     {
-      "cue": "hard.engine.car.intake",
-      "family": "engine",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 93,
-       "frames": 360
-      },
-      "hiddenSec": 3.875,
-      "from": 14,
-      "to": 17.875,
-      "by": "building SE",
-      "levelHiddenA": -0.35,
-      "dHiddenDb": -1.91,
-      "dCueDb": -0.09,
-      "dLoudestDb": 0,
-      "centroidA": 628,
-      "centroidB": 570,
-      "dCentroidOct": -0.139
-     },
-     {
-      "cue": "hard.tyres.car.front",
-      "family": "tyres",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 94,
-       "frames": 360
-      },
-      "hiddenSec": 3.917,
-      "from": 14,
-      "to": 17.917,
-      "by": "building SE",
-      "levelHiddenA": -8.14,
-      "dHiddenDb": -6.05,
-      "dCueDb": -0.57,
-      "dLoudestDb": 0,
-      "centroidA": 961,
-      "centroidB": 838,
-      "dCentroidOct": -0.198
-     },
-     {
-      "cue": "hard.tyres.car.rear",
-      "family": "tyres",
-      "shot": 3,
-      "t0": 14,
-      "t1": 29,
-      "framesBy": {
-       "building SE": 107,
-       "frames": 360
-      },
-      "hiddenSec": 4.458,
-      "from": 14,
-      "to": 18.458,
-      "by": "building SE",
-      "levelHiddenA": -7.71,
-      "dHiddenDb": -6.13,
-      "dCueDb": -0.89,
-      "dLoudestDb": -0.07,
-      "centroidA": 964,
-      "centroidB": 842,
-      "dCentroidOct": -0.195
-     },
-     {
-      "cue": "hard.cabin.car.handbrake",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 29.7,
-      "t1": 30.1,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 29.7,
-      "to": 30.1,
-      "by": "car body",
-      "levelHiddenA": -3.31,
-      "dHiddenDb": -57.98,
-      "dCueDb": -57.98,
-      "dLoudestDb": -57.98,
-      "centroidA": 5974,
-      "centroidB": 2204,
-      "dCentroidOct": -1.438
-     },
-     {
-      "cue": "hard.cabin.A.belt",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 30,
-      "t1": 30.4,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 30,
-      "to": 30.4,
-      "by": "car body",
-      "levelHiddenA": -3.26,
-      "dHiddenDb": -56.72,
-      "dCueDb": -56.72,
-      "dLoudestDb": -56.72,
-      "centroidA": 5972,
-      "centroidB": 1963,
-      "dCentroidOct": -1.605
-     },
-     {
-      "cue": "hard.unload.A.slide",
-      "family": "unload",
-      "shot": 5,
-      "t0": 30.9,
-      "t1": 31.8,
-      "framesBy": {
-       "car body": 10,
-       "frames": 22
-      },
-      "hiddenSec": 0.433,
-      "from": 30.9,
-      "to": 31.333,
-      "by": "car body",
-      "levelHiddenA": -3.28,
-      "dHiddenDb": -2.98,
-      "dCueDb": -2.98,
-      "dLoudestDb": -2.98,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.cabin.B.belt",
-      "family": "cabin",
-      "shot": 5,
-      "t0": 31.5,
-      "t1": 31.9,
-      "framesBy": {
-       "car body": 10,
-       "frames": 10
-      },
-      "hiddenSec": 0.4,
-      "from": 31.5,
-      "to": 31.9,
-      "by": "car body",
-      "levelHiddenA": -4.37,
-      "dHiddenDb": -58.78,
-      "dCueDb": -58.78,
-      "dLoudestDb": -58.78,
-      "centroidA": 6003,
-      "centroidB": 2123,
-      "dCentroidOct": -1.5
-     },
-     {
-      "cue": "hard.unload.A.rise",
-      "family": "unload",
-      "shot": 5,
-      "t0": 31.8,
-      "t1": 32.4,
-      "framesBy": {
-       "car body": 14,
-       "frames": 14
-      },
-      "hiddenSec": 0.6,
-      "from": 31.8,
-      "to": 32.4,
-      "by": "car body",
-      "levelHiddenA": -4.7,
-      "dHiddenDb": -2.98,
-      "dCueDb": -2.98,
-      "dLoudestDb": -2.98,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.unlatch",
-      "family": "door",
-      "shot": 5,
-      "t0": 31.94,
-      "t1": 32,
-      "framesBy": {
-       "car body": 1,
-       "frames": 1
-      },
-      "hiddenSec": 0.06,
-      "from": 31.94,
-      "to": 32,
-      "by": "car body",
-      "levelHiddenA": 11.41,
-      "dHiddenDb": -21.62,
-      "dCueDb": -21.62,
-      "dLoudestDb": -21.62,
-      "centroidA": 1886,
-      "centroidB": 1464,
-      "dCentroidOct": -0.365
-     },
-     {
-      "cue": "hard.door.passenger.swing-open",
-      "family": "door",
-      "shot": 5,
-      "t0": 32,
-      "t1": 32.6,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 32,
-      "to": 32.6,
-      "by": "car body",
-      "levelHiddenA": -4.51,
-      "dHiddenDb": -0.49,
-      "dCueDb": -0.49,
-      "dLoudestDb": -0.4,
-      "centroidA": 449,
-      "centroidB": 446,
-      "dCentroidOct": -0.008
-     },
-     {
-      "cue": "hard.unload.B.slide",
-      "family": "unload",
-      "shot": 5,
-      "t0": 32.2,
-      "t1": 33.2,
-      "framesBy": {
-       "car body": 24,
-       "frames": 24
-      },
-      "hiddenSec": 1,
-      "from": 32.2,
-      "to": 33.2,
-      "by": "car body",
-      "levelHiddenA": -8.06,
-      "dHiddenDb": -2.97,
-      "dCueDb": -2.97,
-      "dLoudestDb": -2.97,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.door.passenger.stop",
-      "family": "door",
-      "shot": 5,
-      "t0": 32.6,
-      "t1": 32.8,
-      "framesBy": {
-       "car body": 5,
-       "frames": 5
-      },
-      "hiddenSec": 0.2,
-      "from": 32.6,
-      "to": 32.8,
-      "by": "car body",
-      "levelHiddenA": -1.04,
-      "dHiddenDb": -0.18,
-      "dCueDb": -0.18,
-      "dLoudestDb": -0.18,
-      "centroidA": 340,
-      "centroidB": 340,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "hard.unload.B.rise",
-      "family": "unload",
-      "shot": 5,
-      "t0": 33.2,
-      "t1": 33.8,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 33.2,
-      "to": 33.8,
-      "by": "car body",
-      "levelHiddenA": -5.79,
-      "dHiddenDb": -2.98,
-      "dCueDb": -2.98,
-      "dLoudestDb": -2.98,
-      "centroidA": 720,
-      "centroidB": 720,
-      "dCentroidOct": 0
-     },
-     {
-      "cue": "foley.moves.B.walk1",
-      "family": "moves",
-      "shot": 5,
-      "t0": 33.8,
-      "t1": 34.6,
-      "framesBy": {
-       "car body": 19,
-       "frames": 19
-      },
-      "hiddenSec": 0.8,
-      "from": 33.8,
-      "to": 34.6,
-      "by": "car body",
-      "levelHiddenA": 1.69,
-      "dHiddenDb": -12.77,
-      "dCueDb": -12.77,
-      "dLoudestDb": -12.65,
-      "centroidA": 1449,
-      "centroidB": 1045,
-      "dCentroidOct": -0.471
-     },
-     {
-      "cue": "foley.moves.B.turn1",
-      "family": "moves",
-      "shot": 5,
-      "t0": 34.6,
-      "t1": 35,
-      "framesBy": {
-       "car body": 9,
-       "frames": 9
-      },
-      "hiddenSec": 0.4,
-      "from": 34.6,
-      "to": 35,
-      "by": "car body",
-      "levelHiddenA": -0.04,
-      "dHiddenDb": -12.64,
-      "dCueDb": -12.64,
-      "dLoudestDb": -12.59,
-      "centroidA": 1469,
-      "centroidB": 1042,
-      "dCentroidOct": -0.495
-     },
-     {
-      "cue": "foley.moves.B.turn2",
-      "family": "moves",
-      "shot": 5,
-      "t0": 35,
-      "t1": 35.7,
-      "framesBy": {
-       "car body": 14,
-       "frames": 17
-      },
-      "hiddenSec": 0.583,
-      "from": 35,
-      "to": 35.583,
-      "by": "car body",
-      "levelHiddenA": 0.71,
-      "dHiddenDb": -12.7,
-      "dCueDb": -10.35,
-      "dLoudestDb": -6.46,
-      "centroidA": 1443,
-      "centroidB": 1051,
-      "dCentroidOct": -0.457
-     },
-     {
-      "cue": "hard.door.passenger.swing-shut",
-      "family": "door",
-      "shot": 5,
-      "t0": 35,
-      "t1": 35.6,
-      "framesBy": {
-       "car body": 15,
-       "frames": 15
-      },
-      "hiddenSec": 0.6,
-      "from": 35,
-      "to": 35.6,
-      "by": "car body",
-      "levelHiddenA": -6.86,
-      "dHiddenDb": -3.2,
-      "dCueDb": -3.2,
-      "dLoudestDb": -3.63,
-      "centroidA": 719,
-      "centroidB": 709,
-      "dCentroidOct": -0.019
-     },
-     {
-      "cue": "hard.door.passenger.latch",
-      "family": "door",
-      "shot": 5,
-      "t0": 35.6,
-      "t1": 35.85,
-      "framesBy": {
-       "car body": 2,
-       "frames": 6
-      },
-      "hiddenSec": 0.108,
-      "from": 35.6,
-      "to": 35.708,
-      "by": "car body",
-      "levelHiddenA": 6.64,
-      "dHiddenDb": -0.03,
-      "dCueDb": -0.03,
-      "dLoudestDb": -0.03,
-      "centroidA": 200,
-      "centroidB": 200,
-      "dCentroidOct": -0.001
+     "swap": {
+      "buzzes": 0.949,
+      "all": 0.957
      }
-    ]
+    },
+    "A": {
+     "buzzes": 1.901,
+     "all": 1.757
+    },
+    "set": {
+     "volume": {
+      "buzzes": 1.851,
+      "all": 1.723
+     },
+     "swap": {
+      "buzzes": 1.713,
+      "all": 1.618
+     }
+    }
    },
    "moments": {
     "engine": {
@@ -1031,10 +2749,18 @@
      "what": "the engine from its first hidden frame (building SE, shot 3) through the car coming into view",
      "mix": {
       "muffle-volume": {
+       "dLevelDb": -1.33,
+       "dBalanceDb": 0.26
+      },
+      "muffle-swap": {
+       "dLevelDb": -1,
+       "dBalanceDb": 0.24
+      },
+      "muffle-volume-all": {
        "dLevelDb": -2.19,
        "dBalanceDb": 0.01
       },
-      "muffle-swap": {
+      "muffle-swap-all": {
        "dLevelDb": -2.56,
        "dBalanceDb": -0.15
       }
@@ -1042,27 +2768,82 @@
      "aAgainstDefault": {
       "dLevelDb": 0,
       "dBalanceDb": 0,
-      "mostDb": 0
-     }
+      "mostDb": 0.03,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": -0.02
+      }
+     },
+     "parts": [
+      {
+       "t0": 14,
+       "t1": 16.5,
+       "what": "the rise out of the quiet (hard.arrival.car.rise)",
+       "mix": {
+        "muffle-volume": -1.78,
+        "muffle-swap": -0.85,
+        "muffle-volume-all": -1.78,
+        "muffle-swap-all": -0.85
+       }
+      },
+      {
+       "t0": 16.5,
+       "t1": 17.875,
+       "what": "the intake behind building SE at full level",
+       "mix": {
+        "muffle-volume": -4.59,
+        "muffle-swap": -1.71,
+        "muffle-volume-all": -4.59,
+        "muffle-swap-all": -1.71
+       }
+      },
+      {
+       "t0": 17.875,
+       "t1": 21,
+       "what": "the intake in view; the set still hides the exhaust and the tyres for a few frames, Sound 1's rule the exhaust behind its own car",
+       "mix": {
+        "muffle-volume": -0.41,
+        "muffle-swap": -0.76,
+        "muffle-volume-all": -1.55,
+        "muffle-swap-all": -3.41
+       }
+      }
+     ]
     },
     "car": {
-     "t0": 28.6667,
-     "t1": 35.6667,
-     "what": "the 7 s where the muffle takes the most off the other hidden cues (15 onsets, all hidden by the car body)",
+     "t0": 28.25,
+     "t1": 35.25,
+     "what": "the 7 s where the muffle takes the most off the other hidden cues (10 onsets, all hidden by the car body)",
      "mix": {
       "muffle-volume": {
-       "dLevelDb": -0.22,
-       "dBalanceDb": -0.08
+       "dLevelDb": -0.11,
+       "dBalanceDb": -0.03
       },
       "muffle-swap": {
-       "dLevelDb": -0.25,
-       "dBalanceDb": -0.12
+       "dLevelDb": -0.12,
+       "dBalanceDb": -0.04
+      },
+      "muffle-volume-all": {
+       "dLevelDb": -0.24,
+       "dBalanceDb": -0.07
+      },
+      "muffle-swap-all": {
+       "dLevelDb": -0.34,
+       "dBalanceDb": -0.16
       }
      },
      "aAgainstDefault": {
-      "dLevelDb": -0.06,
-      "dBalanceDb": -0.01,
-      "mostDb": 1.47
+      "dLevelDb": -0.05,
+      "dBalanceDb": 0,
+      "mostDb": 1.25,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 2,
+       "overThreeDb": 0,
+       "worstDb": -1.11
+      }
      }
     }
    },
@@ -1071,7 +2852,7 @@
      "file": "review/round-05/decisions/muffle-engine-a.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-a.mp4.json",
      "wav": "out/round-05/options/a-muffle.wav",
-     "bytes": 932067,
+     "bytes": 931875,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -1079,7 +2860,7 @@
      "file": "review/round-05/decisions/muffle-engine-b-volume.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-volume.mp4.json",
      "wav": "out/round-05/options/muffle-volume.wav",
-     "bytes": 923507,
+     "bytes": 926845,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -1087,7 +2868,23 @@
      "file": "review/round-05/decisions/muffle-engine-b-swap.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-swap.mp4.json",
      "wav": "out/round-05/options/muffle-swap.wav",
-     "bytes": 921745,
+     "bytes": 923208,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-volume-all.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-volume-all.mp4.json",
+     "wav": "out/round-05/options/muffle-volume-all.wav",
+     "bytes": 923489,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-swap-all.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-swap-all.mp4.json",
+     "wav": "out/round-05/options/muffle-swap-all.wav",
+     "bytes": 921747,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -1095,7 +2892,7 @@
      "file": "review/round-05/decisions/muffle-car-a.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-a.mp4.json",
      "wav": "out/round-05/options/a-muffle.wav",
-     "bytes": 523092,
+     "bytes": 536940,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -1103,7 +2900,7 @@
      "file": "review/round-05/decisions/muffle-car-b-volume.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-b-volume.mp4.json",
      "wav": "out/round-05/options/muffle-volume.wav",
-     "bytes": 524284,
+     "bytes": 534193,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -1111,7 +2908,7 @@
      "file": "review/round-05/decisions/muffle-car-b-swap.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-b-swap.mp4.json",
      "wav": "out/round-05/options/muffle-swap.wav",
-     "bytes": 524788,
+     "bytes": 536906,
      "seconds": 7,
      "audioSeconds": 7
     }
@@ -2063,7 +3860,13 @@
      "aAgainstDefault": {
       "dLevelDb": -0.01,
       "dBalanceDb": 0,
-      "mostDb": 0.23
+      "mostDb": 0.23,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": -0.22
+      }
      }
     }
    },
@@ -2094,7 +3897,7 @@
   {
    "id": "listener",
    "question": "ROADMAP gate 2, question 3: the second listener model, level from the characters and pan from the camera",
-   "definition": "The level of every placed voice by its own distance law from the characters' point: the mean of the visible people's cloth points (each poser's root plus 1.2 m, DESIGN.CLOTH.up), one person while only one is out of the car, the camera's level before anyone is (until 30.9 s, A's first visible frame). The pan, the air lowpass and the dark behind the camera stay the camera's. A cue's level is its loudest 100 ms (the level plan's measure)",
+   "definition": "The level of every placed voice by its own distance law from the characters' point: the mean of the cloth points (each poser's root plus 1.2 m, DESIGN.CLOTH.up) of the people out of the car, whether or not the camera sees them (the poser's presence), one person while only one is out, the camera's level before anyone is (until 30.9 s, just before A's first frame out of the car). The pan, the air lowpass and the dark behind the camera stay the camera's. A cue's level is its loudest 100 ms (the level plan's measure)",
    "starting": {
     "listener": {
      "v": "characters",
@@ -3997,14 +5800,26 @@
      "what": "the 7 s where the levels move the most (19 onsets whose loudest 100 ms moves by 1 dB or more)",
      "mix": {
       "listener": {
-       "dLevelDb": 5.88,
-       "dBalanceDb": -0.32
+       "dLevelDb": 6.37,
+       "dBalanceDb": -0.4
       }
      },
      "aAgainstDefault": {
-      "dLevelDb": -0.81,
-      "dBalanceDb": 0.07,
-      "mostDb": 9.94
+      "dLevelDb": -11.81,
+      "dBalanceDb": 0.09,
+      "mostDb": 12.01,
+      "todaysLimiter": {
+       "windows": 700,
+       "overOneDb": 11,
+       "overThreeDb": 2,
+       "worstDb": -4.45
+      },
+      "jointWouldTake": {
+       "windows": 700,
+       "overOneDb": 107,
+       "overThreeDb": 55,
+       "worstDb": -8.68
+      }
      }
     }
    },
@@ -4013,7 +5828,7 @@
      "file": "review/round-05/decisions/listener-a.mp4",
      "sidecar": "review/round-05/decisions/listener-a.mp4.json",
      "wav": "out/round-05/options/a-listener.wav",
-     "bytes": 874263,
+     "bytes": 870914,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -4021,7 +5836,7 @@
      "file": "review/round-05/decisions/listener-b.mp4",
      "sidecar": "review/round-05/decisions/listener-b.mp4.json",
      "wav": "out/round-05/options/listener.wav",
-     "bytes": 876789,
+     "bytes": 871014,
      "seconds": 7,
      "audioSeconds": 7
     }

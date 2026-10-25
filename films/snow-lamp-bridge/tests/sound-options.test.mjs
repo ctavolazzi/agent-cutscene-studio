@@ -25,14 +25,16 @@ import { mulberry32 } from '../src/prng.js';
 import { predictedBalanceDb } from '../scripts/lib/audio-analysis.mjs';
 import { buildInput, charactersAt } from '../scripts/sound-report.js';
 import {
-  SWITCHES, allOff, balanceOf, candidateScenes, compareCues, firstPoint, hiddenSpans, levelDb, levelGainChange, loudestDb, masterOf,
+  SWITCHES, allOff, balanceOf, candidateScenes, coherenceOf, compareCues, firstPoint, hiddenSpans, levelDb, levelGainChange, loudestDb, masterOf,
   movedAgainstNamed, muffleRow, namedListener, namedMuffle, namedSyncPan, occlusionFrom, preMasterWith, renderCue, strayDifferences, withOptions,
 } from '../scripts/lib/sound-options-lib.js';
 
 const BASE = allOff(atStage(CONFIG, { stage: 'blockout' }));
 const SR = BASE.audio.sr;
 const input = buildInput(), FPS = input.fps;
-const { occlusion, hidden } = occlusionFrom(input);
+// Sound 1's hidden state (its onScreen rule, a car's own body counted) and the set's (the muffle's B: a car's own body
+// does not hide its own sounds)
+const { occlusion, hidden } = occlusionFrom(input), SET = occlusionFrom(input, CUES, { ownBodies: false });
 const byId = new Map(CUES.map((c) => [c.id, c])), cue = (id) => byId.get(id);
 const ctxA = makeContext(BASE), cacheA = new Map();
 const hash = (x) => createHash('sha256').update(Buffer.from(x.left.buffer)).update(Buffer.from(x.right.buffer)).digest('hex');
@@ -96,6 +98,8 @@ test('each switch moves exactly the cues it names, cue by cue and in the whole m
   const cases = [
     ['muffle, volume', withOptions(BASE, SWITCHES.muffleVolume), occlusion, namedMuffle(hidden)],
     ['muffle, swap', withOptions(BASE, SWITCHES.muffleSwap), occlusion, namedMuffle(hidden)],
+    ['muffle by the set, volume', withOptions(BASE, SWITCHES.muffleVolume), SET.occlusion, namedMuffle(SET.hidden)],
+    ['muffle by the set, swap', withOptions(BASE, SWITCHES.muffleSwap), SET.occlusion, namedMuffle(SET.hidden)],
     ['sync pan', withOptions(BASE, SWITCHES.syncPan), null, namedSyncPan(withOptions(BASE, SWITCHES.syncPan).audio.options.syncPan)],
     ['listener', listener, null, namedListener(from)],
   ];
@@ -197,6 +201,7 @@ test('the muffle follows the hidden state block by block and moves over rampSec;
   // every hidden cue, and the intake under a planted toggle
   const intake = cue('hard.engine.car.intake'), planted = (c) => (c.id === intake.id ? toggle(c) : null);
   for (const id of hidden.keys()) assert.deepEqual(timingProblems(cue(id), occlusion, gainOf(cue(id), occlusion)), [], id);
+  for (const id of SET.hidden.keys()) assert.deepEqual(timingProblems(cue(id), SET.occlusion, gainOf(cue(id), SET.occlusion)), [], id);
   assert.deepEqual(timingProblems(intake, planted, gainOf(intake, planted)), []);
   // controls: the state read once at the onset (it never lifts); no ramp (it jumps)
   const once = (c) => { const h = occlusion(c); return h && (() => h(c.t0)); }, step = (c) => (t) => t >= c.t0 + 1;
@@ -384,6 +389,29 @@ test('the hidden state is Sound 1\'s: the same 19 voiced cues hidden on the same
   assert.ok(hiddenProblems(occlusionFrom(noCar).hidden).length >= 15);
 });
 
+// The set's hidden state against Sound 1's: a frame is hidden by the set exactly when Sound 1 hides it by something
+// other than the cue's own body (sound-checks.js screenState tries the set's blockers before the car's, so a frame it
+// gives to an own box has no other blocker), frame for frame
+function setProblems(set, all) {
+  const p = [];
+  for (const [id, h] of all) {
+    const want = h.hid.map((x, j) => x && !h.own[j]), got = set.get(id)?.hid ?? want.map(() => false);
+    if (want.some((x, j) => x !== got[j])) p.push(`${id}: ${got.filter(Boolean).length} frames hidden by the set, want ${want.filter(Boolean).length}`);
+  }
+  for (const id of set.keys()) if (!all.has(id)) p.push(`${id}: hidden by the set, not by Sound 1`);
+  return p;
+}
+
+test('the set\'s hidden state: Sound 1\'s less the frames a car\'s own body hides; the engine behind building SE, the cabin and getting out kept', () => {
+  assert.deepEqual(setProblems(SET.hidden, hidden), []);
+  const by = (id) => [...new Set(SET.hidden.get(id).by.filter(Boolean))];
+  assert.deepEqual(by('hard.engine.car.intake'), ['building SE']);
+  assert.deepEqual(by('hard.engine.car.exhaust'), ['building SE']);
+  assert.ok(!SET.hidden.has('hard.door.passenger.unlatch') && SET.hidden.has('hard.cabin.A.belt') && SET.hidden.has('hard.unload.A.slide'));
+  // control: the own boxes kept (Sound 1's rule) is not the set's
+  assert.ok(setProblems(occlusionFrom(input).hidden, hidden).length > 0);
+});
+
 // ---------- the master ----------
 // a test signal: stereo noise with sparse clicks well over the rest, so the normalization limits them
 function clicky(seconds, seed) {
@@ -393,7 +421,7 @@ function clicky(seconds, seed) {
   return { sr: SR, left, right };
 }
 
-test('the master: masterOf replays normalize sample for sample; a joint master holds every mix of a set to B over A and under the ceiling', () => {
+test('the master: masterOf replays normalize sample for sample; a joint or a still master holds every mix of a set to B over A and under the ceiling, the still one with no curve', () => {
   const A = clicky(6, 3), m = masterOf(A, BASE.audio), own = { left: Float32Array.from(A.left), right: Float32Array.from(A.right) };
   const stats = normalize(own.left, own.right, BASE.audio, SR);
   assert.ok(stats.limitedSamples > 0, 'the test signal is limited');
@@ -407,6 +435,33 @@ test('the master: masterOf replays normalize sample for sample; a joint master h
   assert.ok(j.extra.samples > 0 && j.extra.maxDb > 0, 'B\'s louder clicks turn A down there too, and that is reported');
   // control: B mastered on its own (a per-clip normalization) is not B over A
   assert.ok(ratioProblems(j.mixes[0], masterOf(B, BASE.audio).out) > 0);
+  // the still master: one static gain under A's, so neither mix is limited (each is its raw mix times that gain), B over
+  // A, and both under the ceiling
+  const st = m.still([A, B]);
+  assert.ok(st.belowDb > 0 && st.gainDb < m.stats.gainDb, `${st.belowDb} dB under A's gain`);
+  assert.equal(ratioProblems(st.mixes[0], st.mixes[1]), 0);
+  for (const [x, raw] of [[st.mixes[0], A], [st.mixes[1], B]]) {
+    assert.ok(x.left.every((v) => Math.abs(v) <= ceiling) && x.right.every((v) => Math.abs(v) <= ceiling));
+    let lo = Infinity, hi = 0;
+    for (let i = 0; i < raw.left.length; i++) if (Math.abs(raw.left[i]) > 1e-3) { const k = x.left[i] / raw.left[i]; lo = Math.min(lo, k); hi = Math.max(hi, k); }
+    assert.ok(hi / lo - 1 < 1e-6, `no curve: the raw mix times one gain (${lo} to ${hi})`);
+  }
+  // control: the still gain from A alone leaves B's louder clicks over the ceiling
+  const alone = m.still([A]), ga = 10 ** (alone.gainDb / 20);
+  assert.ok(B.left.some((v) => Math.abs(v * ga) > ceiling));
+});
+
+// ---------- the engine's coherence ----------
+test('coherenceOf: two equal renders in phase add to twice their powers, a render and its negative cancel, two noises add as powers', () => {
+  const noise = (seed, i0 = 0) => { const rng = mulberry32(seed), n = SR, left = new Float32Array(n), right = new Float32Array(n); for (let i = 0; i < n; i++) { left[i] = rng() * 2 - 1; right[i] = rng() * 2 - 1; } return { sr: SR, i0, left, right }; };
+  const x = noise(1), neg = { ...x, left: x.left.map((v) => -v), right: x.right.map((v) => -v) };
+  assert.ok(Math.abs(coherenceOf([x, x], 0, 1) - 2) < 1e-9);
+  assert.ok(coherenceOf([x, neg], 0, 1) < 1e-9);
+  assert.ok(Math.abs(coherenceOf([x, noise(2)], 0, 1) - 1) < 0.02);
+  // the renders are summed by film sample (their i0): the same noise starting half a second later meets another part of
+  // itself and adds as powers; a sum that ignored i0 would read it as one noise in phase, 2
+  const late = { ...x, i0: SR / 2 };
+  assert.ok(Math.abs(coherenceOf([x, late], 0.5, 1) - 1) < 0.02);
 });
 
 // ---------- option 4 ----------
