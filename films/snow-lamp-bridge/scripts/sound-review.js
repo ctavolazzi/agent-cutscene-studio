@@ -33,9 +33,9 @@ import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { CONFIG } from '../src/config.js';
-import { CUES, LAWS, LOCATIONS } from '../src/audio/cues.js';
+import { CUES, DESIGN, LAWS, LOCATIONS } from '../src/audio/cues.js';
 import { atStage, renderSoundtrack } from '../src/audio/index.js';
-import { TIMBRE } from '../src/audio/layers/blockout/timbre.js';
+import { LEVEL, TIMBRE } from '../src/audio/layers/blockout/timbre.js';
 import { bedSpan } from '../src/audio/layers/blockout/voices.js';
 import { integratedLufs, normalize, samplePeak, targetOf, truePeakEnvelope } from '../src/audio/loudness.js';
 import { BLOCK } from '../src/audio/mix.js';
@@ -62,7 +62,7 @@ export const BARS = Object.freeze({
   endFloorDb: { v: 60, starting: false, source: 'the decay RT60 measures: a voice has stopped 60 dB under its loudest sample' },
   bandSpanDb: { v: 10, starting: true, source: 'a cue\'s measured band: the third octaves within 10 dB of its loudest one' },
   sideDb: { v: 3, starting: true, source: 'a cue lives in the side channel when its side carries 3 dB more than its mid (a hard-panned source carries both equally)' },
-  windowSec: { v: 0.1, starting: false, source: 'the level plan\'s 100 ms window (SOUND-PLAN 1.3, LEVEL.windowSec)' },
+  windowSec: { v: LEVEL.windowSec, starting: false, source: 'the level plan\'s 100 ms window (SOUND-PLAN 1.3, src/audio/layers/blockout/timbre.js LEVEL.windowSec)' },
   sweepFromLufs: { v: -16, starting: false, source: 'SOUND-PLAN 3.18: integrated loudness kept at or under -16 LUFS' },
   sweepStepDb: { v: 0.5, starting: false, source: 'Sound 2.6: the sweep\'s step' },
 });
@@ -79,7 +79,7 @@ function entry(id, n, name, definition, barText, source, starting, status, summa
 // The detector's gap within one voice group (tests/sound-blockout.test.mjs): half the group's closest cue times, at
 // most onsets()'s 80 ms, never under cues.js's flam merge. Cues of other groups are on other stems, so the gap never
 // joins two sources (A's and B's steps 3.8 ms apart at 56.34 are measured apart).
-export const minGapOf = (own, flam = 0.03) => Math.max(flam, Math.min(0.08, ...own.slice(1).map((c, i) => (c.t0 - own[i].t0) / 2)));
+export const minGapOf = (own, flam = DESIGN.STEP.flam) => Math.max(flam, Math.min(0.08, ...own.slice(1).map((c, i) => (c.t0 - own[i].t0) / 2)));
 // The body a voice group belongs to, for the listening stems: the night (the backgrounds and the lamp's hum), or the
 // group's own first word (car, A, B), so the stems are what the voice groups really give
 export const bodyOf = (source) => (source.startsWith('bg:') || source === 'lamp' ? 'night' : source.split(':')[0]);
@@ -112,7 +112,6 @@ export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log 
 }
 
 // ---------- one voice group measured: onsets, ends, the loudest window, pan ----------
-const RING_SEC = BLOCK / 48000; // events.js drops a voice in the block it ends in: its lowpass rings to that block's end
 const LOOK_SEC = 0.05; // a continuous voice is read on its group's stem only if the stem is silent this long before it
 // Each voiced cue of group g, measured on the group's stem before the master:
 //   onset   one-shots: the detector (preciseOnsets, the group's gap), matched one to one within that gap (half the
@@ -121,11 +120,12 @@ const LOOK_SEC = 0.05; // a continuous voice is read on its group's stem only if
 //           (a voice that follows another of its group without a gap, the engine's idle after the drive, and an
 //           unplaced background, crossfaded into the next of its family, are read on their own render: 'alone')
 //   end     soundingEnd from the onset to the next cue of the group (or the end), BARS.endFloorDb
-//   window  the loudest 100 ms of its own samples (to its t1 and the ring) and its level; for an unplaced background
+//   window  the loudest 100 ms of its own samples (to its t1 and the ring: events.js drops a voice in the block it ends
+//           in, so its lowpass rings on to that block's end) and its level; for an unplaced background
 //           its level over its span between its crossfades, as the level rule sets it (voices.js)
 // Options for the tests: another stem or cue list, and another matching rule (`match`, matchOneToOne's shape).
 export function measureGroup(session, g, { stem = session.group(g), own = session.own(g), aloneOf = (c) => session.alone(c), match = A.matchOneToOne } = {}) {
-  const sr = session.sr, gap = minGapOf(own), det = A.preciseOnsets(stem.left, stem.right, sr, { minGap: gap });
+  const sr = session.sr, ring = BLOCK / sr, gap = minGapOf(own), det = A.preciseOnsets(stem.left, stem.right, sr, { minGap: gap });
   const m = match(own.map((c) => c.t0), det, gap);
   const rows = own.map((c, i) => {
     const next = own[i + 1], winEnd = next ? next.t0 : T_TOTAL;
@@ -141,7 +141,7 @@ export function measureGroup(session, g, { stem = session.group(g), own = sessio
       const z = A.nonzeroSpan(stem, A.idx(c.t0 - LOOK_SEC, sr), A.idx(winEnd, sr)); onset = z ? z[0] / sr : null;
     }
     const e = A.soundingEnd(src, onset ?? c.t0, limit, BARS.endFloorDb.v);
-    const spanEnd = Math.min(c.t1 + RING_SEC, limit), h = TIMBRE.crossfadeSec / 2;
+    const spanEnd = Math.min(c.t1 + ring, limit), h = TIMBRE.crossfadeSec / 2;
     const w = c.place ? A.loudestWindow(src, c.t0, spanEnd, BARS.windowSec.v) : { t: c.t0 + h, db: A.powerDb(src, c.t0 + h, c.t1 - h) };
     return { c, src, method, onset, end: e?.end ?? null, last: e?.last ?? null, window: w, spanEnd };
   });
@@ -152,7 +152,7 @@ export function measureGroup(session, g, { stem = session.group(g), own = sessio
 const panOf = (c) => { const p0 = c.placement === 'onset' ? c.place(c.t0) : null; return (t) => { const q = p0 ?? c.place(t); return q ? placeAt(q, t, undefined, LAWS[c.law]).pan : 0; }; };
 
 // ---------- the measures, each an entry of measure.json ----------
-// 1 the renderer: every enabled one-shot's onset on its own group's stem, matched one to one within the bar; and no
+// 1 the renderer: every enabled one-shot's onset on its own group's stem (measureGroup), judged against the bar; and no
 // detection where no cue of its group sounds (an unplaced background sounds over bedSpan: its span widened by half the
 // crossfade at each end)
 const soundsFrom = (c, sr) => (c.place ? c.t0 : bedSpan(c, sr)[0] / sr);
@@ -436,7 +436,7 @@ function meterOf(path) {
   const d = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path], { encoding: 'utf8' });
   return { I: Number(/I:\s+(-?[\d.]+) LUFS/.exec(p.stderr)?.[1]), TP: Number(/Peak:\s+(-?[\d.]+) dBFS/.exec(p.stderr)?.[1]), seconds: Number(d.stdout.trim()) };
 }
-export function listeningStems(session, { gainDb, targetLufs, reviewDir, outDir, log = () => {} }) {
+export function listeningStems(session, { round, gainDb, targetLufs, reviewDir, outDir, log = () => {} }) {
   const bodies = [...new Set(session.groups.map(bodyOf))], g = 10 ** (gainDb / 20), raw = session.raw(), n = raw.left.length;
   const sum = [new Float64Array(n), new Float64Array(n)], out = [];
   mkdirSync(resolve(reviewDir, 'stems'), { recursive: true }); mkdirSync(resolve(outDir, 'listen'), { recursive: true });
@@ -452,7 +452,7 @@ export function listeningStems(session, { gainDb, targetLufs, reviewDir, outDir,
   }
   let worst = 0, peak = 0;
   for (let i = 0; i < n; i++) { worst = Math.max(worst, Math.abs(sum[0][i] - raw.left[i]), Math.abs(sum[1][i] - raw.right[i])); peak = Math.max(peak, Math.abs(raw.left[i]), Math.abs(raw.right[i])); }
-  return { round: relative(ROOT, reviewDir), gainDb, targetLufs, codec: LISTEN.codec, bitrate: LISTEN.bitrate, note: 'each body at the mastered mix\'s own gain, unlimited: the stems sum to the mix before its limiter (sumRatio: the largest difference over the raw mix\'s peak); lufs and peakDb are the float signal\'s, aac the encoded file\'s (ffmpeg ebur128)', sumRatio: Number((worst / peak).toExponential(3)), bodies: out };
+  return { round, stage: session.config.audio.stage, gainDb, targetLufs, codec: LISTEN.codec, bitrate: LISTEN.bitrate, note: 'each body at the mastered mix\'s own gain, unlimited: the stems sum to the mix before its limiter (sumRatio: the largest difference over the raw mix\'s peak); lufs and peakDb are the float signal\'s, aac the encoded file\'s (ffmpeg ebur128)', sumRatio: Number((worst / peak).toExponential(3)), bodies: out };
 }
 
 // ---------- the step: --measure ----------
@@ -512,7 +512,7 @@ export async function measureStep(session, { round, reviewDir, outDir, log = con
     return { source: g, body: bodyOf(g), category: own[0].category, cues: own.length, file: relative(ROOT, file) };
   });
   say(`${groups.length} measuring stems in ${relative(ROOT, resolve(outDir, 'stems'))}`);
-  const stems = listeningStems(session, { gainDb: mastered.stats.gainDb, targetLufs: targetOf(cfg.audio), reviewDir, outDir, log: say });
+  const stems = listeningStems(session, { round, gainDb: mastered.stats.gainDb, targetLufs: targetOf(cfg.audio), reviewDir, outDir, log: say });
   writeFileSync(resolve(reviewDir, 'stems', 'stems.json'), `${JSON.stringify(stems, null, 1)}\n`);
 
   const report = {

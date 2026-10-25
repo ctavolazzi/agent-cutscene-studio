@@ -719,3 +719,14 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   `out/round-05/stems/` (not committed).
 - Notes: `review/round-05/notes-measure.md`. Gate: 229 tests (222 pass, 7 skipped), forbidden, build, determinism,
   cameras pass.
+
+#### s2-measure: sound-review.js reads its window and flam from the source (before)
+- `stems.json` names its round and stage (the run that wrote the committed one already did); the review's window is
+  `LEVEL.windowSec`, the detector's floor gap `DESIGN.STEP.flam`, the ring `BLOCK / sr`: the same numbers, read
+  instead of typed. Check: measure.json and stems.json the same bytes after a fresh run; the full gate.
+
+#### s2-measure: sound-review.js reads its window and flam from the source (after)
+- A fresh `--measure` run wrote measure.json and stems.json byte identical to the committed ones. Gate: 229 tests
+  (222 pass, 7 skipped), forbidden, build, determinism, cameras pass (one gate was stopped by a time limit while the
+  other builder's gate shared the CPUs, and rerun alone: 417 s). The design stage with the score unparked renders
+  sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
