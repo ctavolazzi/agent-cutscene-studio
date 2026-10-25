@@ -672,7 +672,9 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   `measuredDensity`. `kWeighted` exported from `loudness.js`, `syncRule` from `sound-report.js` (report.json
   regenerated to scratch: byte identical).
 - Measured: precise onsets of all 93 one-shots on their group stems within 2.0 ms of their cues (the door swings
-  open, a sine from zero, the latest); the meters against ffmpeg ebur128: 0.0008 LU momentary, 0.0007 LU short-term;
+  open the latest; corrected after the checker: not "a sine from zero", which crosses -60 dBFS 0.06 and 0.08 ms
+  after t0, but the detector firing again on the unlatch's tail every 30 ms, held back by its gap; see the checker's
+  fixes below); the meters against ffmpeg ebur128: 0.0008 LU momentary, 0.0007 LU short-term;
   the third-octave bank: 0.034 dB in band, 18.2 dB down in the neighbours to 2 kHz, 12.2 dB at 16 kHz.
 - `tests/sound-measure.test.mjs`: 11 tests, each with its planted fault (a step 5 ms late reads 5 ms later to the
   sample and 6 ms late fails the bar; a ghost onset one to one against nearest match; a cue 50 ms short; a step one
@@ -815,5 +817,29 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - `tests/audio.test.mjs`: one test, the planted pre-target sidecar and its controls (a named target, today's or
   another; a raw render; no sidecar; the S8.3 sidecar). SOUND.md: the normalization and the loudness check name the
   target per stage.
+- Gate: 233 tests (226 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
+  unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-measure: measure.json, the stems and the notes after the fixes (before)
+- Plan: run `node scripts/sound-review.js --round 05 --measure` on the fixed code (twice, to check the bytes), then
+  rewrite `review/round-05/notes-measure.md` from the new measure.json and stems.json: the renderer's new reading,
+  the corrected 2.0 ms explanation (also in this log's Sound 2.5 entry), the sync edges, the stems' float and AAC
+  sums, the drift's rustles, and each finding's disposition, the disagreements with their measurements.
+
+#### s2-measure: measure.json, the stems and the notes after the fixes (after)
+- Three runs of `--measure` (265 s each; 5.0 GB resident at most, sampled every 20 s on the first): each differs from the one before only in the text the
+  code changed between them (the sync summary's single value, the drift's definition of an extra), and stems.json
+  and the four m4a files are byte identical across all three and to the committed m4a; the mastered render is still
+  sha256 610a1d0e...
+- measure.json: renderer pass (142 of 142 voiced cues within 5 ms, worst 0.031 ms; 30 of 30 stems the sum of their
+  cues alone, worst 8.2e-8); sync fail (20: Sound 1's 12, and the 8 on-frame instants now 0.02 ms after their frames,
+  one sample); the six onsets the detector misread now read 0.021 ms; ends, pan, level, loudness, silence, voices,
+  density, masking, phone and mono, determinism, stems, target as before. The drift's extras are said to include the
+  detector's re-fires 80 ms apart. stems.json: the float sum 9.0e-8; the AAC files' sum 0.380 of the peak, 13.03 dB
+  under the mix; coding error per file 9.61 to 17.68 dB.
+- `review/round-05/notes-measure.md` rewritten from those files: the renderer's reading and why, the corrected 2.0 ms,
+  the drift's rustles (the pats are not detected; a tolerance per cue tried, scratch drift-tol.mjs: it would match A's
+  cup to a crinkle 17 ms early, a false match, so not adopted), the stems both ways, each finding's disposition, and the
+  two disagreements with their measurements. The Sound 2.5 entry above is corrected in place.
 - Gate: 233 tests (226 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
   unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

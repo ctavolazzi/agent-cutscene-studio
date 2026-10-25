@@ -5,8 +5,13 @@
  "targetLufs": -23,
  "codec": "aac",
  "bitrate": "96k",
- "note": "each body at the mastered mix's own gain, unlimited: the stems sum to the mix before its limiter (sumRatio: the largest difference over the raw mix's peak); lufs and peakDb are the float signal's, aac the encoded file's (ffmpeg ebur128)",
+ "note": "each body at the mastered mix's own gain, unlimited. The float stems (out/round-NN/listen/*.wav) sum to the mix before its limiter: sumRatio is their largest difference over the raw mix's peak. The AAC files are coded, so they do not: aacSum is their decoded sum against that mix at the same gain (the largest difference over its peak, where, and the error's power under the mix's), and each body's aac.errorDb its own coding error under its float stem (aac.lagSamples the lag that aligns them). lufs and peakDb are the float signal's, aac.lufs and aac.truePeakDb the encoded file's (ffmpeg ebur128)",
  "sumRatio": 8.997e-8,
+ "aacSum": {
+  "ratio": 0.3803,
+  "at": 30.4411,
+  "errorDb": -13.03
+ },
  "bodies": [
   {
    "name": "night",
@@ -18,7 +23,9 @@
    "peakDb": -14.72,
    "aac": {
     "lufs": -27.6,
-    "truePeakDb": -14.8
+    "truePeakDb": -14.8,
+    "lagSamples": 0,
+    "errorDb": -9.61
    },
    "groups": [
     "bg:city",
@@ -45,7 +52,9 @@
    "peakDb": 0.44,
    "aac": {
     "lufs": -20.5,
-    "truePeakDb": 1.7
+    "truePeakDb": 1.7,
+    "lagSamples": 0,
+    "errorDb": -17.59
    },
    "groups": [
     "car:exhaust",
@@ -116,7 +125,9 @@
    "peakDb": -3.6,
    "aac": {
     "lufs": -25.8,
-    "truePeakDb": -3
+    "truePeakDb": -3,
+    "lagSamples": 0,
+    "errorDb": -17.68
    },
    "groups": [
     "A:feet",
@@ -198,7 +209,9 @@
    "peakDb": -4.83,
    "aac": {
     "lufs": -25.9,
-    "truePeakDb": -4.8
+    "truePeakDb": -4.8,
+    "lagSamples": 0,
+    "errorDb": -15.6
    },
    "groups": [
     "B:feet",

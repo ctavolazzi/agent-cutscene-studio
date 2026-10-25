@@ -441,8 +441,8 @@ test('determinism and stems measures: the same render twice passes, one changed 
 });
 
 // The listening stems: one full render per body (reverb in), at the mix's gain, so they sum to the raw mix. That
-// holds for the float bodies the AAC files are encoded from, not for the files (round 05's checker: their decoded
-// sum is 12.6 dB of coding error under the mix), so the float sum is the bar and the files' error is measured
+// holds for the float bodies the AAC files are encoded from, not for the files (their decoded sum is 13.03 dB of
+// coding error under the mix, stems.json aacSum), so the float sum is the bar and the files' error is measured
 // (codingError). Planted: a body left out of the sum; a "decoded" signal 101 samples late with noise 20 dB down.
 test('listening stems: the float bodies sum to the raw mix within the stems bar, one left out does not; the coding error reads its lag and level', () => {
   const bodies = listeningBodies(session), raw = session.raw();
