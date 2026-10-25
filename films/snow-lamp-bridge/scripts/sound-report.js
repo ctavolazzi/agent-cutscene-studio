@@ -45,10 +45,12 @@ const camera = (t) => makeCamera(cameraAt(shotAt(t), t), W, H);
 const MODS = CUES.filter((c) => c.enabled && c.voices === 0 && c.meta.modifies);
 const fraction = (m, t) => { const k = m.track(Math.min(Math.max(t, m.t0), m.t1 - 1e-9)); return m.id.endsWith('.rise') ? 1 - k.u : k.u ?? k.moon ?? k.pull ?? k.open ?? 0; };
 const modDb = (c, t) => MODS.reduce((s, m) => (m.meta.modifies.includes(c.family) && m.t0 < c.t1 && c.t0 < m.t1 && t >= m.t0 ? s + m.level * fraction(m, t) : s), 0);
-// the characters' listener (SOUND-PLAN 3.6, Silent Hill's pattern): level from the distance to the people in the
-// picture (their cloth points, averaged), pan from the camera; the camera's level before anyone is there
+// the characters' listener (SOUND-PLAN 3.6, Silent Hill's pattern): level from the distance to the people out of the
+// car, seen or not (the poser's `visible` is its presence; their cloth points, averaged), pan from the camera; the
+// camera's level before anyone is there. Exported so tests/sound-options.test.mjs can hold src/audio/listeners.js,
+// which renders this model, to the same point
 const clothAt = (id, t) => { const p = posers[id](t); return p.visible ? [p.x, p.y + DESIGN.CLOTH.up, p.z] : null; };
-const charactersAt = (t) => { const ps = IDS.map((id) => clothAt(id, t)).filter(Boolean); return ps.length ? ps.reduce((s, p) => s.map((v, j) => v + p[j] / ps.length), [0, 0, 0]) : null; };
+export const charactersAt = (t) => { const ps = IDS.map((id) => clothAt(id, t)).filter(Boolean); return ps.length ? ps.reduce((s, p) => s.map((v, j) => v + p[j] / ps.length), [0, 0, 0]) : null; };
 function hear(c, t, model = 'camera') {
   const level = c.level + modDb(c, t);
   if (!c.place) return { db: level, pan: null };

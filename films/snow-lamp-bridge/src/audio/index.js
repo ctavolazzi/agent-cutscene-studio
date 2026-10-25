@@ -5,7 +5,7 @@ import { mulberry32, hashString } from '../prng.js';
 import { T_TOTAL } from '../world.js';
 import { renderAll, renderBlocks } from './mix.js';
 import { makeSpatializer } from './spatial.js';
-import { charactersListener } from './listeners.js';
+import { LISTENERS, charactersListener } from './listeners.js';
 import * as ambience from './layers/ambience.js';
 import * as car from './layers/car.js';
 import * as foley from './layers/foley.js';
@@ -41,16 +41,18 @@ export const atStage = (config, { stage = config.audio.stage, parked = config.au
 // A/B only, maps a cue to null (never hidden) or to t -> whether the picture hides its source at t: the hidden state
 // is the picture's screen state (scripts/lib/sound-checks.js), so only scripts/sound-options.js builds one, src/ never
 // does, and the default render has none. `levelAt` is the characters' listener when config.audio.options.listener
-// asks for it (Sound 2.12's option 3), else null. The blockout's voices read both (layers/blockout/voices.js).
+// asks for it (Sound 2.12's option 3), else null; a listener it does not know is refused, so a misspelt one cannot
+// render the camera while it is reported as the characters. The blockout's voices read both (blockout/voices.js).
 export function makeContext(config, { cues = null, occlusion = null } = {}) {
-  const sr = config.audio.sr;
+  const sr = config.audio.sr, listener = config.audio.options?.listener;
+  if (listener !== undefined && !LISTENERS.includes(listener)) throw new Error(`listener '${listener}': want ${LISTENERS.map((x) => `'${x}'`).join(', ')}`);
   return {
     sr,
     total: T_TOTAL,
     config,
     cues,
     occlusion,
-    levelAt: config.audio.options?.listener === 'characters' ? charactersListener() : null,
+    levelAt: listener === 'characters' ? charactersListener() : null,
     rngFor: (name) => mulberry32((config.seed ^ hashString(name)) >>> 0),
     spatializer: (place, law) => makeSpatializer(sr, place, law),
   };

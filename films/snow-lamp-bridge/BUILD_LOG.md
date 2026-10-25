@@ -702,3 +702,39 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   muffle, the physical pan, the camera as listener, shots 4 to 6); three findings beyond the options.
 - Byte identity before this last commit: the default render 6f9c4925..., the design stage with the score unparked
   f80b1542... (the S8.3 bytes), as before the branch.
+
+#### s2-options: the checker's findings F1 to F9, the plan (before)
+- Before: HEAD a7b262d. The checker's gate there: npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run
+  check exit 0; the default render 6f9c4925..., the design stage with the score unparked f80b1542... (S8.3).
+- Plan, in three gated commits. (1) The checks: the muffle's timing per block and its ramp, and the swap's copy in
+  step (F1, planted f1, f2, f8); the characters' listener keeping the camera's pan and air, and its point equal to
+  sound-report.js's at every frame (F2, planted f7, f4); a misspelt listener or a syncPan kind naming no cue refused
+  (F7). (2) The options script: the muffle with the set's blockers only (a car's own body does not hide its own
+  sounds), rendered, measured, clipped and split by blocker (F4); the listener set mastered through one static gain
+  with no limiter in its clip (F3); the header and CLIP_SEC comments (F5); decisions.json and the clips rerun.
+  (3) The notes (F3, F4, F6, F9) and this log (F8).
+
+#### s2-options: F1, F2 and F7, the checks (before)
+- Plan: export voices.js `muffleOf` so a test reads the muffle's gain sample by sample; measure the intake (hidden
+  14.000 to 17.875 s) under each mode before setting any bar; export sound-report.js `charactersAt`; refuse unknown
+  listener values in `makeContext` and syncPan kinds that name no voiced foley cue in `lawOf`. Each new check is shown
+  failing on the checker's planted f1, f2, f4, f7 and f8.
+
+#### s2-options: F1, F2 and F7, the checks (after)
+- Actions: voices.js exports `muffleOf`; `lawOf` refuses a syncPan kind that names no voiced foley cue of the film;
+  `makeContext` refuses a listener other than 'camera' and 'characters' (listeners.js `LISTENERS`); sound-report.js
+  exports `charactersAt`; listeners.js and sound-report.js say "the people out of the car, seen or not" (F6).
+  tests/sound-options.test.mjs gains four tests: the muffle's gain sample by sample (settled to the drop or 1 a block
+  and rampSec after each change, never faster than the whole drop in rampSec) on all 19 hidden cues and a planted
+  toggle, and the swap against its definition (a copy filtered on every sample, measured within 3.3e-16); the intake
+  in the render (-6.000 dB over 14.000 to 17.875 s, its ramp within 0.0017 dB of a linear one, today's samples from a
+  block and rampSec after 17.875 s, the last differing sample 52.4 ms after it); the listener's point equal to
+  charactersAt on every half frame, 37 continuous cues within 0.024 dB of the model in 1596 steady windows, pan, air
+  and distance the camera's at every block edge, each stem's balance within 0.0014 dB of the camera's pan; refused
+  values. Bars: RAMP_TOL_DB 0.05 and STEADY_DB 0.5 are starting values set from those measurements.
+- Planted on copies of this tree, `node --test tests/sound-options.test.mjs`: f1 (state read at the onset) and f2 (no
+  ramp) fail 2 tests each, f8 (copy filtered only while heard) 1, f4 (listener at the roots) 1, f7 (pan halved under
+  the listener) 1, no listener check 1, no kinds check 1; every other test passes on each.
+- Gate: npm test exit 0 (218 tests, 211 pass, 0 fail, 7 skipped, the same 7 as before); npm run check exit 0
+  (forbidden 0 hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the
+  score unparked f80b1542... and the default render 6f9c4925..., as before.

@@ -184,10 +184,18 @@ const edges = (c, n, sr) => {
 // The law a placed voice is heard by: its cue's (cues.js LAWS), plus the options that are on: the pan narrowed for the
 // sync foley that options.syncPan names (a cue's family, or its family and meta.kind), and the level from the
 // characters (ctx.levelAt, which makeContext builds only when options.listener asks for it). With both off it is
-// LAWS[c.law] itself, the object the spatializer has always been handed.
+// LAWS[c.law] itself, the object the spatializer has always been handed. A kind that names no voiced foley cue of the
+// film (SYNC_KINDS, from cues.js, so a stem's subset of the catalogue does not narrow the list) is refused: a misspelt
+// kind would otherwise render today's pan while it is reported as the narrower one.
+const kindsOf = (c) => [c.family, `${c.family}.${c.meta.kind}`];
+const SYNC_KINDS = new Set(CUES.filter((c) => c.enabled && c.voices > 0 && c.place && c.category === 'foley').flatMap(kindsOf));
 function lawOf(c, ctx) {
   const P = ctx.config.audio.options?.syncPan, extra = {};
-  if (P?.on && c.category === 'foley' && (P.kinds.includes(c.family) || P.kinds.includes(`${c.family}.${c.meta.kind}`))) extra.width = P.widthRatio;
+  if (P?.on) {
+    const bad = P.kinds.filter((k) => !SYNC_KINDS.has(k));
+    if (bad.length) throw new Error(`syncPan kinds ${bad.map((k) => `'${k}'`).join(', ')}: name no voiced foley cue (a family, or a family and its meta.kind)`);
+    if (c.category === 'foley' && kindsOf(c).some((k) => P.kinds.includes(k))) extra.width = P.widthRatio;
+  }
   if (ctx.levelAt) extra.levelAt = ctx.levelAt;
   return Object.keys(extra).length ? { ...LAWS[c.law], ...extra } : LAWS[c.law];
 }
@@ -198,9 +206,10 @@ function lawOf(c, ctx) {
 // its onset. The hidden state is read every BLOCK samples, as the spatializer moves a voice, and the muffle follows it
 // at 1 / rampSec a second from where it stands at the onset. Like the modifiers it acts after the level rule. Returns
 // null when the option is off or the cue is never hidden (those voices stay today's), else a maker of (x, i) -> the
-// muffled sample, called once per sample in order.
+// muffled sample, called once per sample in order. Exported so tests/sound-options.test.mjs can read the muffle's
+// gain and the swap's copy sample by sample, before the spatializer smooths them.
 const MUFFLES = ['off', 'volume', 'swap'];
-function muffleOf(c, ctx, n) {
+export function muffleOf(c, ctx, n) {
   const M = ctx.config.audio.options?.muffle;
   if (M && !MUFFLES.includes(M.mode)) throw new Error(`muffle mode '${M.mode}': want ${MUFFLES.map((m) => `'${m}'`).join(', ')}`);
   const hidden = M && M.mode !== 'off' ? ctx.occlusion?.(c) : null;

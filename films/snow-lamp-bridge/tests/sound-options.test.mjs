@@ -1,11 +1,13 @@
 // Checks for Sound 2.12's option switches (config.audio.options, read by layers/blockout/voices.js and spatial.js) and
 // the tools that measure them (scripts/lib/sound-options-lib.js): every switch off renders today's samples, with or
 // without an occlusion handed in, and the design stage reads none of them; each switch on moves exactly the cues it
-// names, cue by cue and in the whole mix before the master; the muffle drops what it says or swaps to its lowpass; the
-// narrower pan is the camera's pan times its width; the characters' level listener is the storyboard's own; the
-// hidden state is Sound 1's; the options script's master is scripts/sound.js's, and its joint master keeps B over A
-// the option alone; the style-frame candidates are the ones their rules pick. Each check has a planted fault shown
-// to fail. Run: node --test tests/sound-options.test.mjs
+// names, cue by cue and in the whole mix before the master; the muffle drops what it says or swaps to its lowpass, follows
+// the hidden state block by block over rampSec, and keeps the swap's copy in step; the narrower pan is the camera's
+// pan times its width; the characters' level listener is the storyboard's own, its point and every cue's level, while
+// the pan and the air stay the camera's; a switch set to a value it does not know is refused; the hidden state is
+// Sound 1's; the options script's master is scripts/sound.js's, and its joint master keeps B over A the option alone;
+// the style-frame candidates are the ones their rules pick. Each check has a planted fault shown to fail.
+// Run: node --test tests/sound-options.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -13,12 +15,15 @@ import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { CONFIG } from '../src/config.js';
 import { CUES, DESIGN, LAWS, WORLD } from '../src/audio/cues.js';
+import { Biquad, dbToGain } from '../src/audio/dsp.js';
 import { atStage, makeContext, renderSoundtrack } from '../src/audio/index.js';
+import { muffleOf, placedEvent } from '../src/audio/layers/blockout/voices.js';
 import { normalize } from '../src/audio/loudness.js';
+import { BLOCK } from '../src/audio/mix.js';
 import { placeAt } from '../src/audio/spatial.js';
 import { mulberry32 } from '../src/prng.js';
 import { predictedBalanceDb } from '../scripts/lib/audio-analysis.mjs';
-import { buildInput } from '../scripts/sound-report.js';
+import { buildInput, charactersAt } from '../scripts/sound-report.js';
 import {
   SWITCHES, allOff, balanceOf, candidateScenes, compareCues, firstPoint, hiddenSpans, levelDb, levelGainChange, loudestDb, masterOf,
   movedAgainstNamed, muffleRow, namedListener, namedMuffle, namedSyncPan, occlusionFrom, preMasterWith, renderCue, strayDifferences, withOptions,
@@ -46,8 +51,16 @@ const SWAP_CABIN_DB = -50;
 const PAN_TOL_DB = 0.5;
 // The characters' listener against the storyboard's prediction at the onset (scripts/sound-report.js hear): measured
 // within 0.12 dB on the 88 moved one-shots (their listener moves a little over their span); the bar is a starting
-// value of about twice that
+// value of about twice that. The continuous cues, window by window against the same model, measured within 0.024 dB
 const PREDICT_TOL_DB = 0.25;
+// The windows of a continuous cue held to the model: those where the model's gain ratio moves under this across the
+// window's block edges (a cut or a person getting out moves it inside one block, which the spatializer interpolates and
+// a window's mean cannot follow). A starting value: it keeps 1596 of the 1618 heard windows, on all 37 cues
+const STEADY_DB = 0.5;
+// The ramp out of a muffle, rendered, against a linear ramp in amplitude from the drop to 1 over rampSec, weighted by
+// the cue's own power: measured within 0.0017 dB on the intake (the spatializer's air lowpass smooths the ramp a little,
+// and the ramp starts a sample into its block); a starting value
+const RAMP_TOL_DB = 0.05;
 
 // ---------- every switch off ----------
 test('every switch off renders today\'s samples: as config.js ships them, with no options at all, and with an occlusion handed in', () => {
@@ -141,6 +154,83 @@ test('the muffle: the volume drop takes dropDb off a cue hidden on every frame; 
   assert.throws(() => renderCue(cue(namedMuffle(hidden)[0]), makeContext(withOptions(BASE, { muffle: { mode: 'filter' } }), { occlusion })), /muffle mode 'filter'/);
 });
 
+// ---------- the muffle's timing ----------
+const M = BASE.audio.options.muffle, DROP = dbToGain(-M.dropDb);
+// A planted hidden state for a cue that toggles every half second from its onset, seen first: both ways, many times,
+// off the block grid
+const toggle = (c) => (t) => Math.floor((t - c.t0) / 0.5) % 2 === 1;
+// The muffle's gain on a voice, sample by sample: voices.js muffleOf in volume mode on a constant 1 (1 where it is null)
+function gainOf(c, occ, mode = 'volume') {
+  const n = Math.round((c.t1 - c.t0) * SR), m = muffleOf(c, makeContext(withOptions(BASE, { muffle: { mode } }), { occlusion: occ }), n), g = new Float64Array(n).fill(1);
+  if (m) { const f = m(); for (let i = 0; i < n; i++) g[i] = f(1, i); }
+  return g;
+}
+// The gain against the option's definition: wherever the hidden state has held for a block and rampSec (it is read
+// every BLOCK samples and followed over rampSec; from the onset it starts where the state stands), the gain is the drop
+// while hidden and 1 while seen, and it never moves faster than the whole drop in rampSec
+function timingProblems(c, occ, g) {
+  const hold = BLOCK + Math.ceil(M.rampSec * SR), rate = (1 - DROP) / (M.rampSec * SR), hid = occ(c) ?? (() => false), p = [];
+  let state = null, since = 0, settled = null, fast = null;
+  for (let i = 0; i < g.length; i++) {
+    const s = hid(c.t0 + i / SR);
+    if (s !== state) { if (state !== null) since = i; state = s; }
+    if ((since === 0 || i - since >= hold) && !(Math.abs(g[i] - (s ? DROP : 1)) <= 1e-12)) settled ??= `${c.id}: gain ${g[i].toFixed(4)} at ${(c.t0 + i / SR).toFixed(4)} s, ${s ? 'hidden' : 'seen'} since ${(c.t0 + since / SR).toFixed(4)} s`;
+    if (i > 0 && Math.abs(g[i] - g[i - 1]) > rate * (1 + 1e-9)) fast ??= `${c.id}: the gain moves ${Math.abs(g[i] - g[i - 1]).toExponential(3)} in a sample at ${(c.t0 + i / SR).toFixed(4)} s, over the whole drop in rampSec`;
+  }
+  return [settled, fast].filter(Boolean);
+}
+// The swap against its definition: the voice crossfaded, by the muffle's own amount (from gainOf), to a copy of itself
+// through two lowpasses at lowpassHz that run on every sample from the onset, so the copy is in step whenever it is
+// heard. Driven by seeded noise; returns the largest difference from that
+function swapGap(c, occ) {
+  const n = Math.round((c.t1 - c.t0) * SR), vol = gainOf(c, occ), f = muffleOf(c, makeContext(withOptions(BASE, { muffle: { mode: 'swap' } }), { occlusion: occ }), n)();
+  const lp = [new Biquad(SR, 'lowpass', M.lowpassHz), new Biquad(SR, 'lowpass', M.lowpassHz)], rng = mulberry32(7);
+  let worst = 0;
+  for (let i = 0; i < n; i++) {
+    const x = rng() * 2 - 1, y = lp[1].process(lp[0].process(x)), m = (vol[i] - 1) / (DROP - 1);
+    worst = Math.max(worst, Math.abs(f(x, i) - (x + (y - x) * m)));
+  }
+  return worst;
+}
+
+test('the muffle follows the hidden state block by block and moves over rampSec; the swap\'s copy stays in step', () => {
+  // every hidden cue, and the intake under a planted toggle
+  const intake = cue('hard.engine.car.intake'), planted = (c) => (c.id === intake.id ? toggle(c) : null);
+  for (const id of hidden.keys()) assert.deepEqual(timingProblems(cue(id), occlusion, gainOf(cue(id), occlusion)), [], id);
+  assert.deepEqual(timingProblems(intake, planted, gainOf(intake, planted)), []);
+  // controls: the state read once at the onset (it never lifts); no ramp (it jumps)
+  const once = (c) => { const h = occlusion(c); return h && (() => h(c.t0)); }, step = (c) => (t) => t >= c.t0 + 1;
+  assert.equal(timingProblems(intake, occlusion, gainOf(intake, once)).length, 1);
+  const jump = Float64Array.from(gainOf(intake, step), (x) => (x < 1 ? DROP : 1));
+  assert.ok(timingProblems(intake, step, jump).some((x) => x.includes('moves')));
+  // the swap: the copy in step on every hidden cue and through the toggle (within float rounding: measured 3.3e-16)
+  for (const id of hidden.keys()) assert.ok(swapGap(cue(id), occlusion) <= 1e-12, id);
+  assert.ok(swapGap(intake, planted) <= 1e-12);
+});
+
+test('the muffle in the render: the intake drops by dropDb while building SE hides it, ramps back over rampSec, then is today\'s sample for sample', () => {
+  const c = cue('hard.engine.car.intake'), [span] = hiddenSpans(c, hidden.get(c.id), FPS), seen = span.t1;
+  assert.equal(span.by, 'building SE');
+  assert.ok(Math.abs(seen - 17.875) < 1e-9 && span.t0 === c.t0 && c.t1 > seen + 1, `${span.t0} to ${seen} of ${c.t0} to ${c.t1}`);
+  const a = renderCue(c, ctxA), b = renderCue(c, makeContext(withOptions(BASE, SWITCHES.muffleVolume), { occlusion }));
+  const d = levelDb(b, [[c.t0, seen]]) - levelDb(a, [[c.t0, seen]]);
+  assert.ok(Math.abs(d + M.dropDb) <= DROP_TOL_DB, `${d} dB while hidden`);
+  // the ramp starts on the first block at or after the frame that shows it (blocks counted from the onset)
+  const s0 = Math.round(c.t0 * SR), r0 = s0 + Math.ceil((seen * SR - s0) / BLOCK) * BLOCK, r1 = r0 + Math.round(M.rampSec * SR);
+  let ea = 0, ew = 0, eb = 0;
+  for (let i = r0; i < r1; i++) {
+    const k = i - a.i0, e = a.left[k] ** 2 + a.right[k] ** 2, g = DROP + (1 - DROP) * (i - r0) / (r1 - r0);
+    ea += e; ew += e * g * g; eb += b.left[k] ** 2 + b.right[k] ** 2;
+  }
+  const ramp = 10 * Math.log10(eb / ea), want = 10 * Math.log10(ew / ea);
+  assert.ok(Math.abs(ramp - want) <= RAMP_TOL_DB && want < -1, `the ramp ${ramp} dB, a linear ramp over rampSec ${want}`);
+  // after a block and rampSec, today's samples exactly
+  const k0 = Math.round((seen + BLOCK / SR + M.rampSec) * SR) - a.i0;
+  let differ = 0;
+  for (let k = k0; k < a.left.length; k++) if (a.left[k] !== b.left[k] || a.right[k] !== b.right[k]) differ++;
+  assert.equal(differ, 0);
+});
+
 // ---------- the narrower pan ----------
 function panProblems(renderOf) {
   const P = withOptions(BASE, SWITCHES.syncPan).audio.options.syncPan, law = (c) => ({ ...LAWS[c.law], width: P.widthRatio }), p = [];
@@ -186,6 +276,94 @@ test('the characters\' level listener: the camera\'s level until a person is out
   // control: a listener that hears from A alone puts B's sounds off the prediction
   const poseA = WORLD.makePoser('A'), aOnly = (t) => { const s = poseA(t); return s.visible ? [s.x, s.y + DESIGN.CLOTH.up, s.z] : null; };
   assert.ok(predictionProblems({ ...ctx, levelAt: aOnly }, (c) => c.person === 'B').length > 0);
+});
+
+// The listener's point against the storyboard's (scripts/sound-report.js charactersAt) on every frame and between them
+function pointProblems(levelAt) {
+  const p = [];
+  for (let k = 0; k < input.total * FPS * 2; k++) {
+    const t = k / (2 * FPS), a = levelAt(t), b = charactersAt(t);
+    if (!a !== !b || (a && a.some((v, j) => !(Math.abs(v - b[j]) <= 1e-9)))) p.push(`${t.toFixed(4)} s: ${a?.map((v) => v.toFixed(3))} against ${b?.map((v) => v.toFixed(3))}`);
+  }
+  return p;
+}
+// Each named cue heard by its law under the switch (voices.js placedEvent's, the one the spatializer is handed): at
+// every block edge of its span its pan, air cutoff and distance are the camera's (LAWS[c.law]) exactly, and its stem's
+// balance follows the camera's pan within PAN_TOL_DB (ROADMAP 2.6), measured on its own power
+function cameraKeptProblems(ctx, named, renderOf = (c) => renderCue(c, ctx)) {
+  const p = [];
+  for (const id of named) {
+    const c = cue(id), law = placedEvent(c, CUES, ctx, 0).law, p0 = c.placement === 'onset' ? c.place(c.t0) : null;
+    for (let i = Math.floor(c.t0 * SR / BLOCK) * BLOCK; i <= Math.ceil(c.t1 * SR / BLOCK) * BLOCK; i += BLOCK) {
+      const t = i / SR, q = p0 ?? c.place(t);
+      if (!q) continue;
+      const a = placeAt(q, t, undefined, LAWS[c.law]), b = placeAt(q, t, undefined, law);
+      if (a.pan !== b.pan || a.hz !== b.hz || a.dist !== b.dist) { p.push(`${id} at ${t.toFixed(4)} s: pan ${b.pan} hz ${b.hz} against the camera's ${a.pan} ${a.hz}`); break; }
+    }
+    const x = renderOf(c), off = x.i0 / SR, panAt = (t) => { const s = p0 ?? c.place(t + off); return s ? placeAt(s, t + off, undefined, LAWS[c.law]).pan : 0; };
+    const want = predictedBalanceDb(x, c.t0 - off, c.t1 - off, panAt), got = balanceOf(x, c.t0, c.t1);
+    if (!(Math.abs(got - want) <= PAN_TOL_DB)) p.push(`${id}: balance ${got.toFixed(2)} dB, the camera's pan predicts ${want.toFixed(2)}`);
+  }
+  return p;
+}
+// Each continuous cue's level window by window (LEVEL.windowSec, where A is within 20 dB of its loudest and the model
+// is steady) against the storyboard's characters model at its rendered point (sound-report.js hear, 'characters' over
+// 'camera', at the middle of each block), weighted by A's own power. A one-shot is held at its onset by the test above
+function continuousProblems(ctx, named, from) {
+  const p = [], w = Math.round(0.1 * SR);
+  for (const id of named) {
+    const c = cue(id);
+    if (c.shape === 'oneshot') continue;
+    const p0 = c.placement === 'onset' ? c.place(c.t0) : null, heard = p0 ? { ...c, place: () => p0 } : c;
+    const ratio = (t) => { const a = input.hear(heard, t, 'camera'), b = input.hear(heard, t, 'characters'); return a && b ? b.db - a.db : 0; };
+    const a = renderCue(c, ctxA), b = renderCue(c, ctx), loud = loudestDb(a, c.t0, c.t1);
+    let worst = 0, at = null;
+    for (let s = Math.round(Math.max(c.t0, from) * SR); s < Math.round(c.t1 * SR); s += w) {
+      const e = Math.min(Math.round(c.t1 * SR), s + w), dbs = [];
+      if (levelDb(a, [[s / SR, e / SR]]) < loud - 20) continue;
+      for (let i = Math.floor(s / BLOCK) * BLOCK; i <= e; i += BLOCK) dbs.push(ratio(i / SR));
+      if (Math.max(...dbs) - Math.min(...dbs) > STEADY_DB) continue;
+      let ea = 0, ew = 0, eb = 0;
+      for (let i = s; i < e; i += BLOCK) {
+        const j = Math.min(e, Math.floor(i / BLOCK) * BLOCK + BLOCK), g = dbToGain(ratio((i + j) / 2 / SR)) ** 2;
+        for (let k = i - a.i0; k < j - a.i0; k++) { const x = a.left[k] ** 2 + a.right[k] ** 2; ea += x; ew += x * g; eb += b.left[k] ** 2 + b.right[k] ** 2; }
+        i = j - BLOCK;
+      }
+      const d = 10 * Math.log10(eb / ea) - 10 * Math.log10(ew / ea);
+      if (Math.abs(d) > Math.abs(worst)) { worst = d; at = s / SR; }
+    }
+    if (!(Math.abs(worst) <= PREDICT_TOL_DB)) p.push(`${id}: ${worst.toFixed(2)} dB off the model at ${at.toFixed(2)} s`);
+  }
+  return p;
+}
+
+test('the characters\' listener moves the level alone: its point is the storyboard\'s, every continuous cue follows the model, the pan and the air stay the camera\'s', () => {
+  const ctx = makeContext(withOptions(BASE, SWITCHES.listener)), from = firstPoint(ctx.levelAt), named = namedListener(from);
+  assert.deepEqual(pointProblems(ctx.levelAt), []);
+  assert.deepEqual(continuousProblems(ctx, named, from), []);
+  assert.deepEqual(cameraKeptProblems(ctx, named), []);
+  // controls: the listener at the people's roots, not their cloth points (the hum's level moves); a law that also
+  // narrows the pan (sync pan on for every foley kind), and its renders
+  const posers = Object.keys(WORLD.PEOPLE).map((id) => WORLD.makePoser(id));
+  const roots = (t) => { const ps = posers.map((pose) => pose(t)).filter((x) => x.visible).map((x) => [x.x, x.y, x.z]); return ps.length ? ps.reduce((s, x) => s.map((v, j) => v + x[j] / ps.length), [0, 0, 0]) : null; };
+  assert.ok(pointProblems(roots).length > 0);
+  assert.equal(continuousProblems({ ...ctx, levelAt: roots }, ['bg.hum.lamp.bed'], from).length, 1);
+  const narrow = makeContext(withOptions(BASE, { ...SWITCHES.listener, ...SWITCHES.syncPan })), steps = named.filter((id) => cue(id).family === 'feet');
+  assert.ok(cameraKeptProblems(narrow, steps).length >= steps.length);
+});
+
+// ---------- the switches' values ----------
+test('a switch set to a value it does not know is refused: a listener, a muffle mode, a sync pan kind that names no foley cue', () => {
+  assert.throws(() => makeContext(withOptions(BASE, { listener: 'character' })), /listener 'character'/);
+  assert.throws(() => makeContext(withOptions(BASE, { listener: 'Camera' })), /listener 'Camera'/);
+  const step = cue('foley.feet.A.10');
+  assert.throws(() => renderCue(step, makeContext(withOptions(BASE, { syncPan: { on: true, kinds: ['feet', 'fet'] } }))), /syncPan kinds 'fet'/);
+  assert.throws(() => renderCue(step, makeContext(withOptions(BASE, { syncPan: { on: true, kinds: ['feet', 'door'] } }))), /syncPan kinds 'door'/);
+  assert.throws(() => renderCue(step, makeContext(withOptions(BASE, { muffle: { mode: 'Volume' } }), { occlusion })), /muffle mode 'Volume'/);
+  // controls: the values it knows, and a kind left alone while the switch is off
+  for (const listener of ['camera', 'characters']) assert.doesNotThrow(() => makeContext(withOptions(BASE, { listener })));
+  assert.doesNotThrow(() => renderCue(step, makeContext(withOptions(BASE, { syncPan: { on: true, kinds: ['feet', 'moves.cup'] } }))));
+  assert.doesNotThrow(() => renderCue(step, makeContext(withOptions(BASE, { syncPan: { on: false, kinds: ['fet'] } }))));
 });
 
 // ---------- the hidden state ----------
