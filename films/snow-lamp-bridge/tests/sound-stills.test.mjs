@@ -13,13 +13,22 @@
 // - Two processes draw the same bytes; a planted clock is seen. The session renders nothing twice; a session that does
 //   not keep its renders is seen to.
 // - No label overlaps another or leaves its drawing.
-// - The committed stills.json, stills and contact sheet are these drawings of the committed measure.json.
-// Signals here are synthetic (zeros, a click, seeded noise), so the tests need no blockout render; the session test
-// renders three beds.
+// - The committed stills.json, stills and contact sheet are these drawings of the committed measure.json, and every
+//   committed PNG is the one stills.json or sheet.json records by its sha256 (tests/sound-stills-rebuild.test.mjs
+//   rebuilds the SVGs from the blockout's renders and checks them against the same files).
+// - The vertical axes, read back from the drawings: tones land on their frequency ticks; left and right on the pan
+//   meter's top and foot; a stem of known level on its lane, on the stills and the arrangement; every dot, ring, bar and
+//   key row at measure.json's number for it, measured and predicted apart; the predicted envelopes the predictor's (round
+//   04's drawn timeline); the loudness at each window's middle, a clamped reading marked; a miss label naming the
+//   captions' person; no glyph on another; leaders stopping at labels.
+// - measureOf refuses a measure.json measured on another render.
+// Signals here are synthetic (zeros, a click, tones, seeded noise, a constant), so the tests need no blockout render;
+// the session test renders three beds.
 // Run: node --test tests/sound-stills.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -29,13 +38,15 @@ import { SHOTS } from '../src/shots.js';
 import { T_TOTAL } from '../src/world.js';
 import { reviewTrack } from '../scripts/lib/captions.js';
 import { rasterize } from '../scripts/lib/raster.mjs';
-import { TL } from '../scripts/lib/sound-timeline.js';
-import { textBox, textOverlaps } from '../scripts/lib/sound-map.js';
+import { TL, DB, buildTimeline } from '../scripts/lib/sound-timeline.js';
+import { makePredictor, textBox, textOverlaps, voiced } from '../scripts/lib/sound-map.js';
+import { mulberry32 } from '../src/prng.js';
 import { scan } from '../scripts/check-forbidden.js';
-import { makeSession, sheetStep, stillsStep } from '../scripts/sound-review.js';
+import { makeSession, measureOf, sheetStep, stillsStep } from '../scripts/sound-review.js';
 import {
-  SCALE, STILL, arrangementProblems, axisProblems, buildArrangement, buildStill, contactSheetHtml, levelCurve, markerProblems, personOf,
-  spectrogram, stillData, stillEntry,
+  SCALE, STILL, WINDOW, arrangementLevelProblems, arrangementProblems, axisProblems, buildArrangement, buildStill, contactSheetHtml, glyphProblems,
+  groupLevels, leaderProblems, levelCurve, levelLineProblems, loudnessProblems, markerProblems, missLabelProblems, panSideProblems, personOf,
+  predictedCurve, predictedProblems, spectrogram, stillData, stillEntry, toneProblems, valueProblems,
 } from '../scripts/lib/sound-stills.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -281,7 +292,10 @@ test('labels: none overlaps another, none is too small or outside, on every stil
 // review/round-05's stills.json and contact sheet are this code's output from measure.json: every still listed with
 // its PNG (1200 px wide, the drawing's height), its mapping the drawing's, each marker's x the time mapping of its
 // measured onset within half a device pixel; the contact sheet byte for byte what contactSheetHtml writes, showing
-// the arrangement and every still and linking every measure, stem and decision clip, each file there.
+// the arrangement and every still and linking every measure, stem and decision clip, each file there. Every committed
+// PNG is the raster stills.json or sheet.json records (its sha256), and the contact sheet's PNG was made from the
+// images there now; that each recorded SVG is the code's is tests/sound-stills-rebuild.test.mjs.
+const sha = (data) => createHash('sha256').update(data).digest('hex');
 const pngSize = (file) => { const b = readFileSync(file); return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) }; };
 function stillsJsonProblems(json, stills, measure) {
   const p = [], onset = new Map(measure.table.rows.map((x) => [x.cue, x.onset]));
@@ -302,6 +316,20 @@ function stillsJsonProblems(json, stills, measure) {
   });
   return p;
 }
+// The PNGs (read by `readPng(name)`, a path in review/round-05) against the sha256 stills.json and sheet.json record,
+// the contact sheet's HTML against its own, and the images the contact sheet's PNG was made from against those there now
+function committedProblems({ json, sheet, html, readPng }) {
+  const p = [], now = new Map();
+  const hashOf = (f) => { if (!now.has(f)) now.set(f, sha(readPng(f))); return now.get(f); };
+  for (const e of json.stills) if (hashOf(e.file) !== e.pngSha256) p.push(`${e.file}: not the PNG stills.json records`);
+  if (hashOf(sheet.arrangement.file) !== sheet.arrangement.pngSha256) p.push(`${sheet.arrangement.file}: not the PNG sheet.json records`);
+  if (hashOf(sheet.contactSheet.png) !== sheet.contactSheet.pngSha256) p.push(`${sheet.contactSheet.png}: not the PNG sheet.json records`);
+  if (sha(html) !== sheet.contactSheet.sha256) p.push('contact-sheet.html: not the HTML sheet.json records');
+  const shown = Object.keys(sheet.contactSheet.images).sort(), want = ['arrangement.png', ...json.stills.map((e) => e.file)].sort();
+  if (shown.join() !== want.join()) p.push(`the contact sheet's PNG was made from ${shown.length} images, the sheet shows ${want.length}`);
+  for (const [f, h] of Object.entries(sheet.contactSheet.images)) if (hashOf(f) !== h) p.push(`contact-sheet.png was made from another ${f}`);
+  return p;
+}
 function contactProblems(html, { measure, stills, stems, decisions }) {
   const p = [], has = (s) => html.includes(s), file = (f) => existsSync(resolve(REVIEW, f));
   if (!has('src="arrangement.png"') || !file('arrangement.png')) p.push('no arrangement');
@@ -312,9 +340,16 @@ function contactProblems(html, { measure, stills, stems, decisions }) {
   for (const o of decisions.options) for (const c of o.clips ?? []) { const f = c.file.replace(/^review\/round-\d+\//, ''); if (!has(`href="${f}"`) || !file(f)) p.push(`no clip ${f}`); }
   return p;
 }
-test('the committed stills.json, stills and contact sheet are these drawings of measure.json; a marker one pixel off and a still left off the sheet are caught', () => {
-  const json = read('stills.json'), html = readFileSync(resolve(REVIEW, 'contact-sheet.html'), 'utf8'), stems = read('stems/stems.json'), decisions = read('decisions/decisions.json');
+test('the committed stills.json, stills and contact sheet are these drawings of measure.json, each PNG the one recorded; a marker one pixel off, a still left off the sheet and a stale PNG are caught', () => {
+  const json = read('stills.json'), sheet = read('sheet.json'), html = readFileSync(resolve(REVIEW, 'contact-sheet.html'), 'utf8'), stems = read('stems/stems.json'), decisions = read('decisions/decisions.json');
   assert.equal(json.raw, MEASURE.renders.raw.sha256, 'made from this measure.json');
+  assert.equal(sheet.raw, MEASURE.renders.raw.sha256, 'the sheet made from this measure.json');
+  const readPng = (f) => readFileSync(resolve(REVIEW, f));
+  assert.deepEqual(committedProblems({ json, sheet, html, readPng }), []);
+  // control: one still's PNG left from an older drawing (one byte changed): that still, and the contact sheet made from it
+  const old = json.stills[6].file, stale = (f) => { const b = Buffer.from(readPng(f)); if (f === old) b[b.length - 20] ^= 1; return b; };
+  assert.deepEqual(committedProblems({ json, sheet, html, readPng: stale }), [`${old}: not the PNG stills.json records`, `contact-sheet.png was made from another ${old}`], 'control: a stale PNG');
+  assert.equal(sheet.arrangement.markers, ARR.markers.length);
   assert.deepEqual(stillsJsonProblems(json, STILLS, MEASURE), []);
   assert.equal(html, contactSheetHtml({ measure: MEASURE, stills: json.stills, stems, decisions }), 'the contact sheet is the code\'s, from the committed files');
   assert.deepEqual(contactProblems(html, { measure: MEASURE, stills: json.stills, stems, decisions }), []);
@@ -325,4 +360,168 @@ test('the committed stills.json, stills and contact sheet are these drawings of 
   const s = json.stills[9], cut = html.replace(new RegExp(`<figure[^\\n]*${s.file}[^\\n]*</figure>\\n`), '');
   assert.notEqual(cut, html, 'premise: the card was cut');
   assert.deepEqual(contactProblems(cut, { measure: MEASURE, stills: json.stills, stems, decisions }), [`no still for shot ${s.shot}`], 'control: a still left off the sheet');
+});
+
+// ---------- the vertical axes, read back ----------
+// Two channels of n samples from f(i) (left) and g(i) (right), the rest of the film silent
+function signalOf(f, g = f) { const s = signal(); for (let i = 0; i < N; i++) { s.left[i] = f(i); s.right[i] = g(i); } return s; }
+const shotIndex = (n) => SHOTS.findIndex((s) => s.n === n);
+
+test('frequency: a tone at each tick lights the spectrogram rows where its tick is drawn; a spectrogram drawn upside down is caught', () => {
+  const k = shotIndex(5), shot = SHOTS[k], fs = [50, 100, 250, 500, 1000, 2000, 5000, 10000];
+  const tones = fs.map((f, j) => ({ f, t0: shot.start + 0.5 + j * 1.2, t1: shot.start + 1.5 + j * 1.2 }));
+  assert.ok(tones[tones.length - 1].t1 < shot.end, 'premise: every tone in the shot');
+  const at = (i) => { const t = i / SR, x = tones.find((q) => t >= q.t0 && t < q.t1); return x ? 0.01 * Math.sin(2 * Math.PI * x.f * t) : 0; };
+  const mix = signalOf(at), data = stillData(shot, { mix, stemOf: () => ZERO, measure: MEASURE });
+  assert.deepEqual(toneProblems(buildStill(data, { measure: MEASURE }), tones), []);
+  // control: the rows upside down (high frequencies at the foot)
+  const { rows, cols } = data.spec, flipped = new Float32Array(rows * cols);
+  for (let r = 0; r < rows; r++) flipped.set(data.spec.db.subarray((rows - 1 - r) * cols, (rows - r) * cols), r * cols);
+  const bad = toneProblems(buildStill({ ...data, spec: { ...data.spec, db: flipped } }, { measure: MEASURE }), tones);
+  assert.ok(bad.length >= 6, `control: the spectrogram upside down (${bad.join('; ')})`);
+});
+
+test('pan: a mix left only, right only, louder left and louder right draws its pan line where the meter puts each balance (left only on its top, right only on its foot); a balance with its sign swapped and a meter drawn upside down are caught', () => {
+  const k = shotIndex(3), shot = SHOTS[k], rnd = mulberry32(11), noise = Float32Array.from({ length: N }, () => (rnd() - 0.5) * 0.1);
+  // left and right gains per span: the balance is 20 log10(right / left)
+  const spans = [[1, 0, 'left only'], [0, 1, 'right only'], [1, 0.5, 'right at half'], [0.25, 1, 'left at a quarter']].map(([l, r, name], j) => ({ t0: shot.start + 0.5 + j * 1.8, t1: shot.start + 2 + j * 1.8, l, r, name, db: l === 0 ? Infinity : r === 0 ? -Infinity : 20 * Math.log10(r / l) }));
+  assert.ok(spans[spans.length - 1].t1 < shot.end, 'premise: every span in the shot');
+  const gain = (ch) => (i) => { const t = i / SR, x = spans.find((q) => t >= q.t0 && t < q.t1); return x ? x[ch] * noise[i] : 0; };
+  const mix = signalOf(gain('l'), gain('r')), data = stillData(shot, { mix, stemOf: () => ZERO, measure: MEASURE });
+  assert.deepEqual(panSideProblems(buildStill(data, { measure: MEASURE }), spans), []);
+  const swapped = buildStill({ ...data, balance: data.balance.map((v) => (v === null ? null : -v)) }, { measure: MEASURE });
+  assert.equal(panSideProblems(swapped, spans).length, 4, 'control: the balance\'s sign swapped');
+  const upside = buildStill(data, { measure: MEASURE }), m = upside.d.items.find((x) => x.role === 'pan-strip'), flip = (y) => m.top + m.bot - y;
+  for (const it of upside.d.items.filter((x) => /^pan-(mix|label|measured|predicted)$/.test(x.role))) {
+    if (it.pts) it.pts = it.pts.map(([x, y]) => [x, flip(y)]);
+    else if (it.k === 'circle') it.cy = flip(it.cy);
+    else it.y = flip(it.y);
+  }
+  assert.equal(panSideProblems(upside, spans).length, 5, 'control: the meter drawn upside down');
+});
+
+test('level: a stem of known level draws its white line at that level over the street, on the stills and the arrangement; lines not referred to the street are caught', () => {
+  const a = Math.fround(0.01), dc = signalOf(() => a), k = shotIndex(8), want = (n) => 10 * Math.log10(2 * (n * a) ** 2) - MEASURE.streetDb;
+  const still = buildStill(stillData(SHOTS[k], { mix: ZERO, stemOf: () => dc, measure: MEASURE }), { measure: MEASURE });
+  const groups = new Map(still.d.items.filter((x) => x.role === 'lane-strip').map((x) => [x.lane, x.groups.length]));
+  assert.ok([...groups.values()].some((n) => n > 1), 'premise: a lane sums several stems (the night)');
+  const expect = (lane) => want(groups.get(lane));
+  assert.deepEqual(levelLineProblems(still, expect), []);
+  const raw = buildStill(stillData(SHOTS[k], { mix: ZERO, stemOf: () => dc, measure: { ...MEASURE, streetDb: 0 } }), { measure: MEASURE });
+  assert.equal(levelLineProblems(raw, expect).length, groups.size, 'control: a still\'s lines not over the street (30 dB off)');
+  const sources = MEASURE.groups.map((g) => g.source), arr = buildArrangement({ measure: MEASURE, envelopes: groupLevels(sources, () => dc, MEASURE, TS) });
+  assert.deepEqual(arrangementLevelProblems(arr, () => want(1)), []);
+  const arrRaw = buildArrangement({ measure: MEASURE, envelopes: groupLevels(sources, () => dc, { ...MEASURE, streetDb: 0 }, TS) });
+  assert.equal(arrangementLevelProblems(arrRaw, () => want(1)).length, sources.length, 'control: the arrangement\'s lines not over the street');
+});
+
+// a planted copy of a still: its drawing's items copied, so a test can move them
+const copyOf = (st) => ({ ...st, d: Object.assign(Object.create(Object.getPrototypeOf(st.d)), st.d, { items: st.d.items.map((x) => ({ ...x })) }) });
+test('values: every dot, ring, bar and key row sits at measure.json\'s number for it, measured and predicted apart, and none is missing; measured pan dots at the predicted value, level dots 50 ms early, a bed\'s bar at its prediction, a key row with another number and a dropped dot are caught', () => {
+  for (const st of STILLS) assert.deepEqual(valueProblems(st, MEASURE), [], `shot ${st.shot.n}`);
+  const pans = MEASURE.measures.find((m) => m.id === 'pan').rows, row = (id) => MEASURE.table.rows.find((x) => x.cue === id);
+  const apart = pans.find((q) => byId.get(q.cue).place && row(q.cue).t1 - row(q.cue).t0 <= 1 && Math.abs(q.balanceDb - q.predictedDb) >= 0.002);
+  assert.ok(apart, 'premise: a short cue whose measured balance is not its prediction');
+  const k = SHOTS.findIndex((s) => row(apart.cue).t0 < s.end && row(apart.cue).t1 > s.start);
+  // the measured pan dots drawn at the predicted balance
+  const atPred = copyOf(STILLS[k]), ring = new Map(atPred.d.items.filter((x) => x.role === 'pan-predicted').map((x) => [x.cue, x.cy]));
+  for (const it of atPred.d.items.filter((x) => x.role === 'pan-measured')) it.cy = ring.get(it.cue);
+  assert.ok(valueProblems(atPred, MEASURE).some((x) => x.startsWith(`pan-measured ${apart.cue}`)), 'control: measured pan dots at the predicted value');
+  // the level dots at the window's start (levelT), 50 ms early: on the time axis by their own times, off measure.json
+  const early = copyOf(STILLS[shotIndex(8)]);
+  for (const it of early.d.items.filter((x) => x.role === 'level-dot')) { it.t -= WINDOW / 2; it.cx = early.axis.X(it.t); }
+  assert.deepEqual(axisProblems(early), [], 'premise: each early dot at X of its own time');
+  assert.ok(valueProblems(early, MEASURE).some((x) => x.startsWith('level-dot ')), 'control: level dots 50 ms early');
+  // a bed's white bar at its predicted level (the bridge's wind, 1.05 dB apart)
+  const bar = copyOf(STILLS[shotIndex(8)]), pred = bar.d.items.find((x) => x.role === 'level-span-predicted' && x.cue === 'bg.wind.bridge.bed');
+  bar.d.items.find((x) => x.role === 'level-span' && x.cue === 'bg.wind.bridge.bed').pts = pred.pts.map((q) => [...q]);
+  assert.deepEqual(valueProblems(bar, MEASURE), ['level-span bg.wind.bridge.bed: not at -0.55 dB (y ' + `${valueY(bar, 'bg:wind', -0.55)})`], 'control: a bed\'s bar at its prediction');
+  // a key row giving another number, and a dot left out
+  const key = copyOf(STILLS[shotIndex(8)]), hum = key.d.items.find((x) => x.role === 'pan-key' && x.cue === 'bg.hum.lamp.bed');
+  hum.str = hum.str.replace('measured R 1.90', 'measured R 1.80');
+  assert.ok(valueProblems(key, MEASURE).some((x) => x.startsWith('pan-key bg.hum.lamp.bed')), 'control: a key row with another number');
+  const less = copyOf(STILLS[shotIndex(8)]), gone = less.d.items.findIndex((x) => x.role === 'level-dot');
+  const id = less.d.items[gone].cue;
+  less.d.items.splice(gone, 1);
+  assert.deepEqual(valueProblems(less, MEASURE), [`level-dot ${id}: 0 drawn, one wanted`], 'control: a dot left out');
+});
+// y of a level on the lane that holds a group (for the control's expected message)
+function valueY(st, group, db) {
+  const s = st.d.items.find((x) => x.role === 'lane-strip' && x.groups.includes(group));
+  return s.bot - ((Math.min(DB.hi, Math.max(DB.lo, db)) - DB.lo) / (DB.hi - DB.lo)) * (s.bot - s.top);
+}
+
+test('predicted: each lane\'s envelope is the predictor\'s over the lane\'s own cues, and the predictor is round 04\'s drawn timeline; a lane missing a cue and a predictor 3 dB off are caught', () => {
+  const pred = makePredictor();
+  for (const st of STILLS) assert.deepEqual(predictedProblems(st, { pred }), [], `shot ${st.shot.n}`);
+  // the predictor against the timeline's own drawing: every voiced, enabled cue's envelope read back
+  const tl = buildTimeline(), lanes = new Map(tl.lanes.map((l) => [l.source, l]));
+  const timelineProblems = (p) => {
+    const out = [];
+    for (const it of tl.d.items.filter((x) => x.role === 'envelope' && x.ts)) {
+      const c = byId.get(it.cue), ln = lanes.get(c.source);
+      if (!c.enabled) continue;
+      it.ts.forEach((t, i) => { const q = p.at(c, t), want = tl.dbY(ln, q.db); if (Math.abs(it.pts[i][1] - want) > 1e-9 && out.length < 3) out.push(`${c.id} at ${t}: drawn ${it.pts[i][1]}, ${want}`); });
+    }
+    return out;
+  };
+  assert.deepEqual(timelineProblems(pred), []);
+  const louder = { ...pred, at: (c, t) => { const q = pred.at(c, t); return q && { ...q, db: q.db + 3 }; } };
+  assert.ok(timelineProblems(louder).length > 0, 'control: a predictor 3 dB off is not the timeline\'s');
+  const k = shotIndex(8), data = DATA[k], j = data.lanes.findIndex((ln) => ln.key === 'A:feet'), shot = SHOTS[k];
+  const first = data.lanes[j].cues.find((c) => c.t0 >= shot.start && c.t0 < shot.end);
+  const fewer = { ...data, lanes: data.lanes.map((ln, i) => (i === j ? { ...ln, predicted: predictedCurve(ln.cues.filter((c) => c !== first && c.enabled && voiced(c)), data.axis.ts, pred) } : ln)) };
+  assert.deepEqual(predictedProblems(buildStill(fewer, { measure: MEASURE }), { pred }).map((x) => x.split(' ')[0]), ['A:feet'], `control: a lane missing its first step in the shot (${first.id})`);
+  const off = stillData(SHOTS[k], { mix: ZERO, stemOf: () => ZERO, measure: MEASURE, pred: louder });
+  assert.equal(predictedProblems(buildStill(off, { measure: MEASURE }), { pred }).length, data.lanes.length, 'control: every lane under a predictor 3 dB off');
+});
+
+test('loudness: each point at its window\'s middle and value, every reading drawn, a reading under the floor marked; points at the window\'s end and an unmarked clamp are caught', () => {
+  for (const st of STILLS) assert.deepEqual(loudnessProblems(st, MEASURE), [], `shot ${st.shot.n}`);
+  assert.ok(STILLS[0].d.items.some((x) => x.role === 'loud-under' && x.min < -60), 'premise: shot 1\'s fade-in is under the floor');
+  const late = copyOf(STILLS[shotIndex(6)]), win = MEASURE.series.momentary.windowSec;
+  for (const it of late.d.items.filter((x) => x.role === 'loud-m')) { it.ts = it.ts.map((t) => t + win / 2); it.pts = it.pts.map(([x, y]) => [x + (win / 2) * late.axis.pxPerSec, y]); }
+  assert.deepEqual(axisProblems(late), [], 'premise: each moved point at X of its own time');
+  assert.ok(loudnessProblems(late, MEASURE).some((x) => x.startsWith('momentary')), 'control: momentary drawn at its windows\' ends');
+  const bare = copyOf(STILLS[0]);
+  bare.d.items = bare.d.items.filter((x) => x.role !== 'loud-under');
+  assert.ok(loudnessProblems(bare, MEASURE).some((x) => x.includes('no mark says so')), 'control: a clamped reading with no mark');
+});
+
+test('people: a miss label names the person the review captions give, and the glyph keeps that person\'s colour; a label naming the other person is caught', () => {
+  const lane = new Map(reviewTrack().captions.flatMap((c) => c.ids.map((id) => [id, c.lane]))), who = (id) => lane.get(id);
+  for (const st of STILLS) assert.deepEqual(missLabelProblems(st, MEASURE, who), [], `shot ${st.shot.n}`);
+  const wrong = copyOf(STILLS[shotIndex(5)]), it = wrong.d.items.find((x) => x.role === 'marker-label' && x.cue === 'foley.scuff.B.1');
+  assert.equal(it.str, 'B scuff 1: sync', 'premise');
+  it.str = 'A scuff 1: sync';
+  assert.deepEqual(missLabelProblems(wrong, MEASURE, who), ['foley.scuff.B.1: "A scuff 1: sync" names A, the captions\' person is B'], 'control: the other person named');
+});
+
+test('glyphs and leaders: no glyph on another and no ring around another cue, every label on a chip over the leaders; glyphs left on one row and labels without chips are caught', () => {
+  for (const st of STILLS) assert.deepEqual([...glyphProblems(st), ...leaderProblems(st)], [], `shot ${st.shot.n}`);
+  const one = copyOf(STILLS[shotIndex(8)]), y0 = Math.min(...one.d.items.filter((x) => x.role === 'marker').map((x) => x.cy));
+  for (const it of one.d.items.filter((x) => x.role === 'marker' || x.role === 'marker-ring')) { if (it.pts) it.pts = it.pts.map(([x, y]) => [x, y - it.cy + y0]); it.cy = y0; }
+  assert.ok(glyphProblems(one).some((x) => x.startsWith('foley.feet.A.29 and foley.feet.B.21') || x.startsWith('foley.feet.B.21 and foley.feet.A.29')), `control: A.29 on B.21 (${glyphProblems(one).join('; ')})`);
+  const bare = copyOf(STILLS[shotIndex(5)]);
+  bare.d.items = bare.d.items.filter((x) => x.role !== 'label-chip');
+  assert.equal(leaderProblems(bare).length, STILLS[shotIndex(5)].markers.length, 'control: no chips');
+});
+
+// ---------- measureOf: measure.json for a step run alone ----------
+// A stub session renders a tiny signal; measure.json is accepted only if it records that render's sha256
+test('measureOf returns the measure.json measured on the session\'s own render and refuses one measured on another; a guard without the comparison is caught', () => {
+  const raw = (a) => ({ sr: SR, left: Float32Array.of(a, -0.2, 0.05), right: Float32Array.of(0.3, 0, a) });
+  const hashOf = (s) => createHash('sha256').update(Buffer.from(s.left.buffer)).update(Buffer.from(s.right.buffer)).digest('hex');
+  const at = mkdtempSync(join(dir, 'measure-'));
+  writeFileSync(join(at, 'measure.json'), JSON.stringify({ mark: 'ours', renders: { raw: { sha256: hashOf(raw(0.1)) } } }));
+  const guardProblems = (impl) => {
+    const p = [];
+    try { if (impl({ raw: () => raw(0.1) }, at)?.mark !== 'ours') p.push('did not return the file'); } catch (e) { p.push(`refused its own render: ${e.message}`); }
+    try { impl({ raw: () => raw(0.11) }, at); p.push('accepted a measure.json measured on another render'); } catch (e) { if (!/another render/.test(e.message)) p.push(`refused for another reason: ${e.message}`); }
+    try { impl({ raw: () => raw(0.1) }, mkdtempSync(join(dir, 'none-'))); p.push('accepted no measure.json'); } catch (e) { if (!/run --measure first/.test(e.message)) p.push(`refused no file for another reason: ${e.message}`); }
+    return p;
+  };
+  assert.deepEqual(guardProblems(measureOf), []);
+  const noGuard = (s, d) => { if (!existsSync(join(d, 'measure.json'))) throw new Error('no measure.json: run --measure first'); return JSON.parse(readFileSync(join(d, 'measure.json'), 'utf8')); };
+  assert.deepEqual(guardProblems(noGuard), ['accepted a measure.json measured on another render'], 'control: a guard that never compares');
 });

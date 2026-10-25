@@ -1,0 +1,40 @@
+{
+ "round": "05",
+ "made": "node scripts/sound-review.js --round 05 --sheet",
+ "raw": "88be8ebb13569ba89a8cc427d7e860dda293d32136d357ffe5d1321f297150b5",
+ "chromium": "141.0.7390.37",
+ "arrangement": {
+  "file": "arrangement.png",
+  "svg": "out/round-05/arrangement.svg",
+  "width": 3446,
+  "height": 3700,
+  "markers": 142,
+  "svgSha256": "0577ee7c40426f469bd22b0f7228b0f3b5957a66f0ec35215feb1b3136bd1275",
+  "pngSha256": "bfa67de8dc49c81d9a3ce564504cb4c38fe4228f6cbbdc7a3900397808b9a124"
+ },
+ "contactSheet": {
+  "file": "contact-sheet.html",
+  "sha256": "58c8f57779498ce959f44195282772b26a291330c8a7423ffcc790611c50ece5",
+  "png": "contact-sheet.png",
+  "pngSha256": "42b868a32fd7352cb0119eed457253a21cb68a0a2b60fad2071fb1fca083d20b",
+  "width": 1500,
+  "images": {
+   "arrangement.png": "bfa67de8dc49c81d9a3ce564504cb4c38fe4228f6cbbdc7a3900397808b9a124",
+   "stills/shot-01.png": "0b80b6147660d7ec40a1634d9c0477e67db41adf8424b87ab9b5495ab09ae115",
+   "stills/shot-02.png": "b1e9b5d2f92548333679fbad0736fba5a5edf9b944a6883a2de13fb1ecb39077",
+   "stills/shot-03.png": "217d249de95f5bacf9e3835f404ae8a0950f07e301986a7101fed2c116be7540",
+   "stills/shot-04.png": "4ab3a9bc924630e518df115aac1e8f038ed12552310757d49bd21d486289c995",
+   "stills/shot-05.png": "740e751680e26eb371c71b0cf4f7db774bb61716f5d14f34bb00f706947823cf",
+   "stills/shot-06.png": "d0c8e59ad6328e042e0ebf650a19d152748c363602c6111ab3c9426efd17ab08",
+   "stills/shot-07.png": "5a19f3fd3da075e4764a0b70f5b3e8bef12c725d16f1366ec60299921a816dae",
+   "stills/shot-08.png": "1bbe4402d654614fa54b23c9e1ca53bd9a3ea1ac13c28835c92165926d38ddf1",
+   "stills/shot-09.png": "65a47d2f9d6165712157689f0ac255b495157d16f5b5a4eb75087867e81bbe32",
+   "stills/shot-10.png": "94599cc8d43d0fd8dfe82fabb0ab99e54c8510a44bb8774b01ea449c6b37353e",
+   "stills/shot-11.png": "75c2ec6675fe3761e1f12336ea9ef9bcdfed9474678a356ed5204931d2e0d9cc",
+   "stills/shot-12.png": "3f83aa62906dfdc7203448fe37ff346c6e6e520e3aa16b91292901fd185c45b4",
+   "stills/shot-13.png": "5adffaee6832dca45522f7f254858db5ee3509f46a4f1b42cb86d387010539f1",
+   "stills/shot-14.png": "e1b79e93234dc83bd66dac4a8ae627f0de0d81494e2a2f5a87f027b5e7c016b4",
+   "stills/shot-15.png": "351b76d438cd3166b6db61ccb5da1912c8d18226291fb7fda2fe0983200710ed"
+  }
+ }
+}

@@ -1076,3 +1076,45 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   the arrangement and the contact sheet all byte for byte as committed). The note is added to notes-stills.md.
 - Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped); npm run check exit 0 (forbidden 0 hits, determinism
   0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+
+#### s2-stills: the checker's findings F1 to F7, the plan (before)
+- Before: HEAD 160ccf7. The checker's gate there: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped), npm run
+  check exit 0; the design stage with the score unparked f80b1542.... Findings: check 11 compares only the PNGs' sizes
+  (F1); nothing checks the values on the vertical axes or keeps measured and predicted apart (F2); the measureOf guard
+  has no test (F3); the notes claim the hum's lines in every shot (F4); the beds' span means and long cues' pans are
+  drawn as moments (F5); coincident glyphs hide each other (F6); leaders through labels, clamped loudness unmarked, a
+  lost colon, the low rows' bin centres (F7).
+- Plan, in gated commits. (1) The library and its checks: stills.json and a new sheet.json carry each SVG's and PNG's
+  sha256 (and the Chromium version that rasterized them); read-back checks, each with a planted fault, for tones on the
+  frequency ticks, left and right on the pan meter, a stem's known level on the lane (stills and arrangement), every
+  dot, ring, bar and key row against measure.json, the predicted envelopes against cues.js through the predictor and
+  round 04's timeline, the loudness at each window's middle, the miss labels' person, glyph overlaps and the leaders;
+  measureOf on a stub session; the committed PNGs against their hashes, and a rebuild from a real session against
+  stills.json and sheet.json. The beds' level as a bar over its span, long cues' pan as a key under the meter, glyphs
+  stacked, leaders behind label chips, clamped loudness marked, the colon kept, the bins in the legend, the 250 and
+  500 Hz lines moved off the spectrogram to violet ticks at its edges. (2) The images rerun and looked at, the notes
+  (F4 measured per shot, F5's shot 8 sentence, the new checks), this log.
+
+#### s2-stills: F1 to F7, the library, the checks and the images (after)
+- `scripts/lib/sound-stills.js`: a bed's level (measure.json's mean between its crossfades) is a white bar over that
+  span, named in the lane's head with both numbers (the heads wrap); a cue over 1 s has its pan in a key under the
+  axis, the shorter ones stay dots; glyphs closer than a glyph's width (or a ring's reach) are stacked down, each ring
+  around its own; labels on opaque chips over the leaders; loudness under -45 LUFS marked with an arrow and its lowest
+  reading (stills and arrangement); the arrangement keeps "sync: ..."; the 250 and 500 Hz lines moved off the
+  spectrogram to violet ticks at its edges; the legend says where rows read between bins. Every drawn number carries
+  its role and what it draws. New read-back checks: `toneProblems`, `panSideProblems`, `levelLineProblems`,
+  `arrangementLevelProblems`, `valueProblems`, `predictedProblems`, `loudnessProblems`, `missLabelProblems`,
+  `glyphProblems`, `leaderProblems`; `groupLevels` (the arrangement's levels, used by --sheet); `decodePng`.
+- `scripts/sound-review.js`: stills.json records each still's SVG and PNG sha256, the new sheet.json the arrangement's
+  and the contact sheet's (and the images it was made from), both with the Chromium (`rasterize` returns its version).
+- Tests: `tests/sound-stills.test.mjs` 20 (was 11): check 11 now holds every committed PNG to its recorded sha256
+  (planted: one byte of one still), and 9 new checks with planted faults, among them measureOf's guard (F3).
+  `tests/sound-stills-rebuild.test.mjs` (new, 2, about 37 s): the 15 stills and the arrangement rebuilt from a real
+  session hash to the recorded SVG sha256, and rasterize to the recorded PNG sha256 on the recorded Chromium (planted:
+  SPEC.lo -90, levels not over the street).
+- Mutation run in scratch copies (the checker's M05 to M22, and four new: no stacking, no chips, no clamp marks, a
+  bed's bar at its prediction): every one fails at least one test. M05 first passed (one-sided signals take the
+  balance's infinite branches), so the pan check now also draws spans right at half and left at a quarter.
+- Images: `node scripts/sound-review.js --round 05 --stills --sheet` twice, all 36 outputs byte for byte the same;
+  looked at whole and in crops (shots 1, 3, 5, 8, 9, 13 and 15, the arrangement, the contact sheet). The design stage
+  with the score unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

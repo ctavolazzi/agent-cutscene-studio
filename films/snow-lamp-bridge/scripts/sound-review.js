@@ -7,7 +7,9 @@
 //   --stills   the audio stills (Sound 2.9): one per shot, review/round-NN/stills/shot-NN.png (the SVG under
 //              out/round-NN/stills/), and stills.json; from measure.json, the mastered mix and the voice groups' stems
 //   --sheet    the arrangement sheet (review/round-NN/arrangement.png, the SVG under out/) and the contact sheet
-//              (contact-sheet.html and .png), from measure.json, the stems and stills.json
+//              (contact-sheet.html and .png), from measure.json, the stems and stills.json; sheet.json
+// stills.json and sheet.json hold each drawing's SVG sha256 and each PNG's (and the Chromium that rasterized them), so
+// a test can tell the committed images from the code's: the SVGs rebuilt from a session, the PNGs by their bytes.
 // The steps run in that order whatever the order asked; a step after --measure in the same run reads its measure.json
 // and its renders from the session, so nothing is rendered twice. Alone, --stills and --sheet read measure.json from
 // review/round-NN/ and refuse it unless its raw render's sha256 is this session's (scripts/lib/sound-stills.js draws).
@@ -57,7 +59,7 @@ import * as A from './lib/audio-analysis.mjs';
 import { alignment, decodeAudio } from './lib/ffmpeg.mjs';
 import { allocate, maskingBed, safeBand } from './lib/sound-checks.js';
 import { rasterize } from './lib/raster.mjs';
-import { buildArrangement, buildStill, contactSheetHtml, levelCurve, SCALE, STILL, stillData, stillEntry } from './lib/sound-stills.js';
+import { buildArrangement, buildStill, contactSheetHtml, groupLevels, SCALE, STILL, stillData, stillEntry } from './lib/sound-stills.js';
 import { TL } from './lib/sound-timeline.js';
 import { buildInput, syncRule } from './sound-report.js';
 
@@ -630,8 +632,10 @@ export function measureOf(session, reviewDir) {
 // What a step rendered: the session's renders made since `from` (an index into session.rendered)
 const madeSince = (session, from) => { const k = session.rendered.slice(from); return k.length ? `${k.length} (${k.length > 4 ? `${k.slice(0, 4).join(', ')} and ${k.length - 4} more` : k.join(', ')})` : 'nothing'; };
 
+const sha256 = (data) => createHash('sha256').update(data).digest('hex');
 // The --stills step: one still per shot from measure.json, the mastered mix and the groups' stems (memoised on the
 // session), as SVG (out/round-NN/stills/, not committed) and PNG at SCALE (review/round-NN/stills/), and stills.json
+// with each SVG's and PNG's sha256
 export async function stillsStep(session, { round, reviewDir, outDir, log = console.log }) {
   const start = performance.now(), say = (msg) => log(`[${((performance.now() - start) / 1000).toFixed(1)} s] ${msg}`), from = session.rendered.length;
   const measure = measureOf(session, reviewDir), mix = session.mastered(), stemOf = (g) => session.group(g);
@@ -639,42 +643,54 @@ export async function stillsStep(session, { round, reviewDir, outDir, log = cons
   mkdirSync(svgDir, { recursive: true }); mkdirSync(pngDir, { recursive: true });
   for (const shot of SHOTS) {
     const still = buildStill(stillData(shot, { mix, stemOf, measure }), { measure });
-    const svg = resolve(svgDir, `shot-${pad2(shot.n)}.svg`), png = resolve(pngDir, `shot-${pad2(shot.n)}.png`);
-    writeFileSync(svg, still.d.toSVG());
+    const svg = resolve(svgDir, `shot-${pad2(shot.n)}.svg`), png = resolve(pngDir, `shot-${pad2(shot.n)}.png`), text = still.d.toSVG();
+    writeFileSync(svg, text);
     jobs.push({ file: svg, out: png, width: STILL.w, height: still.height, scale: SCALE });
-    stills.push(stillEntry(still, { png: relative(reviewDir, png), svg: relative(ROOT, svg) }));
+    stills.push({ ...stillEntry(still, { png: relative(reviewDir, png), svg: relative(ROOT, svg) }), svgSha256: sha256(text) });
     if (still.labeler.dropped.length) say(`  shot ${shot.n}: ${still.labeler.dropped.length} labels dropped (${still.labeler.dropped.join('; ')})`);
   }
   say(`${stills.length} stills drawn (${stills.reduce((n, s) => n + s.markers.length, 0)} markers); rendered for them: ${madeSince(session, from)}`);
-  await rasterize(jobs);
-  const out = { round, made: `node scripts/sound-review.js --round ${round} --stills`, stage: measure.stage, targetLufs: measure.targetLufs, raw: measure.renders.raw.sha256, note: 'x of time t in a still\'s PNG is x0 + (t - t0) * pxPerSec device pixels; every strip shares it. markers: each cue whose measured onset (measure.json table.onset) is in the shot, its x the drawn glyph\'s centre; misses: the bars it is off (onset, sync, pan) and its check 14 flag (phone). carried: the cues sounding in the shot that started before it', stills };
+  const chromium = await rasterize(jobs);
+  jobs.forEach((j, i) => { stills[i].pngSha256 = sha256(readFileSync(j.out)); });
+  const out = { round, made: `node scripts/sound-review.js --round ${round} --stills`, stage: measure.stage, targetLufs: measure.targetLufs, raw: measure.renders.raw.sha256, chromium, note: 'x of time t in a still\'s PNG is x0 + (t - t0) * pxPerSec device pixels; every strip shares it. markers: each cue whose measured onset (measure.json table.onset) is in the shot, its x the drawn glyph\'s centre; misses: the bars it is off (onset, sync, pan) and its check 14 flag (phone). carried: the cues sounding in the shot that started before it. svgSha256 and pngSha256: the drawing and its raster by chromium', stills };
   writeFileSync(resolve(reviewDir, 'stills.json'), `${JSON.stringify(out, null, 1)}\n`);
   say(`wrote ${relative(ROOT, pngDir)}/ (${jobs.length} PNG), ${relative(ROOT, svgDir)}/ and ${relative(ROOT, resolve(reviewDir, 'stills.json'))}`);
   return out;
 }
 
-// The --sheet step: the arrangement (each voice group's measured level at one point a pixel of round 04's timeline,
-// from its stem) as SVG under out/ and PNG in review/, then the contact sheet from stills.json, stems.json and
-// decisions.json beside it
+// The arrangement's sample times: one point a pixel of round 04's timeline, at each pixel's middle
+export const ARRANGEMENT_TS = Object.freeze(Array.from({ length: Math.round(T_TOTAL * TL.pxPerS) }, (_, i) => (i + 0.5) / TL.pxPerS));
+// The --sheet step: the arrangement (each voice group's measured level at ARRANGEMENT_TS, from its stem) as SVG under
+// out/ and PNG in review/, then the contact sheet from stills.json, stems.json and decisions.json beside it, and
+// sheet.json: the arrangement's SVG and PNG sha256, the contact sheet's HTML and PNG sha256, and the sha256 of each
+// image the contact sheet showed when it was rasterized
 export async function sheetStep(session, { round, reviewDir, outDir, log = console.log }) {
   const start = performance.now(), say = (msg) => log(`[${((performance.now() - start) / 1000).toFixed(1)} s] ${msg}`), from = session.rendered.length;
-  const measure = measureOf(session, reviewDir), ts = Array.from({ length: Math.round(T_TOTAL * TL.pxPerS) }, (_, i) => (i + 0.5) / TL.pxPerS);
-  const envelopes = new Map(session.groups.map((g) => [g, { ts, db: levelCurve([session.group(g)], ts, { refDb: measure.streetDb }) }]));
-  const arr = buildArrangement({ measure, envelopes });
+  const measure = measureOf(session, reviewDir);
+  const arr = buildArrangement({ measure, envelopes: groupLevels(session.groups, (g) => session.group(g), measure, ARRANGEMENT_TS) });
   say(`the arrangement: ${arr.markers.length} measured onsets on ${arr.lanes.length} lanes; rendered for it: ${madeSince(session, from)}`);
   if (arr.labeler.dropped.length) say(`  ${arr.labeler.dropped.length} labels dropped (${arr.labeler.dropped.join('; ')})`);
   mkdirSync(outDir, { recursive: true });
-  const svg = resolve(outDir, 'arrangement.svg');
-  writeFileSync(svg, arr.d.toSVG());
+  const svg = resolve(outDir, 'arrangement.svg'), text = arr.d.toSVG();
+  writeFileSync(svg, text);
   const stillsFile = resolve(reviewDir, 'stills.json');
   if (!existsSync(stillsFile)) throw new Error(`no ${relative(ROOT, stillsFile)}: run --stills first (the contact sheet shows them)`);
-  const read = (p) => JSON.parse(readFileSync(resolve(reviewDir, p), 'utf8'));
-  writeFileSync(resolve(reviewDir, 'contact-sheet.html'), contactSheetHtml({ measure, stills: read('stills.json').stills, stems: read('stems/stems.json'), decisions: read('decisions/decisions.json') }));
-  await rasterize([
-    { file: svg, out: resolve(reviewDir, 'arrangement.png'), width: Math.round(arr.d.w), height: Math.round(arr.d.h) },
-    { file: resolve(reviewDir, 'contact-sheet.html'), out: resolve(reviewDir, 'contact-sheet.png'), width: 1500, fullPage: true },
+  const read = (p) => JSON.parse(readFileSync(resolve(reviewDir, p), 'utf8')), stills = read('stills.json').stills;
+  const html = contactSheetHtml({ measure, stills, stems: read('stems/stems.json'), decisions: read('decisions/decisions.json') });
+  writeFileSync(resolve(reviewDir, 'contact-sheet.html'), html);
+  const arrangementPng = resolve(reviewDir, 'arrangement.png'), sheetPng = resolve(reviewDir, 'contact-sheet.png');
+  const chromium = await rasterize([
+    { file: svg, out: arrangementPng, width: Math.round(arr.d.w), height: Math.round(arr.d.h) },
+    { file: resolve(reviewDir, 'contact-sheet.html'), out: sheetPng, width: 1500, fullPage: true },
   ]);
-  say(`wrote ${relative(ROOT, resolve(reviewDir, 'arrangement.png'))}, ${relative(ROOT, svg)}, contact-sheet.html and contact-sheet.png`);
+  const images = Object.fromEntries(['arrangement.png', ...stills.map((s) => s.file)].map((f) => [f, sha256(readFileSync(resolve(reviewDir, f)))]));
+  const out = {
+    round, made: `node scripts/sound-review.js --round ${round} --sheet`, raw: measure.renders.raw.sha256, chromium,
+    arrangement: { file: 'arrangement.png', svg: relative(ROOT, svg), width: Math.round(arr.d.w), height: Math.round(arr.d.h), markers: arr.markers.length, svgSha256: sha256(text), pngSha256: images['arrangement.png'] },
+    contactSheet: { file: 'contact-sheet.html', sha256: sha256(html), png: 'contact-sheet.png', pngSha256: sha256(readFileSync(sheetPng)), width: 1500, images },
+  };
+  writeFileSync(resolve(reviewDir, 'sheet.json'), `${JSON.stringify(out, null, 1)}\n`);
+  say(`wrote ${relative(ROOT, arrangementPng)}, ${relative(ROOT, svg)}, contact-sheet.html, contact-sheet.png and sheet.json`);
   return arr;
 }
 
