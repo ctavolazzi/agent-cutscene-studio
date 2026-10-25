@@ -843,3 +843,146 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   two disagreements with their measurements. The Sound 2.5 entry above is corrected in place.
 - Gate: 233 tests (226 pass, 7 skipped); forbidden, build, determinism, cameras pass. The design stage with the score
   unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-options: Sound 2.12, the plan (before)
+- Before: no option switches; the hidden state, the narrower pan and the characters' listener exist only as Sound 1
+  predictions (storyboard/sound/report.json checks 2 and 6). Base commit 80a432e.
+- Plan: record the sha256 of the default render and of the design stage with the score unparked; add the switches to
+  `config.audio.options` (all off), read by the blockout voices and the spatializer, with the hidden state handed in
+  through `makeContext` by the options script only; `scripts/sound-options.js` renders each A/B through one master gain,
+  measures it per cue, checks it moves only the cues it names, and captures clips; `tests/sound-options.test.mjs`
+  with planted leaks; `review/round-05/decisions/` and `notes-options.md`.
+
+#### s2-options: the switches, the measuring library and their test (after)
+- Before: sha256 of `node scripts/sound.js` (the default blockout) 6f9c4925b58beaf80d2e385932b921532d3d7a558952ea589922718a18f51cb7; of the design
+  stage with the score unparked f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da (the S8.3 bytes).
+- Actions: `config.audio.options` (muffle mode 'off', syncPan off, listener 'camera'); `makeContext` takes `occlusion`
+  (only the options script builds one) and builds `levelAt` when the listener is 'characters'
+  (`src/audio/listeners.js`, Sound 1's model); `placeAt` takes `levelAt` and `width` from a law; the blockout voices
+  add them to a cue's law and apply the muffle after the level rule. `scripts/lib/sound-options-lib.js` and
+  `tests/sound-options.test.mjs` (9 tests, each with a planted fault).
+- After, every switch off: the same two sha256, byte for byte. Measured: the hidden state matches Sound 1's check 2
+  (19 voiced cues, the same frames); each switch moves exactly the cues it names (0 stray, 0 stray samples in the
+  mix); the A master replays `normalize` sample for sample.
+- Gate (added at the fix pass, F8: no gate result was kept for this commit): re-run then from a `git archive e94f193`
+  copy, npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+
+#### s2-options: the options script, its measurements and clips (before)
+- Plan: `node scripts/sound-options.js --round 05` measures options 1 to 3 cue by cue (A against B), checks what each
+  moves, masters each set through A's gain and one limiter curve, captures 7 s preview clips at each option's moment
+  into `review/round-05/decisions/`, tabulates the style-frame candidates, and writes `decisions.json`.
+
+#### s2-options: the options script, its measurements and clips (after)
+- Actions: `scripts/sound-options.js` (`--round 05`, about 5 min; `--no-clips` about 2). `review/round-05/decisions/`:
+  `decisions.json` and 10 preview clips of 7 s (7.3 MB) with their capture sidecars; the mastered WAVs in
+  `out/round-05/options/`. Two runs give the same WAVs and the same rows.
+- Measured (per cue, before the master): the volume muffle takes 6.00 dB off all 19 hidden cues; the swap 1.9 dB off
+  the engine (its 650 Hz buzz is under the 900 Hz cutoff), 57 to 59 dB off the cabin's clicks. The narrower pan moves
+  28 of 74 sync foley cues by 0.1 or more (up to 0.40, B's off-screen steps in shot 5). The characters' listener moves
+  98 of 125 cues by 1 dB or more, all louder, up to +11.4 dB (shot 8's far steps). All three: ask the director.
+- Found: the intake and exhaust placeholders are phase-locked (the same saw from the same rpm track) and add
+  coherently in the mix; Sound 1's blockers hide the exhaust behind its own car 229 frames; through A's own limiter
+  curve the listener's B would reach +7.9 dBFS, so each set shares one curve from its loudest mix.
+- Style frame: the default (shots 4 to 6) against 4 to 5, 5 to 8 and 11 to 13, picked by rule.
+- Gate (added at the fix pass, F8: no gate result was kept for this commit): re-run then from a `git archive 0143d4e`
+  copy, npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run check exit 0 (the same three PASS lines).
+
+#### s2-options: the notes (before)
+- Added at the fix pass (F8); no 'before' entry was written at the time. The step, from its commit a7b262d: write
+  review/round-05/notes-options.md from decisions.json for the lead to merge into notes.md.
+
+#### s2-options: the notes (after)
+- `review/round-05/notes-options.md` for the lead to merge: how each A/B was made, each option's definition, starting
+  values and why, numbers, clips, what a placeholder can and cannot show, the call, and my recommended default (no
+  muffle, the physical pan, the camera as listener, shots 4 to 6); three findings beyond the options.
+- Byte identity before this last commit: the default render 6f9c4925..., the design stage with the score unparked
+  f80b1542... (the S8.3 bytes), as before the branch.
+- Gate (added at the fix pass, F8, from the builder's own logs, written 02:35 to 02:41, just before this commit at
+  02:41; no exit status was kept): npm test 214 tests, 207 pass, 0 fail, 7 skipped; npm run check, forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15.
+
+#### s2-options: the checker's findings F1 to F9, the plan (before)
+- Before: HEAD a7b262d. The checker's gate there: npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run
+  check exit 0; the default render 6f9c4925..., the design stage with the score unparked f80b1542... (S8.3).
+- Plan, in three gated commits. (1) The checks: the muffle's timing per block and its ramp, and the swap's copy in
+  step (F1, planted f1, f2, f8); the characters' listener keeping the camera's pan and air, and its point equal to
+  sound-report.js's at every frame (F2, planted f7, f4); a misspelt listener or a syncPan kind naming no cue refused
+  (F7). (2) The options script: the muffle with the set's blockers only (a car's own body does not hide its own
+  sounds), rendered, measured, clipped and split by blocker (F4); the listener set mastered through one static gain
+  with no limiter in its clip (F3); the header and CLIP_SEC comments (F5); decisions.json and the clips rerun.
+  (3) The notes (F3, F4, F6, F9) and this log (F8).
+
+#### s2-options: F1, F2 and F7, the checks (before)
+- Plan: export voices.js `muffleOf` so a test reads the muffle's gain sample by sample; measure the intake (hidden
+  14.000 to 17.875 s) under each mode before setting any bar; export sound-report.js `charactersAt`; refuse unknown
+  listener values in `makeContext` and syncPan kinds that name no voiced foley cue in `lawOf`. Each new check is shown
+  failing on the checker's planted f1, f2, f4, f7 and f8.
+
+#### s2-options: F1, F2 and F7, the checks (after)
+- Actions: voices.js exports `muffleOf`; `lawOf` refuses a syncPan kind that names no voiced foley cue of the film;
+  `makeContext` refuses a listener other than 'camera' and 'characters' (listeners.js `LISTENERS`); sound-report.js
+  exports `charactersAt`; listeners.js and sound-report.js say "the people out of the car, seen or not" (F6).
+  tests/sound-options.test.mjs gains four tests: the muffle's gain sample by sample (settled to the drop or 1 a block
+  and rampSec after each change, never faster than the whole drop in rampSec) on all 19 hidden cues and a planted
+  toggle, and the swap against its definition (a copy filtered on every sample, measured within 3.3e-16); the intake
+  in the render (-6.000 dB over 14.000 to 17.875 s, its ramp within 0.0017 dB of a linear one, today's samples from a
+  block and rampSec after 17.875 s, the last differing sample 52.4 ms after it); the listener's point equal to
+  charactersAt on every half frame, 37 continuous cues within 0.024 dB of the model in 1596 steady windows, pan, air
+  and distance the camera's at every block edge, each stem's balance within 0.0014 dB of the camera's pan; refused
+  values. Bars: RAMP_TOL_DB 0.05 and STEADY_DB 0.5 are starting values set from those measurements.
+- Planted on copies of this tree, `node --test tests/sound-options.test.mjs`: f1 (state read at the onset) and f2 (no
+  ramp) fail 2 tests each, f8 (copy filtered only while heard) 1, f4 (listener at the roots) 1, f7 (pan halved under
+  the listener) 1, no listener check 1, no kinds check 1; every other test passes on each.
+- Gate: npm test exit 0 (218 tests, 211 pass, 0 fail, 7 skipped, the same 7 as before); npm run check exit 0
+  (forbidden 0 hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the
+  score unparked f80b1542... and the default render 6f9c4925..., as before.
+
+#### s2-options: F3, F4 and F5, the options script (before)
+- Before: decisions.json measures the muffle with Sound 1's hidden state only, which counts a car's own body; the
+  listener set shares one limiter curve driven by B's steps; two comments in scripts/sound-options.js do not match.
+- Plan: `occlusionFrom(..., { ownBodies: false })` leaves out the boxes sound-report.js marks `own`; the muffle is
+  measured with both hidden states ('set', its B, and 'all', Sound 1's), its rows split by blocker and the engine
+  clip by part (the rise, the intake behind building SE at full level, the intake in view); clips for both at the
+  engine, the set's at the car. `masterOf` gains `still`, one static gain under A's with no limiter, for the listener
+  set; every clip reports what its master takes off A in 10 ms windows. Tests: the set's state against Sound 1's
+  frame for frame, the switches with it, the still master. Then the script rerun with clips.
+
+#### s2-options: F3, F4 and F5, the options script (after)
+- Actions: lib `occlusionFrom` takes `ownBodies` and records whether each frame's blocker is the cue's own body;
+  `muffleRow` splits by blocker; `masterOf` gains `still`; `coherenceOf` (the engine's coherence, now in
+  decisions.json, F9). The script measures the muffle by the set (B, 14 cues) and by Sound 1's rule (19), clips both
+  at the engine and the set's at the car body, masters the listener set through one static gain 12.01 dB under A's
+  with no limiter, and reports each clip's A against today's master in 10 ms windows. Header and CLIP_SEC comments
+  fixed (F5). Tests: the set's hidden state is Sound 1's less the own-body frames, frame for frame; each switch by
+  the set; the still master; coherenceOf. Planted on copies: occlusionFrom ignoring `ownBodies` and the still gain from
+  A alone each fail one test of the file (13 pass); a coherence ignoring where a render starts fails its test.
+- Rerun `node scripts/sound-options.js --round 05` (4.5 min): 12 clips of 7 s (9.3 MB with decisions.json), each
+  moment's clips with identical decoded video. Engine clip, B against A, by the set: -1.33 dB (volume), -1.00 (swap);
+  by Sound 1's rule -2.19, -2.56. By part: the rise -1.78/-0.85 under both; the intake behind building SE at full
+  level -4.59/-1.71 under both; the intake in view -0.41/-0.76 by the set, -1.55/-3.41 by Sound 1's rule. The car
+  moment moved to 28.250 s (the door cues are no longer hidden): -0.11/-0.12 dB by the set. The listener clip: +6.37
+  dB; the shared curve would have taken 1 dB or more off its A in 107 of 700 windows (worst -8.68), the still master
+  takes none; today's limiter takes 1 dB or more in 11 (worst -4.45). The muffle and pan clips' A: at most 2 of 700
+  windows 1 dB or more under today's master (worst -1.11).
+- Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). Default render 6f9c4925... and `a.wav` the
+  same bytes; the design stage with the score unparked f80b1542... (S8.3).
+
+#### s2-options: F6, F8 and F9, the notes and this log (before)
+- Plan: rewrite review/round-05/notes-options.md from the rerun decisions.json (the muffle by the set and by Sound 1's
+  rule, the still master and the clips' A against today's master, the listener's definition, the continuous cues' gap,
+  the phantom as an inference, the checks, the checker's findings with what changed and one disagreement); add the
+  missing 'before' entry and the gate results to the first three sub-entries above, marked as added at this pass.
+
+#### s2-options: F6, F8 and F9, the notes and this log (after)
+- Actions: review/round-05/notes-options.md rewritten from the rerun decisions.json: the muffle by the set and by
+  Sound 1's rule with the engine clip by part and a recommendation reworded on that split; the listener's still
+  master and every clip's A against today's master; the listener as the people out of the car, seen or not, with the
+  continuous cues' 6.92 dB gap to the onset prediction and why; the phantom as an inference; 15 checks; the checker's
+  findings and what changed, with one measured disagreement (F2: the hum's stem balance is 0.82 dB from A's by
+  design, so balances are held to the camera's pan law). The rampSec reason in the script now counts the block
+  latency (55 ms, not "8 ms into the next frame"); the rerun gave the same 12 clips byte for byte and a decisions.json
+  that differs only in that sentence. This log: the gates of the first three commits and the notes' 'before'.
+- Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
