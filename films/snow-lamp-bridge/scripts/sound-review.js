@@ -4,9 +4,14 @@
 //              group (float WAV, out/round-NN/stems/, not committed); the listening stems, one per body (AAC,
 //              review/round-NN/stems/ with stems.json); the parked design layers' drift (Sound 2.7); the blockout's
 //              loudness target, chosen by measurement (the sweep in measure.json, the value in src/config.js)
-//   --stills, --sheet  the audio stills and the arrangement sheet (Sound 2.9): steps to add here, on the same session,
-//              reading measure.json's table, bands and series (the shape below)
-// Usage: node scripts/sound-review.js --round 05 --measure
+//   --stills   the audio stills (Sound 2.9): one per shot, review/round-NN/stills/shot-NN.png (the SVG under
+//              out/round-NN/stills/), and stills.json; from measure.json, the mastered mix and the voice groups' stems
+//   --sheet    the arrangement sheet (review/round-NN/arrangement.png, the SVG under out/) and the contact sheet
+//              (contact-sheet.html and .png), from measure.json, the stems and stills.json
+// The steps run in that order whatever the order asked; a step after --measure in the same run reads its measure.json
+// and its renders from the session, so nothing is rendered twice. Alone, --stills and --sheet read measure.json from
+// review/round-NN/ and refuse it unless its raw render's sha256 is this session's (scripts/lib/sound-stills.js draws).
+// Usage: node scripts/sound-review.js --round 05 --measure [--stills] [--sheet]
 //
 // measure.json:
 //   { round, stage, parked, seed, sr, seconds, targetLufs, gainDb, cues, voiced, streetDb,
@@ -32,7 +37,7 @@
 // Deterministic: no clock is written; the same code gives the same files.
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -51,6 +56,9 @@ import { carTimes, FPS, T_TOTAL } from '../src/world.js';
 import * as A from './lib/audio-analysis.mjs';
 import { alignment, decodeAudio } from './lib/ffmpeg.mjs';
 import { allocate, maskingBed, safeBand } from './lib/sound-checks.js';
+import { rasterize } from './lib/raster.mjs';
+import { buildArrangement, buildStill, contactSheetHtml, levelCurve, SCALE, STILL, stillData, stillEntry } from './lib/sound-stills.js';
+import { TL } from './lib/sound-timeline.js';
 import { buildInput, syncRule } from './sound-report.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -109,8 +117,10 @@ export function sumAgainst(parts, whole) {
 // ---------- the session: every render once ----------
 // The first sample that is not zero of a render, in seconds (null when silent)
 const firstSound = (s) => { const z = A.nonzeroSpan(s); return z ? z[0] / s.sr : null; };
-export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log } = {}) {
-  const memo = new Map(), once = (k, f) => { if (!memo.has(k)) memo.set(k, f()); return memo.get(k); };
+// `rendered` lists every memoised render in the order it was made, so a run can show that nothing was made twice.
+// keep: false makes every call render again (passed in only to plant that fault).
+export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log, keep = true } = {}) {
+  const memo = new Map(), rendered = [], once = (k, f) => { if (!keep || !memo.has(k)) { memo.set(k, f()); rendered.push(k); } return memo.get(k); };
   const sr = config.audio.sr, quiet = cues.filter((c) => c.voices === 0), voiced = cues.filter((c) => c.enabled && c.voices > 0);
   const groups = [...new Set(voiced.map((c) => c.source))];
   const copy = (s) => ({ sr: s.sr, left: Float32Array.from(s.left), right: Float32Array.from(s.right) });
@@ -120,7 +130,7 @@ export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log 
   const renders = new WeakMap(), onsets = new WeakMap();
   const render = (c) => renders.get(c) ?? A.preMaster([...quiet, c], config);
   const s = {
-    config, cues, sr, log, quiet, voiced, groups,
+    config, cues, sr, log, quiet, voiced, groups, rendered,
     own: (g) => voiced.filter((c) => c.source === g).sort((a, b) => a.t0 - b.t0 || (a.id < b.id ? -1 : 1)),
     // the full render before the master's normalization (reverb, highpass, fades), twice for determinism
     raw: () => once('raw', () => renderSoundtrack(config, { cues, normalize: false })),
@@ -604,9 +614,72 @@ export async function measureStep(session, { round, reviewDir, outDir, log = con
   return report;
 }
 
-// The steps in the order they run; each reads the session (and what earlier steps left on it) and writes its files.
-// Sound 2.9's --stills and --sheet join here.
-export const STEPS = Object.freeze({ measure: measureStep });
+// ---------- the steps: --stills and --sheet (Sound 2.9) ----------
+// measure.json for the steps after --measure: the session's own (a --measure in this run), or the file, read only if
+// its raw render is this session's (the same code and cues, byte for byte), so every number drawn is about the
+// signals drawn beside it
+export function measureOf(session, reviewDir) {
+  if (session.measure) return session.measure;
+  const file = resolve(reviewDir, 'measure.json');
+  if (!existsSync(file)) throw new Error(`no ${relative(ROOT, file)}: run --measure first`);
+  const m = JSON.parse(readFileSync(file, 'utf8')), raw = session.raw(), h = sha(raw.left, raw.right);
+  if (m.renders?.raw?.sha256 !== h) throw new Error(`${relative(ROOT, file)} was measured on another render (raw sha256 ${String(m.renders?.raw?.sha256).slice(0, 12)}, this session's ${h.slice(0, 12)}): run --measure again`);
+  session.measure = m;
+  return m;
+}
+// What a step rendered: the session's renders made since `from` (an index into session.rendered)
+const madeSince = (session, from) => { const k = session.rendered.slice(from); return k.length ? `${k.length} (${k.length > 4 ? `${k.slice(0, 4).join(', ')} and ${k.length - 4} more` : k.join(', ')})` : 'nothing'; };
+
+// The --stills step: one still per shot from measure.json, the mastered mix and the groups' stems (memoised on the
+// session), as SVG (out/round-NN/stills/, not committed) and PNG at SCALE (review/round-NN/stills/), and stills.json
+export async function stillsStep(session, { round, reviewDir, outDir, log = console.log }) {
+  const start = performance.now(), say = (msg) => log(`[${((performance.now() - start) / 1000).toFixed(1)} s] ${msg}`), from = session.rendered.length;
+  const measure = measureOf(session, reviewDir), mix = session.mastered(), stemOf = (g) => session.group(g);
+  const svgDir = resolve(outDir, 'stills'), pngDir = resolve(reviewDir, 'stills'), jobs = [], stills = [];
+  mkdirSync(svgDir, { recursive: true }); mkdirSync(pngDir, { recursive: true });
+  for (const shot of SHOTS) {
+    const still = buildStill(stillData(shot, { mix, stemOf, measure }), { measure });
+    const svg = resolve(svgDir, `shot-${pad2(shot.n)}.svg`), png = resolve(pngDir, `shot-${pad2(shot.n)}.png`);
+    writeFileSync(svg, still.d.toSVG());
+    jobs.push({ file: svg, out: png, width: STILL.w, height: still.height, scale: SCALE });
+    stills.push(stillEntry(still, { png: relative(reviewDir, png), svg: relative(ROOT, svg) }));
+    if (still.labeler.dropped.length) say(`  shot ${shot.n}: ${still.labeler.dropped.length} labels dropped (${still.labeler.dropped.join('; ')})`);
+  }
+  say(`${stills.length} stills drawn (${stills.reduce((n, s) => n + s.markers.length, 0)} markers); rendered for them: ${madeSince(session, from)}`);
+  await rasterize(jobs);
+  const out = { round, made: `node scripts/sound-review.js --round ${round} --stills`, stage: measure.stage, targetLufs: measure.targetLufs, raw: measure.renders.raw.sha256, note: 'x of time t in a still\'s PNG is x0 + (t - t0) * pxPerSec device pixels; every strip shares it. markers: each cue whose measured onset (measure.json table.onset) is in the shot, its x the drawn glyph\'s centre; misses: the bars it is off (onset, sync, pan) and its check 14 flag (phone). carried: the cues sounding in the shot that started before it', stills };
+  writeFileSync(resolve(reviewDir, 'stills.json'), `${JSON.stringify(out, null, 1)}\n`);
+  say(`wrote ${relative(ROOT, pngDir)}/ (${jobs.length} PNG), ${relative(ROOT, svgDir)}/ and ${relative(ROOT, resolve(reviewDir, 'stills.json'))}`);
+  return out;
+}
+
+// The --sheet step: the arrangement (each voice group's measured level at one point a pixel of round 04's timeline,
+// from its stem) as SVG under out/ and PNG in review/, then the contact sheet from stills.json, stems.json and
+// decisions.json beside it
+export async function sheetStep(session, { round, reviewDir, outDir, log = console.log }) {
+  const start = performance.now(), say = (msg) => log(`[${((performance.now() - start) / 1000).toFixed(1)} s] ${msg}`), from = session.rendered.length;
+  const measure = measureOf(session, reviewDir), ts = Array.from({ length: Math.round(T_TOTAL * TL.pxPerS) }, (_, i) => (i + 0.5) / TL.pxPerS);
+  const envelopes = new Map(session.groups.map((g) => [g, { ts, db: levelCurve([session.group(g)], ts, { refDb: measure.streetDb }) }]));
+  const arr = buildArrangement({ measure, envelopes });
+  say(`the arrangement: ${arr.markers.length} measured onsets on ${arr.lanes.length} lanes; rendered for it: ${madeSince(session, from)}`);
+  if (arr.labeler.dropped.length) say(`  ${arr.labeler.dropped.length} labels dropped (${arr.labeler.dropped.join('; ')})`);
+  mkdirSync(outDir, { recursive: true });
+  const svg = resolve(outDir, 'arrangement.svg');
+  writeFileSync(svg, arr.d.toSVG());
+  const stillsFile = resolve(reviewDir, 'stills.json');
+  if (!existsSync(stillsFile)) throw new Error(`no ${relative(ROOT, stillsFile)}: run --stills first (the contact sheet shows them)`);
+  const read = (p) => JSON.parse(readFileSync(resolve(reviewDir, p), 'utf8'));
+  writeFileSync(resolve(reviewDir, 'contact-sheet.html'), contactSheetHtml({ measure, stills: read('stills.json').stills, stems: read('stems/stems.json'), decisions: read('decisions/decisions.json') }));
+  await rasterize([
+    { file: svg, out: resolve(reviewDir, 'arrangement.png'), width: Math.round(arr.d.w), height: Math.round(arr.d.h) },
+    { file: resolve(reviewDir, 'contact-sheet.html'), out: resolve(reviewDir, 'contact-sheet.png'), width: 1500, fullPage: true },
+  ]);
+  say(`wrote ${relative(ROOT, resolve(reviewDir, 'arrangement.png'))}, ${relative(ROOT, svg)}, contact-sheet.html and contact-sheet.png`);
+  return arr;
+}
+
+// The steps in the order they run; each reads the session (and what earlier steps left on it) and writes its files
+export const STEPS = Object.freeze({ measure: measureStep, stills: stillsStep, sheet: sheetStep });
 
 async function main() {
   const { values: a } = parseArgs({ options: { round: { type: 'string', default: '05' }, ...Object.fromEntries(Object.keys(STEPS).map((k) => [k, { type: 'boolean', default: false }])) }, strict: true });

@@ -1019,3 +1019,31 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - `node scripts/sound-options.js --round 05`: all three A/Bs still measure over the audibility bar (ask the director).
   The engine clip under the muffle by the set: -0.89 dB with the volume drop, -0.49 dB with the swap (it was -1.33 and
   -1.00 with the buzzes in phase); -3.93 and -1.67 dB over the 1.4 s the intake is hidden at full level.
+
+#### s2-stills: Sound 2.9, the plan (before)
+- Before: base 21871c8. `measure.json` holds every number the drawings need except the curves over time (the
+  spectrogram, the stems' levels, the mix's balance), which come from the session's renders: the mastered mix (8.9 s
+  here) and the 30 voice-group stems before the master (7 s). The design stage with the score unparked renders sha256
+  f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da (checked, out/round-05/design-check.wav).
+- Plan: `scripts/lib/sound-stills.js` (the spectrogram, the level and balance curves, one still per shot, the
+  arrangement on round 04's timeline lanes, stills.json, the contact sheet); `buildTimeline` gains a header option and
+  a shift (its default drawing byte identical); `--stills` and `--sheet` join `STEPS` in `scripts/sound-review.js` on
+  the same session (memoised, so `--measure --stills --sheet` renders nothing twice; alone they check the raw render
+  against measure.json's sha256 before drawing); `tests/sound-stills.test.mjs` with planted faults; then the images,
+  looked at full size and at 390 px, and `review/round-05/notes-stills.md`.
+
+#### s2-stills: the drawing library, the steps and their checks (after)
+- `scripts/lib/sound-stills.js`: the time axis, the spectrogram (4096-sample Hann centred on each device pixel column,
+  log rows 25 Hz to 20 kHz, magma in 3 dB steps from -88 to -22 dB: set from the mastered blockout's own row levels,
+  median -52, 99 percent under -32.5; -115 to -25 and -100 to -30 were tried first and drew the beds orange), a PNG
+  encoder, the level and balance curves (100 ms windows centred on each point), the lanes (per voice group, or per
+  body in shots 5 and 9), one still per shot, the arrangement on round 04's lanes, stills.json entries, the contact
+  sheet. Measured is white or filled; predicted the lane's colour, translucent or hollow; the markers by person in the
+  reel's colours (a test holds them to the captions' lanes).
+- `buildTimeline` gained a header option, a shift and `pan: false`; round 04's `timeline.svg` regenerates byte for byte
+  (sha256 defaa92f...). `makeSession` lists its renders (`rendered`) and takes `keep: false` to plant re-rendering.
+  `--stills` and `--sheet` joined `STEPS`; alone they refuse a measure.json whose raw sha256 is not the session's.
+- `tests/sound-stills.test.mjs`: 9 tests, each with its planted fault (37 s alone).
+- Gate: npm test exit 0 (258 tests, 255 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
+  renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
