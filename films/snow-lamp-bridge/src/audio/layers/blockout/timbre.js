@@ -27,7 +27,11 @@ export const TIMBRE = freeze({
   city: { highpassHz: 40, lowpassHz: 300 }, // brown noise
   wind: { bandHz: 750, bandQ: 0.7 }, // pink noise
   water: { bandHz: 7000, bandQ: 0.7 }, // grey: white noise in a wide band
-  engine: { bandHz: 650, bandQ: 1.4, firesPerRpm: 1 / 30, noiseRatio: 0.2 }, // a four-stroke four fires twice a turn
+  // a four-stroke four fires twice a turn. The intake's and the exhaust's buzzes play the same saw from the same rpm,
+  // so in phase they add coherently (1.90 times their summed powers over the drive, measured round 05) and the engine
+  // is louder in the mix than its two planned levels: each voice group's buzz starts this far into a firing period,
+  // and half a period apart they add as their powers (1.00, the drive and the idle)
+  engine: { bandHz: 650, bandQ: 1.4, firesPerRpm: 1 / 30, noiseRatio: 0.2, startRatio: { intake: 0, exhaust: 0.5 } },
   stop: { glideOctaves: 1.5 }, // the engine's buzz, its band gliding down this far as it falls to nothing
   tyres: { bandHz: 900, bandQ: 2, steerOctaves: 0.5 }, // the band moves with the steering, up at full lock
   brake: { bandHz: 2700, bandQ: 3, creakHz: 1900, creakLowRatio: 0.7 }, // pads; the creak glides down as it stops

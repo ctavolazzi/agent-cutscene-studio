@@ -24,6 +24,12 @@ export const cueList = (ctx) => ctx.cues ?? CUES;
 export const sounding = (list, category) => list.filter((c) => c.enabled && c.voices > 0 && c.category === category);
 // A cue's part, the last field of its id (category.family.source.part), which names what it is: unlatch, latch, creak
 export const partOf = (c) => c.id.slice(c.id.lastIndexOf('.') + 1);
+// Where an engine voice's saw starts in its firing period: its voice group's part (the source after its colon)
+const startOf = (c) => {
+  const s = TIMBRE.engine.startRatio[c.source.slice(c.source.indexOf(':') + 1)];
+  if (s === undefined) throw new Error(`blockout: no engine start for ${c.id} (${c.source})`);
+  return s;
+};
 
 const amp = (db) => dbToGain(LEVEL.refDb + db);
 const band = (sr, hz, q) => [new Biquad(sr, 'bandpass', hz, q), new Biquad(sr, 'bandpass', hz, q)];
@@ -102,10 +108,11 @@ function bandNoise(sr, rng, centre, q, level = () => 1) {
   return (dt) => { if (++i % BLOCK === 0) retune(f, centre(dt)); return through(f, white(rng)) * level(dt); };
 }
 // the engine's buzz: a saw at the firing rate from the track's rpm, a little noise, through the engine's band; `glide`
-// (octaves, a function of dt) moves the band down from there, retuned every BLOCK samples, and `level` scales it
-function buzz(sr, rng, track, glide = null, level = () => 1) {
+// (octaves, a function of dt) moves the band down from there, retuned every BLOCK samples, and `level` scales it. The
+// saw starts `start` of a firing period in (TIMBRE.engine.startRatio, by voice group).
+function buzz(sr, rng, track, glide = null, level = () => 1, start = 0) {
   const T = TIMBRE.engine, f = band(sr, T.bandHz, T.bandQ), n = T.noiseRatio;
-  let ph = 0, i = 0;
+  let ph = start, i = 0;
   return (dt) => {
     if (glide && ++i % BLOCK === 0) retune(f, T.bandHz * 2 ** -glide(dt));
     ph += track('rpm', dt) * T.firesPerRpm / sr;
@@ -114,7 +121,7 @@ function buzz(sr, rng, track, glide = null, level = () => 1) {
 }
 
 export const FAMILY = {
-  engine: (c, { sr, rng, track }) => buzz(sr, rng, track),
+  engine: (c, { sr, rng, track }) => buzz(sr, rng, track, null, undefined, startOf(c)),
   // the run-down is the engine's own voice dying (the same voice group): it starts in the engine's band and falls,
   // in rate (the track's rpm), in band and in level, with the track's `dying`; no key click (Gate 0, question 2 b)
   stop: (c, { sr, rng, track }) => buzz(sr, rng, track, (dt) => TIMBRE.stop.glideOctaves * (1 - track('dying', dt)), (dt) => track('dying', dt)),

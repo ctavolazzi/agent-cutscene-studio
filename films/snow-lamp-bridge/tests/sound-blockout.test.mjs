@@ -393,6 +393,32 @@ function centroidProblems(hz) {
   return p;
 }
 
+// The engine's two voice groups play one saw from one rpm track: in phase they would add coherently, louder in the mix
+// than their two planned levels. Each group's buzz starts its own share of a firing period in (TIMBRE.engine.
+// startRatio), so they add as their powers: the power of their sum over the sum of their powers near 1 over the drive
+// and the idle (measured 1.000 to 1.004, round 05; the bar a starting value). The control is the same cues played in
+// phase (both from the intake's start), which measured 1.54 to 1.90.
+const COHERENT_TOL = 0.1;
+const enginePart = (p) => CUES.filter((c) => c.enabled && c.family === 'engine' && c.source.endsWith(`:${p}`));
+// per intake cue (the drive, the idle): the power of the two parts' sum over the sum of their powers across its span
+function engineCoherence(intakes, exhausts) {
+  const a = preMaster(intakes), b = preMaster(exhausts);
+  return intakes.map((c) => {
+    let sum = 0, each = 0;
+    for (let i = Math.round(c.t0 * SR); i < Math.round(c.t1 * SR); i++) for (const ch of ['left', 'right']) { const x = a[ch][i], y = b[ch][i]; sum += (x + y) ** 2; each += x * x + y * y; }
+    return { cue: c.id, ratio: sum / each };
+  });
+}
+test('the engine\'s intake and exhaust add as their powers, not in phase; played in phase, the control, they add coherently', () => {
+  const intakes = enginePart('intake'), exhausts = enginePart('exhaust');
+  const real = engineCoherence(intakes, exhausts);
+  assert.equal(real.length, 2, 'the drive and the idle');
+  for (const x of real) assert.ok(Math.abs(x.ratio - 1) <= COHERENT_TOL, `${x.cue}: ${x.ratio.toFixed(3)}`);
+  // the control: the exhaust's cues as if they were the intake's voice group, so their buzz starts where the intake's does
+  const inPhase = engineCoherence(intakes, exhausts.map((c) => ({ ...c, source: c.source.replace(/:exhaust$/, ':intake') })));
+  for (const x of inPhase) assert.ok(x.ratio - 1 > COHERENT_TOL, `in phase, ${x.cue}: ${x.ratio.toFixed(3)}`);
+});
+
 test('timbre: every family\'s spectral centroid at least 0.11 octave from every other family\'s but its own voice\'s', () => {
   const fams = Object.keys(FAMILIES);
   assert.deepEqual(fams.flatMap((a, i) => fams.slice(i + 1).filter((b) => oneVoice(a, b)).map((b) => `${a} ${b}`)), ['engine stop']);

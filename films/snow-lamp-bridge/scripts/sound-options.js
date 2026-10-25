@@ -22,6 +22,7 @@ import { parseArgs } from 'node:util';
 import { CONFIG } from '../src/config.js';
 import { CUES } from '../src/audio/cues.js';
 import { atStage, makeContext, renderSoundtrack } from '../src/audio/index.js';
+import { targetOf } from '../src/audio/loudness.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { mulberry32, hashString } from '../src/prng.js';
 import { FPS } from '../src/world.js';
@@ -265,7 +266,7 @@ export function masterAndMoments(m, wavDir, { log = console.log } = {}) {
   }
   return {
     wavs, sets: how, moments,
-    master: { ...master.stats, ceilingDb: A.ceilingDb, targetLufs: A.targetLufs, what: 'the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option\'s set of mixes then goes through A\'s gain and one limiter curve from the loudest of the set at each sample (joint), or through one static gain low enough that none is limited (still, the characters\' listener), so B over A is the option alone and nothing passes the ceiling' },
+    master: { ...master.stats, ceilingDb: A.ceilingDb, targetLufs: targetOf(A), what: 'the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option\'s set of mixes then goes through A\'s gain and one limiter curve from the loudest of the set at each sample (joint), or through one static gain low enough that none is limited (still, the characters\' listener), so B over A is the option alone and nothing passes the ceiling' },
   };
 }
 

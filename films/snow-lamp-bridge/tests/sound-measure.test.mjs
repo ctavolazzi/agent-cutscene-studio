@@ -350,12 +350,13 @@ test('sync measure: a step one frame late against its picture event fails, where
 
 // An instant on its frame's own time passes on its cue time with nothing to spare, and its onset, the first sample
 // that is not zero (one after its voice's start), reads 0.02 ms after the frame: that, and only that, is the reading's
-// lag (readLagSec, 1.5 samples). A cue on a frame time played 10 ms late is late, and its note says so plainly.
-test('sync measure: an instant on its frame\'s own time reads the reading\'s lag after it, noted so; played 10 ms late it is plainly late', () => {
+// lag (readLagSec, 1.5 samples), and it passes as on its frame (the lead's ruling, round 05). A cue on a frame time
+// played 10 ms late is late, fails, and its note says so plainly.
+test('sync measure: an instant on its frame\'s own time reads the reading\'s lag after it and passes, noted so; played 10 ms late it is plainly late', () => {
   for (const id of ['hard.door.driver.latch', 'hard.engine.car.intake']) {
     const c = byId(id), row = (m) => syncEntry(m.rows, INPUT).rows.find((x) => x.cue === id);
     const on = row(measureGroup(session, c.source));
-    assert.deepEqual([on.ok, on.cueOk], [false, true], id);
+    assert.deepEqual([on.ok, on.cueOk], [true, true], id);
     assert.match(on.note, /on the frame's own time/);
     assert.ok(-on.aheadMs > 0 && -on.aheadMs <= readLagSec(SR) * 1000 + 1e-6, `${id} reads ${-on.aheadMs} ms after its frame`);
     const late = row(measureGroup(session, c.source, { played: [shiftBy(c, 0.01)] }));

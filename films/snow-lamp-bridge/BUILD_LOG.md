@@ -986,3 +986,25 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   that differs only in that sentence. This log: the gates of the first three commits and the notes' 'before'.
 - Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
   determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+
+#### lead: the merge, the engine's phase, the sync ruling (before)
+- Merged s2-measure and s2-options (both checked and fixed). The merged gate found one interaction: `masterOf`
+  (sound-options-lib) read `targetLufs` as a number, and it is per stage since s2-measure. It now reads `targetOf`.
+- The engine's placeholders: the intake's and the exhaust's buzzes are one saw from one rpm track, in phase, so they
+  add coherently (power of the sum over the sum of powers 1.86 over the drive, 1.54 over the idle, by cue span): the
+  engine is louder in the mix than its two planned levels. A placeholder fault, fixed before the preview: each voice
+  group's buzz starts its own share of a firing period in (`TIMBRE.engine.startRatio`, the exhaust half a period).
+- Sync, the lead's ruling: an instant on its frame's own time whose onset reads within the reading's lag (1.5 samples)
+  after the frame is on its frame and passes, with its note. The measure cannot tell the two apart; BT.1359 puts the
+  threshold for late sound near 125 ms. The 12 real misses (Sound 1's) still fail.
+- Accepted as they stand: the crossfade ruling (two beds of one family overlapping inside `TIMBRE.crossfadeSec` are
+  intended); the group-sum bar 1e-6 of the peak (a starting value); the AAC listening stems are for listening (their
+  decoded sum is 13.0 dB under the mix's error floor, the float stems sum within 9.0e-8).
+
+#### lead: the merge, the engine's phase, the sync ruling (after)
+- The engine's two parts now add as their powers: 1.002 over the drive, 1.001 over the idle (in phase, the control:
+  1.862 and 1.542). New test in `tests/sound-blockout.test.mjs` with that control. `masterOf` reads the stage's target.
+  The sync ruling is in `syncEntry` (`scripts/sound-review.js`), its test changed to expect the pass, and the bar's
+  text says so.
+- Gate: 249 tests, 246 pass, 0 fail, 3 skipped (the parked score); check pass (forbidden 0, determinism, cameras 191
+  comparisons, worst 2.00e-15). The design stage still renders the S8.3 bytes (sha256 f80b1542).

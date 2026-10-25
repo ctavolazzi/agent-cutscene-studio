@@ -11,7 +11,7 @@ import { makeEvents } from '../../src/audio/events.js';
 import { buildLayers } from '../../src/audio/index.js';
 import { LEVEL } from '../../src/audio/layers/blockout/timbre.js';
 import { placedEvent } from '../../src/audio/layers/blockout/voices.js';
-import { integratedLufs, limit, truePeakEnvelope } from '../../src/audio/loudness.js';
+import { integratedLufs, limit, targetOf, truePeakEnvelope } from '../../src/audio/loudness.js';
 import { BLOCK } from '../../src/audio/mix.js';
 import { placeAt } from '../../src/audio/spatial.js';
 import { SHOTS } from '../../src/shots.js';
@@ -280,7 +280,8 @@ export function listenerRow(c, a, b, predicted, floorDb = 20) {
 // option at every sample and neither has a gain that moves in time; the cost is level, `belowDb` under A's master.
 // Returns { stats, out, joint(raws) -> { mixes, extra: { samples, maxDb, at } }, still(raws) -> { mixes, gainDb,
 // belowDb, at } }.
-export function masterOf(rawA, { targetLufs, ceilingDb }, passes = 4) {
+export function masterOf(rawA, audio, passes = 4) {
+  const targetLufs = targetOf(audio), { ceilingDb } = audio;
   const { sr } = rawA, n = rawA.left.length, peaks = truePeakEnvelope(rawA.left, rawA.right), before = integratedLufs(rawA.left, rawA.right, sr);
   const curveOf = (env, g) => { const c = new Float64Array(n).fill(1); return { c, limited: limit(c, new Float64Array(n).fill(1), dbToGain(ceilingDb), sr, undefined, undefined, env, g).reducedSamples }; };
   const run = (raw, g, curve) => {
