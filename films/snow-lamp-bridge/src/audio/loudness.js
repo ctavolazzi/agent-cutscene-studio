@@ -8,7 +8,9 @@ const K = [
   { b: [1.0, -2.0, 1.0], a: [-1.99004745483398, 0.99007225036621] },
 ];
 
-function kWeighted(x) {
+// A signal through both K-weighting stages, as a Float64Array: what every meter here and the review's momentary and
+// short-term series (scripts/lib/audio-analysis.mjs) square and sum.
+export function kWeighted(x) {
   let y = x;
   for (const { b, a } of K) {
     const out = new Float64Array(y.length);

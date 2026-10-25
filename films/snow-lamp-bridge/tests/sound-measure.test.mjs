@@ -1,0 +1,255 @@
+// Checks for the blockout's measurement tooling (scripts/lib/audio-analysis.mjs, ROADMAP Sound 2.5, SOUND-PLAN 4.5):
+// onsets to the sample, one-to-one matching, cue ends, sync judged on a measured onset, pan from a stem window, the
+// momentary and short-term meters against ffmpeg, the third-octave bank on pure tones, the limiter's loss, the mono
+// fold-down and the phone, the loudest window and the measured density. Each has a planted fault that must be found:
+// a cue 5 ms late measured 5 ms late and one 6 ms late failing the 5 ms renderer bar, a cue one frame late failing
+// sync, swapped channels failing the pan bar, and an onset that a nearest-match rule hands to the wrong cue.
+// Run: node --test tests/sound-measure.test.mjs
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { CONFIG } from '../src/config.js';
+import { CUES, DESIGN, LAWS } from '../src/audio/cues.js';
+import { atStage } from '../src/audio/index.js';
+import { placeAt } from '../src/audio/spatial.js';
+import { encodeWav } from '../src/audio/wav.js';
+import { mulberry32 } from '../src/prng.js';
+import { FPS } from '../src/world.js';
+import { syncRule } from '../scripts/sound-report.js';
+import {
+  THIRD_OCTAVES, balanceDb, bandLevels, energyBlocks, foldDown, limiterLoss, loudestWindow, matchOnsets, matchOneToOne,
+  measuredDensity, momentary, onsets, preMaster, preciseOnsets, predictedBalanceDb, segment, shortTerm, soundingEnd, syncOf, thirdOctaveBank,
+} from '../scripts/lib/audio-analysis.mjs';
+
+const BLOCKOUT = atStage(CONFIG, { stage: 'blockout' });
+const SR = BLOCKOUT.audio.sr;
+const dir = mkdtempSync(join(tmpdir(), 'sound-measure-test-'));
+const byId = (id) => CUES.find((c) => c.id === id);
+const quiet = CUES.filter((c) => c.voices === 0);
+// one voice group's stem before the master, from cues.js's catalogue with some cues replaced or added
+const groupOf = (source, swap = []) => preMaster([...quiet, ...CUES.filter((c) => c.source === source && c.voices > 0 && !swap.some((x) => x.id === c.id)), ...swap]);
+const moveBy = (c, dt) => ({ ...c, sync: c.sync + dt, t0: c.t0 + dt, t1: c.t1 + dt });
+const own = (source) => CUES.filter((c) => c.enabled && c.voices > 0 && c.source === source).sort((a, b) => a.t0 - b.t0);
+// the detector's gap within one voice group (tests/sound-blockout.test.mjs): half the group's closest onsets, at most
+// 80 ms, never under cues.js's flam merge
+const minGapOf = (list) => Math.max(DESIGN.STEP.flam, Math.min(0.08, ...list.slice(1).map((c, i) => (c.t0 - list[i].t0) / 2)));
+
+// ---------- onsets to the sample, and matching one to one ----------
+// The renderer bar (ROADMAP Sound 2.6): an onset within 5 ms of its cue time. onsets() reports the 1 ms hop an
+// attack crosses its line in, so a cue 6 ms late can read 5 (tests/sound-blockout.test.mjs plants 7 ms for that
+// reason); preciseOnsets() reads the sample, so 5 ms late reads 5 ms late and 6 ms late fails. Measured: this step on
+// time reads 0.083 ms after its t0 (the first sample of its attack over the detector's line), so 5 ms late reads
+// 5.083 ms against its cue time and exactly 5 ms (240 samples) against its own reading on time; the bar on that shift
+// is one sample. The time is read within READ_TOL, the renderer bar is RENDER_TOL.
+const RENDER_TOL = 0.005, READ_TOL = 0.01;
+test('onsets to the sample: a step 5 ms late reads 5 ms late, one 6 ms late fails the 5 ms renderer bar', () => {
+  const g = 'A:feet', c = byId('foley.feet.A.05'), times = own(g).map((x) => x.t0);
+  const read = (stem, tol) => matchOneToOne(times, preciseOnsets(stem.left, stem.right, SR, { minGap: minGapOf(own(g)) }), tol);
+  const at = (m) => m.pairs.find((x) => x.expected === c.t0);
+  const real = read(groupOf(g), RENDER_TOL), late5 = read(groupOf(g, [moveBy(c, 0.005)]), READ_TOL);
+  assert.equal(real.missed.length, 0, 'every step of the group within the bar');
+  assert.ok(Math.abs(at(real).diff) < 0.25e-3, `on time: ${at(real).diff * 1000} ms`);
+  assert.ok(Math.abs(at(late5).diff - at(real).diff - 0.005) <= 1 / SR + 1e-9, `5 ms late reads ${((at(late5).diff - at(real).diff) * 1000).toFixed(3)} ms later`);
+  // control: 6 ms late is no longer within the bar, and reads 6 ms late
+  const late6 = read(groupOf(g, [moveBy(c, 0.006)]), RENDER_TOL);
+  assert.deepEqual(late6.missed, [c.t0]);
+  assert.ok(Math.abs(at(read(groupOf(g, [moveBy(c, 0.006)]), READ_TOL)).diff - at(real).diff - 0.006) <= 1 / SR + 1e-9);
+  // onsets() is unchanged by the refactor into a shared detector, and still rounds to the millisecond
+  const s = groupOf(g), hop = onsets(s.left, s.right, SR, { minGap: minGapOf(own(g)) }), fine = preciseOnsets(s.left, s.right, SR, { minGap: minGapOf(own(g)) });
+  assert.equal(hop.length, fine.length);
+  assert.ok(hop.every((t, i) => fine[i] >= t - 1e-12 && fine[i] < t + 0.001), 'each precise onset inside its hop');
+});
+
+test('one to one: an onset that a nearest-match rule hands to the wrong cue is matched right; nearest-match passes it (control)', () => {
+  // a ghost cue 3 ms after a real tick, never rendered: the one onset belongs to the real cue
+  const real = byId('hard.tick.car.03'), ghost = real.t0 + 0.003, s = groupOf(real.source);
+  const det = preciseOnsets(s.left, s.right, SR), expected = [...own(real.source).map((x) => x.t0), ghost].sort((a, b) => a - b);
+  const one = matchOneToOne(expected, det, RENDER_TOL);
+  assert.deepEqual(one.missed, [ghost], 'the ghost has no onset of its own');
+  assert.ok(one.pairs.some((x) => x.expected === real.t0 && Math.abs(x.diff) < 0.001), 'the real cue keeps its onset');
+  // control: the nearest-match rule gives the real tick's onset to the ghost too, and so misses nothing
+  const near = matchOnsets(expected, det);
+  assert.equal(near.find((x) => x.expected === ghost).detected, near.find((x) => x.expected === real.t0).detected);
+  assert.ok(near.every((x) => Math.abs(x.diff) <= RENDER_TOL));
+});
+
+// ---------- cue ends ----------
+// soundingEnd: just after the last sample within 60 dB of the loudest in the span. Measured on the brake's first pad
+// span rendered alone (a continuous voice, faded over its last 5 ms): 0.15 ms before its t1. The planted fault cuts
+// the cue 50 ms short; its measured end moves 50 ms, to a millisecond.
+test('cue ends: a continuous voice ends on its t1; one cut 50 ms short is measured 50 ms short', () => {
+  const c = byId('hard.brake.car.pads1'), end = (x) => soundingEnd(preMaster([...quiet, x]), x.t0, x.t1 + 0.1).end;
+  const real = end(c), cut = end({ ...c, t1: c.t1 - 0.05 });
+  assert.ok(real <= c.t1 + 1e-9 && real > c.t1 - 0.001, `ends ${((real - c.t1) * 1000).toFixed(3)} ms from its t1`);
+  assert.ok(Math.abs(real - cut - 0.05) < 0.001, `the cut voice ends ${((real - cut) * 1000).toFixed(2)} ms earlier`);
+  // silence has no end; a span holding only the ring of a voice that stopped has `last` past `end`
+  assert.equal(soundingEnd({ sr: SR, left: new Float32Array(SR), right: new Float32Array(SR) }, 0, 1), null);
+});
+
+// ---------- sync on the measured onset ----------
+// check 4's judgement with the measured onset in place of the cue time: the frame that shows the event (the film's
+// syncRule, scripts/sound-report.js) must come 0 to 45 ms after the onset, past the cue's lead. A step one frame late
+// is heard after the frame that shows its boot down.
+const SYNC = { fps: FPS, search: 0.5, ahead: 0.045 };
+test('sync on the measured onset: a step one frame late against its picture event fails', () => {
+  const g = 'A:feet', c = byId('foley.feet.A.05'), rule = syncRule(c);
+  // the onset detected near a cue's time on a stem, matched within the renderer bar
+  const onsetOf = (x, stem) => matchOneToOne([x.t0], preciseOnsets(stem.left, stem.right, SR, { from: x.t0 - 0.01, to: x.t0 + 0.1 }), RENDER_TOL).pairs[0].detected;
+  const real = syncOf(rule, onsetOf(c, groupOf(g)), c.lead, SYNC);
+  assert.ok(real.ok && real.aheadMs >= 0 && real.aheadMs <= 45, JSON.stringify(real));
+  // control: the step rendered one frame late, measured where it now sounds
+  const late = moveBy(c, 1 / FPS), judged = syncOf(rule, onsetOf(late, groupOf(g, [late])), c.lead, SYNC);
+  assert.equal(judged.ok, false);
+  assert.match(judged.note, /ms after its frame$/);
+  assert.equal(judged.frame, real.frame, 'the same frame shows the same boot');
+});
+
+// ---------- pan ----------
+// A placed cue's balance in its own stem window against its placement's prediction (predictedBalanceDb, weighted by
+// the stem's energy each millisecond), bar 0.5 dB (SOUND-PLAN 4.5). The driver's door cues sit well off centre.
+const PAN_TOL_DB = 0.5;
+const panDiff = (c, s) => {
+  const p0 = c.placement === 'onset' ? c.place(c.t0) : null;
+  const panAt = (t) => { const q = p0 ?? c.place(t); return q ? placeAt(q, t, undefined, LAWS[c.law]).pan : 0; };
+  return balanceDb(s.left, s.right, s.sr, c.t0, c.t1) - predictedBalanceDb(s, c.t0, c.t1, panAt);
+};
+test('pan from the stem window: each driver\'s door cue within 0.5 dB of its prediction; swapped channels fail', () => {
+  const s = groupOf('car:door:driver'), cues = own('car:door:driver');
+  // every one leans more than half the bar, so swapping the channels moves each by more than the bar
+  const lean = cues.map((c) => balanceDb(s.left, s.right, SR, c.t0, c.t1));
+  assert.ok(lean.every((x) => Math.abs(x) > PAN_TOL_DB / 2), `the door leans: ${lean.map((x) => x.toFixed(2))}`);
+  assert.deepEqual(cues.filter((c) => !(Math.abs(panDiff(c, s)) <= PAN_TOL_DB)).map((c) => c.id), []);
+  // control: left and right swapped
+  const swapped = { ...s, left: s.right, right: s.left };
+  assert.deepEqual(cues.filter((c) => !(Math.abs(panDiff(c, swapped)) <= PAN_TOL_DB)).map((c) => c.id), cues.map((c) => c.id));
+});
+
+// ---------- momentary and short-term loudness against ffmpeg ----------
+// ffmpeg's ebur128 filter, fed 100 ms frames (asetnsamples), gives the momentary (M) and short-term (S) loudness of
+// the windows ending at each frame's end. Measured against ours on the stepped noise: 0.0008 LU (M) and 0.0007 LU (S)
+// at worst; the bar is a starting value over that. Control: our series read one hop out of step misses by far.
+const METER_TOL_LU = 0.01;
+function steppedNoise(seconds, seed = 7) {
+  const rng = mulberry32(seed), n = seconds * SR, l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = 0; i < n; i++) { const g = [0.05, 0.3, 0.01, 0.15][Math.floor(i / SR / 2) % 4]; l[i] = (rng() * 2 - 1) * g; r[i] = (rng() * 2 - 1) * g * 0.7; }
+  return { sr: SR, left: l, right: r };
+}
+function ffmpegSeries(s) {
+  const f = join(dir, `meter-${s.left.length}.wav`);
+  writeFileSync(f, encodeWav(s.left, s.right, SR, mulberry32(1)));
+  const p = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', f, '-af', 'asetnsamples=n=4800:p=0,ebur128=metadata=1,ametadata=print:key=lavfi.r128.M,ametadata=print:key=lavfi.r128.S', '-f', 'null', '-'], { encoding: 'utf8' });
+  const read = (k) => [...p.stderr.matchAll(new RegExp(`lavfi\\.r128\\.${k}=(-?[\\d.]+)`, 'g'))].map((m) => Number(m[1]));
+  return { M: read('M'), S: read('S') };
+}
+// the worst difference between our series and ffmpeg's frames (frame k holds the window ending at (k + 1) * 0.1 s)
+const worstAgainst = (ours, theirs, shift = 0) => ours.lufs.reduce((w, v, k) => { const f = theirs[Math.round((ours.firstEnd + k * ours.hopSec) * 10) - 1 + shift]; return f === undefined ? w : Math.max(w, Math.abs(v - f)); }, 0);
+test('momentary (400 ms) and short-term (3 s) loudness agree with ffmpeg ebur128 within 0.01 LU; one hop out of step does not', () => {
+  const s = steppedNoise(12), ref = ffmpegSeries(s), m = momentary(s), st = shortTerm(s);
+  assert.equal(m.lufs.length, 117); assert.equal(st.lufs.length, 91);
+  assert.ok(worstAgainst(m, ref.M) <= METER_TOL_LU, `momentary ${worstAgainst(m, ref.M)}`);
+  assert.ok(worstAgainst(st, ref.S) <= METER_TOL_LU, `short-term ${worstAgainst(st, ref.S)}`);
+  // doubling the signal adds 6.02 LU to every window
+  const twice = momentary({ sr: SR, left: s.left.map((x) => 2 * x), right: s.right.map((x) => 2 * x) });
+  assert.ok(twice.lufs.every((v, k) => Math.abs(v - m.lufs[k] - 6.0206) < 1e-3));
+  // control: the same series compared one frame late
+  assert.ok(worstAgainst(m, ref.M, 1) > 1, 'control: a series one hop out of step');
+});
+
+// ---------- third octaves on pure tones ----------
+// The bank is 30 Butterworth band-passes of order 3 (IEC 61260's usual class 1 realisation). A tone at a band's
+// centre reads its own level there (measured within 0.034 dB) and at least 18.2 dB less in each neighbour up to
+// 2 kHz; the bilinear transform squeezes the upper side near Nyquist (17.6 dB at 6.3 kHz, 15.1 at 12.5 kHz, 12.2 at
+// 16 kHz). A tone at a band edge reads -3 dB in both bands that share it (measured within 0.04 dB). Bars: starting
+// values over those. Control: one RBJ band-pass biquad per band (Q 4.3, the third octave's) lets far more through.
+const TONE = { amp: 0.1, inBandDb: 0.1, edgeDb: 0.1 };
+const toneOf = (hz, n = SR) => Float32Array.from({ length: n }, (_, i) => TONE.amp * Math.sin(2 * Math.PI * hz * i / SR));
+const rejectionBar = (hz) => (hz <= 2100 ? 18 : hz <= 13000 ? 15 : 12);
+test('third octaves on pure tones: its own level at a band centre, the neighbours down, the edges at -3 dB', () => {
+  const bank = thirdOctaveBank(SR), ref = 10 * Math.log10(TONE.amp ** 2); // two channels at amp: power summed
+  assert.equal(bank.length, 30);
+  assert.deepEqual([bank[0].nominal, bank[16].nominal, bank[29].nominal], [25, 1000, 20000]);
+  assert.ok(Math.abs(THIRD_OCTAVES[16].hz - 1000) < 1e-9 && Math.abs(THIRD_OCTAVES[0].hz - 25.119) < 1e-3);
+  const p = [];
+  for (const [i, b] of bank.entries()) {
+    const t = toneOf(b.hz), lv = bandLevels(t, t, SR, SR / 2, SR);
+    if (!(Math.abs(lv[i].db - ref) <= TONE.inBandDb)) p.push(`${b.nominal} Hz: ${(lv[i].db - ref).toFixed(3)} dB in its band`);
+    for (const j of [i - 1, i + 1]) if (lv[j] && !(ref - lv[j].db >= rejectionBar(b.hz))) p.push(`${b.nominal} Hz: only ${(ref - lv[j].db).toFixed(1)} dB down in ${lv[j].nominal}`);
+    if (i + 1 < bank.length) {
+      const e = toneOf(b.hi), le = bandLevels(e, e, SR, SR / 2, SR);
+      for (const j of [i, i + 1]) if (!(Math.abs(le[j].db - ref + 10 * Math.log10(2)) <= TONE.edgeDb)) p.push(`edge ${b.hi.toFixed(0)} Hz: ${(le[j].db - ref).toFixed(3)} dB in ${le[j].nominal}`);
+    }
+  }
+  assert.deepEqual(p, []);
+  // control: a single RBJ biquad per band is not a third-octave filter
+  const rbj = (hz) => { const x = toneOf(hz * 2 ** (1 / 3)), out = new Float64Array(x.length); const w = 2 * Math.PI * hz / SR, al = Math.sin(w) / (2 * 4.32), a0 = 1 + al; let x1 = 0, x2 = 0, y1 = 0, y2 = 0; for (let i = 0; i < x.length; i++) { const y = (al * x[i] - al * x2 + 2 * Math.cos(w) * y1 - (1 - al) * y2) / a0; x2 = x1; x1 = x[i]; y2 = y1; y1 = y; out[i] = y; } let e = 0; for (let i = SR / 2; i < SR; i++) e += out[i] ** 2; return ref - 10 * Math.log10(2 * e / (SR / 2)); };
+  assert.ok(rbj(1000) < rejectionBar(1000), `control: an RBJ biquad rejects the next band by only ${rbj(1000).toFixed(1)} dB`);
+});
+
+// ---------- the limiter's loss ----------
+// The blockout's loudness rule (Sound 2.6): no 400 ms window may lose more than 1 dB to the limiter. A click limited
+// for a few milliseconds is not a level change; a pumped stretch is. Planted on noise: a 500 ms stretch held 3 dB
+// down, and a 2 ms dip of 10 dB.
+test('the limiter\'s loss: a pumped half second reads 3 dB in its windows; a 2 ms click limited 10 dB is under 1 dB there', () => {
+  const s = steppedNoise(4, 3), g = 2, out = { sr: SR, left: s.left.map((x) => x * g), right: s.right.map((x) => x * g) };
+  assert.equal(limiterLoss(s, out, 20 * Math.log10(g)).worst.db < 1e-6, true, 'nothing limited, nothing lost');
+  const click = { sr: SR, left: Float32Array.from(out.left), right: Float32Array.from(out.right) };
+  for (let i = 1.5 * SR; i < 1.5 * SR + 0.002 * SR; i++) { click.left[i] *= 10 ** (-10 / 20); click.right[i] *= 10 ** (-10 / 20); }
+  const c = limiterLoss(s, click, 20 * Math.log10(g));
+  assert.ok(c.worst.db < 1 && c.worstSample.db > 9.99, `click: window ${c.worst.db.toFixed(3)} dB, sample ${c.worstSample.db.toFixed(2)} dB`);
+  const pump = { sr: SR, left: Float32Array.from(out.left), right: Float32Array.from(out.right) };
+  for (let i = 2 * SR; i < 2.5 * SR; i++) { pump.left[i] *= 10 ** (-3 / 20); pump.right[i] *= 10 ** (-3 / 20); }
+  const q = limiterLoss(s, pump, 20 * Math.log10(g));
+  assert.ok(Math.abs(q.worst.db - 3) < 0.01 && q.worst.t >= 2 && q.worst.t <= 2.1, `pump: ${q.worst.db.toFixed(3)} dB at ${q.worst.t}`);
+});
+
+// ---------- the mono fold-down and the phone ----------
+// foldDown: stereo, mono (L + R) / 2, side (L - R) / 2 and the phone, each played on both channels. A centred source
+// loses nothing in mono, a hard-panned one 3 dB, an anti-phase one all of it (the "side channel only" of check 14).
+// The phone's 500 Hz second-order high-pass takes a 100 Hz tone down by about 28 dB (|H| = (f / fc) ^ 2 well below
+// the corner) and leaves 2 kHz within a few tenths.
+test('mono and phone: centred keeps its level, hard left loses 3 dB, anti-phase vanishes; the phone cuts 100 Hz, keeps 2 kHz', () => {
+  const n = SR / 2, seg = (l, r) => ({ left: l, right: r, from: SR / 4, to: n });
+  const t2k = toneOf(2000, n), t100 = toneOf(100, n), zero = new Float32Array(n);
+  const c = foldDown(seg(t2k, t2k), SR), left = foldDown(seg(t2k, zero), SR), anti = foldDown(seg(t2k, t2k.map((x) => -x)), SR);
+  assert.ok(Math.abs(c.monoDb - c.stereoDb) < 1e-6 && c.sideDb === -Infinity);
+  assert.ok(Math.abs(left.monoDb - left.stereoDb + 10 * Math.log10(2)) < 1e-6, `hard left ${left.monoDb - left.stereoDb}`);
+  assert.equal(anti.monoDb, -Infinity);
+  assert.ok(anti.sideDb - anti.stereoDb > -1e-6, 'all of it in the side');
+  const low = foldDown(seg(t100, t100), SR);
+  assert.ok(low.phoneDb - low.stereoDb < -25 && low.smallPhoneDb < low.phoneDb, `100 Hz on the phone: ${(low.phoneDb - low.stereoDb).toFixed(1)} dB`);
+  assert.ok(Math.abs(c.phoneDb - c.stereoDb) < 0.5, `2 kHz on the phone: ${(c.phoneDb - c.stereoDb).toFixed(2)} dB`);
+});
+
+// ---------- the loudest window and segments ----------
+test('loudest window: a click shorter than the window is measured over the whole window; a segment keeps only its span', () => {
+  const n = SR, l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = 0; i < 0.01 * SR; i++) { l[SR / 2 + i] = 0.5; r[SR / 2 + i] = 0.5; } // 10 ms at 0.5 on both channels
+  const s = { sr: SR, left: l, right: r }, w = loudestWindow(s, 0.5, 0.51);
+  assert.ok(Math.abs(w.db - 10 * Math.log10(2 * 0.25 * 0.01 / 0.1)) < 1e-9, `${w.db}`);
+  assert.equal(w.t, 0.5);
+  const cut = segment(s, 0.5, 0.6, { lead: 0.1, keep: (t) => t >= 0.505 });
+  assert.equal(cut.from, 0.1 * SR);
+  assert.equal(cut.left[cut.from + 0.001 * SR], 0); assert.equal(cut.left[cut.from + 0.006 * SR], 0.5);
+  assert.equal(loudestWindow({ sr: SR, left: new Float32Array(n), right: new Float32Array(n) }, 0, 1), null);
+});
+
+// ---------- measured density ----------
+test('measured density: groups sounding together are counted, within 6 dB of the loudest or fresh; one 20 dB down is not', () => {
+  const step = 0.01, total = 1, mk = (name, body, level, from, to, onset) => {
+    const l = new Float32Array(SR * total);
+    for (let i = from * SR; i < to * SR; i++) l[i] = level * Math.sin(i);
+    return { name, body, blocks: energyBlocks({ sr: SR, left: l, right: l }, step), onsets: onset === null ? [] : [onset] };
+  };
+  const groups = [mk('A:feet', 'A', 0.3, 0.1, 0.9, 0.1), mk('B:feet', 'B', 0.2, 0.2, 0.9, 0.2), mk('car:engine', 'car', 0.03, 0, 1, null)];
+  const ticks = measuredDensity(groups, { step, window: 0.1, recent: 0.1, db: 6, total });
+  assert.equal(ticks.length, 100);
+  assert.deepEqual(ticks[50].fg, ['A:feet', 'B:feet']); // the engine is 20 dB under the loudest and not fresh
+  assert.equal(ticks[50].bodies, 2);
+  assert.deepEqual(ticks[5].fg, ['car:engine'], 'alone, the engine is the loudest');
+  // control: the engine 4 dB under the steps joins them
+  const loud = [groups[0], groups[1], mk('car:engine', 'car', 0.2, 0, 1, null)];
+  assert.equal(measuredDensity(loud, { step, window: 0.1, recent: 0.1, db: 6, total })[50].bodies, 3);
+});

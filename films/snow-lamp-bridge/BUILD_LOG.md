@@ -656,3 +656,25 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   10.3 dB off shot 4, 960753 samples limited (raw mix -22.2 LUFS, peak 9.2 dB over the ceiling after gain). Measured
   levels and onsets in the master would be the limiter's, so the measurements read the stems before the master, and
   the blockout's own target is chosen by measurement (SOUND-PLAN 3.18 keeps integrated loudness at or under -16).
+
+#### s2-measure: Sound 2.5, the measurement tooling (before)
+- Plan: in `scripts/lib/audio-analysis.mjs`, onsets to the sample, cue ends, sync on the measured onset (showingFrame
+  and the film's syncRule, exported from `scripts/sound-report.js` with report.json byte identical), momentary and
+  short-term loudness (the K-weighting `loudness.js` uses, exported), third octaves (IEC 61260 centres), the phone
+  and mono fold-down, the limiter's loss per window. Planted faults in `tests/sound-measure.test.mjs`.
+- Before: the design stage with the score unparked renders sha256 f80b1542... (checked, out/round-05/design-check.wav).
+
+#### s2-measure: Sound 2.5, the measurement tooling (after)
+- Added to `scripts/lib/audio-analysis.mjs`: `preciseOnsets` (onsets() and it share one detector; onsets() returns the
+  same times on all 30 voice groups' stems), `soundingEnd`, `syncOf`, `kBlocks`, `loudnessSeries`, `momentary`,
+  `shortTerm`, `seriesSummary`, `limiterLoss`, `loudestWindow`, `powerDb`, `energyBlocks`, `THIRD_OCTAVES`,
+  `butterBandpass`, `thirdOctaveBank`, `bandLevels`, `segment`, `PHONE_SPEAKER` (its sources beside it), `foldDown`,
+  `measuredDensity`. `kWeighted` exported from `loudness.js`, `syncRule` from `sound-report.js` (report.json
+  regenerated to scratch: byte identical).
+- Measured: precise onsets of all 93 one-shots on their group stems within 2.0 ms of their cues (the door swings
+  open, a sine from zero, the latest); the meters against ffmpeg ebur128: 0.0008 LU momentary, 0.0007 LU short-term;
+  the third-octave bank: 0.034 dB in band, 18.2 dB down in the neighbours to 2 kHz, 12.2 dB at 16 kHz.
+- `tests/sound-measure.test.mjs`: 11 tests, each with its planted fault (a step 5 ms late reads 5 ms later to the
+  sample and 6 ms late fails the bar; a ghost onset one to one against nearest match; a cue 50 ms short; a step one
+  frame late fails sync; swapped channels; one hop out of step against ffmpeg; an RBJ biquad as a third octave; a
+  pumped window against a limited click; anti-phase in mono; a louder engine joining the density).
