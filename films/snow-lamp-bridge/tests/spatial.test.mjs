@@ -9,7 +9,7 @@ import { SHOTS, cameraAt, shotAt, hfovDeg } from '../src/shots.js';
 import { T_TOTAL, FPS } from '../src/world.js';
 import { CUES } from '../src/audio/cues.js';
 import { SPATIAL, axisSine, listenerAt, makeSpatializer, placeAt } from '../src/audio/spatial.js';
-import { LAYERS, makeContext } from '../src/audio/index.js';
+import { atStage, layersOf, makeContext } from '../src/audio/index.js';
 import { renderAll } from '../src/audio/mix.js';
 import { makeCamera, D2R } from '../scripts/lib/math.js';
 
@@ -186,10 +186,11 @@ test('away from the vertical axis the guard changes nothing: bit for bit the for
 // while the soundtrack renders (each block's ends, exactly what placeAt receives), and every enabled cues.js point on
 // every frame it sounds. Outside the cone the formula is unchanged (above), so the render is too.
 function closestParked() {
-  const ctx = makeContext(CONFIG);
+  const design = atStage(CONFIG, { stage: 'design', parked: [] }); // the first pass, every layer, as it renders today
+  const ctx = makeContext(design);
   let m = { s: Infinity };
   const spy = { ...ctx, spatializer: (place, law) => makeSpatializer(ctx.sr, (t) => { const p = place(t); if (p) { const s = axisSine(p, listenerAt(t)); if (s < m.s) m = { s, t }; } return p; }, law) };
-  renderAll({ layers: LAYERS.map((l) => l.build(spy)), config: CONFIG, sr: ctx.sr, total: T_TOTAL, normalize: false, reverb: false });
+  renderAll({ layers: layersOf(design).map(([, l]) => l.build(spy)), config: design, sr: ctx.sr, total: T_TOTAL, normalize: false, reverb: false });
   return m;
 }
 function closestCue(list = CUES) {

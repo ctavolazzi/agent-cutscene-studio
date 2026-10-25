@@ -1,0 +1,35 @@
+1
+00:00:14,000 --> 00:00:21,000
+{\an7}<font id="hard.engine.car.intake"></font>[engine approaches]
+
+2
+00:00:30,440 --> 00:00:31,273
+{\an7}<font id="hard.door.driver.unlatch"></font>[car door opens]
+
+3
+00:00:31,756 --> 00:00:32,589
+{\an7}<font id="foley.feet.A.01"></font>[crunches in the snow]
+
+4
+00:00:31,940 --> 00:00:32,773
+{\an7}<font id="hard.door.passenger.unlatch"></font>[opens]
+
+5
+00:00:34,500 --> 00:00:35,333
+{\an7}<font id="hard.door.driver.latch"></font>[shuts]
+
+6
+00:00:35,600 --> 00:00:36,433
+{\an7}<font id="hard.door.passenger.latch"></font>[shuts]
+
+7
+00:00:36,200 --> 00:00:37,033
+{\an7}<font id="hard.stop.car.rundown"></font>[stops]
+
+8
+00:01:18,530 --> 00:01:19,363
+{\an7}<font id="foley.lighter.A.strike"></font>[clicks]
+
+9
+00:01:30,000 --> 00:01:32,800
+{\an7}<font id="foley.breath.A.exhale2"></font>[exhales]

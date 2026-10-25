@@ -1,0 +1,39 @@
+WEBVTT
+
+NOTE SDH track (Sound 6) from src/audio/cues.js: plot-pertinent sounds only; the cue identifiers are the cue ids
+
+hard.engine.car.intake
+00:00:14.000 --> 00:00:21.000 line:0 position:0% align:start size:100%
+[engine approaches]
+
+hard.door.driver.unlatch
+00:00:30.440 --> 00:00:31.273 line:0 position:0% align:start size:100%
+[car door opens]
+
+foley.feet.A.01
+00:00:31.756 --> 00:00:32.589 line:0 position:0% align:start size:100%
+[crunches in the snow]
+
+hard.door.passenger.unlatch
+00:00:31.940 --> 00:00:32.773 line:0 position:0% align:start size:100%
+[opens]
+
+hard.door.driver.latch
+00:00:34.500 --> 00:00:35.333 line:0 position:0% align:start size:100%
+[shuts]
+
+hard.door.passenger.latch
+00:00:35.600 --> 00:00:36.433 line:0 position:0% align:start size:100%
+[shuts]
+
+hard.stop.car.rundown
+00:00:36.200 --> 00:00:37.033 line:0 position:0% align:start size:100%
+[stops]
+
+foley.lighter.A.strike
+00:01:18.530 --> 00:01:19.363 line:0 position:0% align:start size:100%
+[clicks]
+
+foley.breath.A.exhale2
+00:01:30.000 --> 00:01:32.800 line:0 position:0% align:start size:100%
+[exhales]

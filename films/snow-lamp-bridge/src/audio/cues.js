@@ -43,13 +43,14 @@ export const LEVELS = Object.freeze({
   bridge: Object.freeze({ wind: 0.5, city: -7, water: -3.5 }),
   // 1.3 the car while it moves on screen: at least 6 LU over the street background, never quieter as it comes closer
   intake: 16, exhaust: 13.5, tyres: 9, brake: 6, swell: 3,
-  // 1.3 the idle: at least 6 LU under the drive
-  intakeIdle: 8, exhaustIdle: 5.5,
+  // 1.3 the idle: at least 6 LU under the drive; the run-down is the idle's own voice falling to nothing, so it starts
+  // at the idle's level (above it, the engine would rise just as the hush returns)
+  intakeIdle: 8, exhaustIdle: 5.5, rundown: 8,
   // 1.3 the engine's first light (question 3): rises out of the quiet from this far down
   rise: -30,
   // 1.3 foreground foley: peaks at least 6 dB over the background in a 100 ms window, at the distances its shots
   // frame it (shot 8's far steps and shot 13's drag and exhale at 7 m fall short: perspective, Sound 2 and 5)
-  door: 13, rundown: 10, feet: 14, feetBoth: 17, lighter: 10, drag: 9.5, breath: 9.5,
+  door: 13, feet: 14, feetBoth: 17, lighter: 10, drag: 9.5, breath: 9.5,
   // 1.3 midground (cloth, scuffs, ticks, sounds inside the car, the hands' contacts, a door's swing and stop): 0 to 6 dB
   // over the background where each is framed (cloth at 3 to 5 m in shots 7, 9 and 11); farther, the distance law rules
   creak: 5, settle: 4, rebound: 0, unload: 3, cabin: 3, tick: 5, scuff: 6, cloth: 6, contact: 7, doorSwing: 6, flame: 4,

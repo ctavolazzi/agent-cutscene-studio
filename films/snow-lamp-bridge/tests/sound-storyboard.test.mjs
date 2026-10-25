@@ -16,7 +16,7 @@ import { CONFIG } from '../src/config.js';
 import { makeCamera } from '../scripts/lib/math.js';
 import { buildSoundMap, buildSoundDetail, soundDetails, makePredictor, makeSight, textBox, textOverlaps, MAP_SCALE } from '../scripts/lib/sound-map.js';
 import { buildTimeline, bedOnlyWindows, BED_ONLY, TL, DB } from '../scripts/lib/sound-timeline.js';
-import { buildSoundPanel, decodeFrames, panelFrame, fieldX, levelR, SF, FW, FH } from '../scripts/lib/sound-panel.js';
+import { buildSoundPanel, decodeFrames, panelFrame, fieldX, levelR, SF, FW, FH, PANEL_LIFT } from '../scripts/lib/sound-panel.js';
 import { sheetHtml } from '../scripts/sound-storyboard.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -331,7 +331,8 @@ test('panels: each frame is the shot\'s own, by its frame number', (t) => {
   if (!existsSync(VIDEO)) { t.diagnostic(`no export at ${VIDEO}: the decoded pixels are not compared`); return; }
   // the embedded image is that frame's pixels: all 15 frames decoded by number in one pass, as the script decodes them,
   // each equal to the frame decoded at n / FPS by time; control: the last shot's frame n + 1 differs
-  const rgb = (args) => { const r = spawnSync('ffmpeg', ['-v', 'error', ...args, '-vf', `scale=${CONFIG.res.w}:${CONFIG.res.h}:flags=neighbor`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 26 }); assert.equal(r.status, 0, String(r.stderr)); return r.stdout; };
+  // decoded the panels' way: nearest neighbour to the internal size, then the viewing lift the caption names
+  const rgb = (args, lift = PANEL_LIFT) => { const r = spawnSync('ffmpeg', ['-v', 'error', ...args, '-vf', `scale=${CONFIG.res.w}:${CONFIG.res.h}:flags=neighbor${lift ? `,${lift}` : ''}`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 26 }); assert.equal(r.status, 0, String(r.stderr)); return r.stdout; };
   const frames = SHOTS.map((s) => panelFrame(s)), pngs = decodeFrames(VIDEO, frames.map((f) => f.n));
   let embedded = null;
   for (const [i, s] of SHOTS.entries()) {
@@ -343,6 +344,8 @@ test('panels: each frame is the shot\'s own, by its frame number', (t) => {
   }
   const lastN = frames[frames.length - 1].n + 1;
   assert.ok(!embedded.equals(rgb(['-ss', String(lastN / FPS), '-i', VIDEO, '-frames:v', '1'])), `control: frame ${lastN} differs`);
+  // control: the lift is applied (the same frame decoded without it differs)
+  assert.ok(!embedded.equals(rgb(['-ss', String(frames[frames.length - 1].n / FPS), '-i', VIDEO, '-frames:v', '1'], null)), 'control: unlifted differs');
 });
 
 // ---------- labels ----------

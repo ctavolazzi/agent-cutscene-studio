@@ -611,3 +611,36 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Found about my own commits: the six commits before Sound 1 carry a co-author trailer that names a model, against this
   repo's rule. Rewriting them needs a force push, which was not allowed here; from now on the trailer names no model.
 - Gate: 120 tests pass; forbidden, build, determinism, cameras pass.
+
+### Sound 1.4 to 1.13 and Sound 2.1 to 2.4  The storyboard, the stage switch, the captions
+- Before: the cue catalogue only.
+- Actions: four builders in parallel worktrees, each followed by a checker and a fix pass (builders with checkers,
+  adapted). Two usage limits stopped them partway; each resumed from its worktree's gated commits.
+  - checks (s1-checks): `scripts/lib/sound-checks.js` (the 15 checks of SOUND-PLAN 4.3, film-generic),
+    `scripts/sound-report.js` (the film's glue: orders, windows, blockers, sync events), `scripts/lib/perturb.mjs` and
+    its module hooks (Sound 1.5: 17 perturbations, each in a child process), a vertical-axis guard in `spatial.js` (the
+    first-pass render stays byte identical, sha256 f80b1542), tests with planted faults. The checker's high finding
+    (the far door judged on screen through the car body) and five medium ones fixed.
+  - board (s1-board): `scripts/sound-storyboard.js` with `lib/sound-map.js`, `sound-timeline.js`, `sound-panel.js`:
+    the sound map, 4 detail maps, the timeline drawn like a DAW arrangement, 15 panels, the contact sheet, Excalidraw
+    (1491 elements in and out). The checker found hidden sources drawn as on screen, the engine drawn at full level from
+    14.0 (the rise ignored) and the bridge beds drawn as quieter: fixed, with the drawn levels and pans now tested.
+  - blockout (s2-blockout): `config.audio.stage` ('blockout' default, 'design' the first pass) and `audio.parked`
+    (['score']); `src/audio/layers/blockout/` (placeholders that read only cues.js); the score tests split out and
+    guarded; verify reads old sidecars as "made before the switch". The design stage with the score unparked renders
+    byte identical to the first pass. Voices timed exactly (each cue rendered alone before the master); the crossfade at
+    the place change checked.
+  - captions (s1-captions): `scripts/lib/captions.js` (review and SDH tracks, VTT, SRT, ASS), `scripts/spotting-reel.js`
+    (the 1080p picture with soft subtitles, video copied bit for bit; a 480x270 phone copy with the captions burned),
+    `capture.js --captions` and `--burn-captions`. The checker found the burned layout reflowing frame to frame and the
+    soft track wrapping past 3 lines: sticky layout, a fitted font size.
+- Merged: the four branches touch disjoint files. The merged gate found one interaction (the checks' spatial test used
+  the `LAYERS` export the blockout replaced): ported to the stage API.
+- Self-review of round 04 (`review/round-04/notes.md`): the run-down was planned 2 dB over the idle it continues
+  (now equal); shot 5's panel frame was black (the panels now show lifted frames, labelled). Two rulings: "feet before
+  the people" allows feet out of frame (the plan's 3.7 keeps B's off-screen steps); density counts bodies, not voice
+  groups (a car's parts fuse into one stream the ear follows). Their tests now check the rulings, with the old rules as
+  planted controls.
+- Report: 14 of 15 checks pass or report; sync finds 12 cues off their frame (6 scuffs, 6 cloth moves timed from keys),
+  carried to Sound 3.
+- Gate for this commit: 205 tests (202 pass, 3 skipped: the parked score, each with its printed reason); forbidden, build, determinism, cameras pass.

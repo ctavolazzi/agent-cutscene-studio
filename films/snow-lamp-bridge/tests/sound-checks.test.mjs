@@ -137,25 +137,32 @@ test('2 onScreen: on, hidden by a named blocker, off with its side, behind; a po
 });
 
 // ---------- 3 storyOrder ----------
-test('3 storyOrder: light before the car and anticipation before the moon hold; feet before the people fails on B\'s off-screen steps', () => {
+test('3 storyOrder: the three orders hold; B\'s off-screen steps in shot 5 pass, hidden or behind would not', () => {
   const s = run('storyOrder');
-  assert.equal(s.status, 'fail');
-  // finding: the four steps B takes round the car, off screen right in shot 5 (kept on purpose, SOUND-PLAN 3.7), break
-  // "through shot 5 the boots are heard on feet in frame"; the bodies are first seen at shot 6's start
-  // (the three scuffs before the bodies are seen, A's first and B's first two, are on screen)
-  assert.deepEqual(ids(s), ['foley.feet.B.04', 'foley.feet.B.05', 'foley.feet.B.06', 'foley.feet.B.07']);
-  assert.ok(s.rows.filter((x) => x.cue).every((x) => /^Feet before/.test(x.order) && x.detail === 'off (right)'));
+  assert.equal(s.status, 'pass', JSON.stringify(s.rows.filter((x) => x.cue)));
+  // the lead's ruling (round 04): "feet before the people" allows feet out of frame. The four steps B takes round the
+  // car, off screen right in shot 5, are kept on purpose (SOUND-PLAN 3.7) and show no body before shot 6
+  assert.deepEqual(REAL.orders[1].allow, ['on', 'off']);
+  const strict = SC.storyOrder({ ...REAL, orders: REAL.orders.map((o, i) => (i === 1 ? { ...o, allow: ['on'] } : o)) });
+  assert.deepEqual(ids(strict), ['foley.feet.B.04', 'foley.feet.B.05', 'foley.feet.B.06', 'foley.feet.B.07'], 'control: the strict rule finds them');
+  assert.ok(strict.rows.filter((x) => x.cue).every((x) => /^Feet before/.test(x.order) && x.detail === 'off (right)'));
   const early = CUES.filter((c) => c.enabled && c.family === 'scuff' && c.t0 < REAL.orders[1].t1).map((c) => c.id);
   assert.deepEqual(early, ['foley.scuff.A.1', 'foley.scuff.B.1', 'foley.scuff.B.2']);
-  assert.ok(early.every((id) => !ids(s).includes(id)));
   assert.equal(REAL.orders[1].t1, shot(6).start, 'the first frame showing a head is shot 6\'s first');
+  // control: a step planted behind the camera before the bodies are seen (shot 5 at 30.0, a point behind its lens)
+  const L = listenerAt(30.0), behind = [L.pos[0] - L.f[0] * 2, 0.02, L.pos[2] - L.f[2] * 2];
+  const hid = moved('foley.feet.A.01', 30.0, { id: 'planted.behind', place: () => behind });
+  assert.ok(ids(SC.storyOrder(withCues([hid]))).includes(hid.id), 'control: a step behind the camera');
   // control: an engine onset planted at 13.5
   const engine = moved('hard.engine.car.intake', 13.5, { id: 'hard.engine.car.early' });
   assert.ok(ids(SC.storyOrder(withCues([engine]))).includes(engine.id), 'control: an engine onset at 13.5');
-  // control: a scuff (boots too) planted where B's fourth step lands, off screen right in shot 5
+  // control: a scuff (boots too) planted where B's fourth step lands, off screen right in shot 5: the order selects
+  // scuffs (the strict rule finds it), and the ruling lets it through as it lets B's steps through
   const b4 = byId.get('foley.feet.B.04'), scuff = moved('foley.scuff.B.1', b4.t0, { id: 'planted.scuff', place: b4.place });
-  const s2 = SC.storyOrder(withCues([scuff]));
-  assert.ok(s2.rows.some((x) => x.cue === scuff.id && x.detail === 'off (right)'), 'control: an off-screen scuff');
+  const strictOrders = REAL.orders.map((o, i) => (i === 1 ? { ...o, allow: ['on'] } : o));
+  const s2 = SC.storyOrder({ ...withCues([scuff]), orders: strictOrders });
+  assert.ok(s2.rows.some((x) => x.cue === scuff.id && x.detail === 'off (right)'), 'control: an off-screen scuff, strict rule');
+  assert.ok(!ids(SC.storyOrder(withCues([scuff]))).includes(scuff.id), 'the ruling lets an off-screen scuff through');
   // and the definition is the input's: renamed orders print their own names, nothing of this film's
   const named = SC.storyOrder({ ...REAL, orders: [{ name: 'A planted order', kind: 'noOnset', t0: 0, t1: 0, select: () => false }] });
   assert.ok(named.definition.includes('A planted order') && !/moon|car|feet/.test(named.definition), named.definition);
@@ -313,19 +320,20 @@ test('10 flams: one person\'s contacts at least 30 ms apart; two prints 10 ms ap
 });
 
 // ---------- 11 density ----------
-test('11 density: more than 3 foreground streams fails; the car\'s four parts at its first light and shot 5\'s pile-up do', () => {
+test('11 density: the bars count bodies; never more than 3, while the streams peak at 6', () => {
   const d = run('density');
-  assert.equal(d.status, 'fail');
-  // findings: at 14.0 the car's four voice groups start together (one body, four streams by the definition); in shot 5
-  // the doors, the getting out, the cloth and the scuffs pile up (6 streams at 33.6 to 35.2, three bodies at most); the
-  // lean's two forearm rests with both coats (63.45); the shoulders closing in (94.5)
-  const fails = d.rows.filter((x) => x.fails);
-  assert.deepEqual([...new Set(fails.map((x) => x.shot))], [3, 5, 9, 13]);
-  assert.equal(Math.max(...d.rows.map((x) => x.peak)), 6);
+  // the lead's ruling (round 04): a car's intake, exhaust and tyres fuse into one object the ear follows, as one
+  // person's steps and cloth do, so the bars count bodies (REAL.density.by); the streams are still reported per run
+  assert.equal(REAL.density.by, 'body');
+  assert.equal(d.status, 'pass', JSON.stringify(d.rows.filter((x) => x.fails)));
+  assert.equal(Math.max(...d.rows.map((x) => x.peak)), 6, 'the stream peak, reported');
   assert.ok(d.rows.every((x) => x.bodies <= 3));
-  // control: four groups planted in shot 12's quiet
-  const four = [0, 1, 2, 3].map((i) => moved('hard.tick.car.03', 86, { id: `planted.${i}`, source: `planted:${i}` }));
-  assert.ok(SC.density(withCues(four)).rows.some((x) => x.shot === 12 && x.fails && x.peak === 4), 'control: four groups at one moment');
+  // control: counted by streams, as the plan first wrote it, the car's first light and shot 5's pile-up fail
+  const byStream = SC.density({ ...REAL, density: { ...REAL.density, by: 'stream' } });
+  assert.deepEqual([...new Set(byStream.rows.filter((x) => x.fails).map((x) => x.shot))], [3, 5, 9, 13], 'control: by streams');
+  // control: four bodies planted in shot 12's quiet fail by bodies too
+  const four = [0, 1, 2, 3].map((i) => moved('hard.tick.car.03', 86, { id: `planted.${i}`, source: `planted${i}:x`, person: null }));
+  assert.ok(SC.density(withCues(four)).rows.some((x) => x.shot === 12 && x.fails && x.bodies === 4), 'control: four bodies at one moment');
 });
 
 // ---------- 12 voices ----------

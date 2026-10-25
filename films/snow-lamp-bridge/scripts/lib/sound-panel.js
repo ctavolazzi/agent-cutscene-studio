@@ -38,9 +38,12 @@ export class PanelDraw extends Draw {
 // The frames numbered `ns` of a video (frame n shows t = n / fps), as PNG buffers at the film's internal size: scaled
 // down nearest-neighbour, so the export's whole-number upscale gives back the film's own pixels. One ffmpeg pass,
 // selected by frame number; the PNG stream is cut chunk by chunk at each IEND.
-export function decodeFrames(file, ns, { w = CONFIG.res.w, h = CONFIG.res.h } = {}) {
+// The panels show the frames lifted, as every review of this film does for its dark shots (shot 5 averages under 2 of
+// 255): the marks must land on something you can see. The caption says so; the film itself is not changed.
+export const PANEL_LIFT = "curves=all='0/0 0.25/0.6 1/1'";
+export function decodeFrames(file, ns, { w = CONFIG.res.w, h = CONFIG.res.h, lift = PANEL_LIFT } = {}) {
   const sel = [...new Set(ns)].sort((a, b) => a - b);
-  const vf = `select='${sel.map((n) => `eq(n,${n})`).join('+')}',scale=${w}:${h}:flags=neighbor`;
+  const vf = `select='${sel.map((n) => `eq(n,${n})`).join('+')}',scale=${w}:${h}:flags=neighbor${lift ? `,${lift}` : ''}`;
   const r = spawnSync('ffmpeg', ['-v', 'error', '-i', file, '-vf', vf, '-fps_mode', 'passthrough', '-f', 'image2pipe', '-c:v', 'png', '-'], { maxBuffer: 1 << 28 });
   if (r.status !== 0) throw new Error(`ffmpeg could not decode frames ${sel.join(', ')} of ${file}: ${String(r.stderr).trim()}`);
   const buf = r.stdout, out = new Map();
@@ -128,7 +131,7 @@ export function buildSoundPanel(shot, { cues = CUES, w = WORLD, frame = null, pr
     if (it.k === 'text') { const b = textBox(it); d.rect(b.x0 - 1.5, b.y0 - 1, b.x1 - b.x0 + 3, b.y1 - b.y0 + 2, { fill: '#0b1020', fillOp: 0.7 }); }
     d.add(it);
   }
-  const capLines = wrapText(`Frame ${fr.n} (${fmtT(fr.t)} s) of the published export. Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); barred, in frame but hidden (the list names what hides it); dashed, offered and off; diamond at the edge, out of frame.`, FW - 8, 11);
+  const capLines = wrapText(`Frame ${fr.n} (${fmtT(fr.t)} s) of the published export, lifted for viewing (${PANEL_LIFT}; the film is darker). Marks: filled, sounding in this frame; hollow, sounding elsewhere in the shot (marked where it is then); barred, in frame but hidden (the list names what hides it); dashed, offered and off; diamond at the edge, out of frame.`, FW - 8, 11);
   capLines.forEach((line, i) => L.fixed(4, FH + 17 + i * 14, line, { size: 11, fill: '#c9d4ee' }));
 
   // ---- the stereo field over the whole shot

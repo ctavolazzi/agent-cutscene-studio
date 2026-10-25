@@ -1,0 +1,983 @@
+WEBVTT
+
+NOTE review track from src/audio/cues.js (scripts/lib/captions.js): 95 captions of 149 cues, at most 3 lines; the cue identifiers list the ids on screen: a caption's joined by +, captions by a space, lines by |, an empty line as -
+
+NOTE ticks: the step lane, one per step: walker, contact in ms, on or off screen, cue id
+A 31756 on foley.feet.A.01
+A 32034 on foley.feet.A.02
+A 33019 on foley.feet.A.03
+B 33312 on foley.feet.B.01
+B 34499 on foley.feet.B.02
+B 34600 on foley.feet.B.03
+A 35179 on foley.feet.A.04
+A 35675 on foley.feet.A.05
+A 36172 on foley.feet.A.06
+B 36228 off foley.feet.B.04
+A 36668 on foley.feet.A.07
+B 36785 off foley.feet.B.05
+A 37164 on foley.feet.A.08
+B 37286 off foley.feet.B.06
+B 37665 off foley.feet.B.07
+A 37678 on foley.feet.A.09
+A 38171 on foley.feet.A.10
+A 38655 on foley.feet.A.11
+A 39140 on foley.feet.A.12
+A 39291 on foley.feet.A.13
+A 39733 on foley.feet.A.14
+A 40097 on foley.feet.A.15
+A 40479 on foley.feet.A.16
+B 45530 on foley.feet.B.08
+A 45614 on foley.feet.A.17
+B 46415 on foley.feet.B.09
+A 46569 on foley.feet.A.18
+B 47301 on foley.feet.B.10
+A 47525 on foley.feet.A.19
+B 48186 on foley.feet.B.11
+A 48480 on foley.feet.A.20
+B 49071 on foley.feet.B.12
+A 49435 on foley.feet.A.21
+B 49957 on foley.feet.B.13
+A 50390 on foley.feet.A.22
+B 50842 on foley.feet.B.14
+A 51346 on foley.feet.A.23
+B 51727 on foley.feet.B.15
+A 52301 on foley.feet.A.24
+B 52613 on foley.feet.B.16
+A 53256 on foley.feet.A.25
+B 53498 on foley.feet.B.17
+A 54200 on foley.feet.A.26
+B 54295 on foley.feet.B.18
+B 54977 on foley.feet.B.19
+A 55102 on foley.feet.A.27
+B 55658 on foley.feet.B.20
+A 55871 on foley.feet.A.28
+B 56340 on foley.feet.B.21
+A 56344 on foley.feet.A.29
+A 56906 on foley.feet.A.30
+B 56928 on foley.feet.B.22
+B 57430 on foley.feet.B.23
+A 57808 on foley.feet.A.31
+B 57834 on foley.feet.B.24
+A 58711 on foley.feet.A.32
+B 59381 on foley.feet.B.25
+A 59627 on foley.feet.A.33
+B 60404 off foley.feet.B.26
+A 60725 off foley.feet.A.34
+B 61076 off foley.feet.B.27
+A 61691 off foley.feet.A.35
+B 61724 off foley.feet.B.28
+
+NOTE layout: the burn, one caption a line: ids, line, x in px right of the band inset, horizontal scale, in and out in ms, text
+bg.hum.lamp.bed 0 0 1 0 112000 the lamp hums
+bg.city.street.bed+bg.wind.street.bed 0 68 1 0 54000 street: city, wind
+hard.engine.car.exhaust 0 153 1 14000 29000 the exhaust burbles
+hard.engine.car.intake 0 252 1 14000 29000 the engine drives
+hard.tyres.car.front+hard.tyres.car.rear 0 340 1 14000 29000 tyres in the snow
+hard.arrival.car.rise 1 0 1 14000 16500 the car rises out of the quiet <c.new>(new)</c>
+hard.arrival.car.swell 1 0 1 17470 29000 the car swells as it comes in <c.new>(new)</c>
+hard.brake.car.pads1 1 156 1 19038 20601 brakes <c.new>(new)</c>
+hard.brake.car.pads2 1 156 1 21987 29000 brakes <c.new>(new)</c>
+hard.brake.car.creak 1 224 0.9 28381 29215 brakes creak
+hard.engine.car.exhaust-idle 1 285 0.9 29000 36200 <i>the exhaust idles</i>
+hard.engine.car.intake-idle 1 363 0.9 29000 36200 <i>the engine idles</i>
+hard.settle.car.dip 0 153 0.9 29000 29833 the car settles on its springs
+hard.settle.car.rebound 0 276 0.9 29350 30183 the springs rebound
+hard.cabin.car.handbrake 1 0 0.9 29700 30533 handbrake, inside the car <c.new>(new)</c>
+hard.cabin.A.belt 0 153 0.9 30000 30833 <c.A>seat belt comes off <c.new>(new)</c></c>
+hard.door.driver.unlatch 0 265 0.9 30440 31273 <c.A><i>driver door unlatches</i></c>
+hard.engine.car.door-open 2 0 0.9 30500 35600 <i>the idle, louder through an open door</i> <c.offered>(offered)</c>
+hard.door.driver.swing-open 0 360 0.9 30500 31333 <c.A><i>driver door swings open</i></c>
+hard.unload.A.slide 0 153 0.9 30900 31800 <c.A>slides off the seat <c.new>(new)</c></c>
+hard.door.driver.stop 2 191 0.9 31100 31933 <c.A><i>driver door stops, open</i> <c.new>(new)</c></c>
+hard.cabin.B.belt 2 319 0.9 31500 32333 <c.B>seat belt comes off <c.new>(new)</c></c>
+foley.feet.A.01+foley.feet.A.02 0 259 0.9 31756 32589 <c.A>steps, road</c>
+hard.unload.A.rise 1 0 0.9 31800 32633 <c.A>the seat springs back as A rises <c.new>(new)</c></c>
+hard.door.passenger.unlatch 2 191 0.9 31940 32773 <c.B>passenger door unlatches</c>
+hard.door.passenger.swing-open 1 155 0.9 32000 32833 <c.B>passenger door swings open</c>
+hard.unload.B.slide 0 153 0.9 32200 33200 <c.B>slides off the seat <c.new>(new)</c></c>
+foley.moves.A.walk1 0 313 0.9 32400 33233 <c.A><i>coat swishes with the walk</i> <c.new>(new)</c></c>
+hard.door.passenger.stop 2 304 0.9 32600 33433 <c.B>passenger door stops, open <c.new>(new)</c></c>
+foley.feet.A.03 2 191 0.9 33019 33852 <c.A>walks, road</c>
+foley.moves.A.turn1 2 246 0.9 33200 34033 <c.A><i>turns</i> <c.new>(new)</c></c>
+hard.unload.B.rise 1 0 0.9 33200 34033 <c.B>the seat springs back as B rises <c.new>(new)</c></c>
+foley.scuff.A.1 1 155 0.9 33224 34057 <c.A>boots scuff the snow <c.new>(new)</c></c>
+foley.feet.B.01 0 153 0.9 33312 34146 <c.B>lands on both boots, road</c>
+foley.moves.B.walk1 0 265 0.9 33800 34633 <c.B>jacket swishes with the walk <c.new>(new)</c></c>
+hard.door.driver.swing-shut 2 301 0.9 33900 34733 <c.A>driver door swings shut <c.new>(new)</c></c>
+hard.door.driver.latch 2 191 0.9 34500 35333 <c.A>driver door shuts</c>
+foley.feet.B.02+foley.feet.B.03 0 414 0.9 34499 35333 <c.B>walks, road</c>
+foley.moves.A.walk2 1 0 0.9 34600 40600 <c.A><i>coat swishes with the walk</i> <c.new>(new)</c></c>
+foley.scuff.B.1 1 135 0.9 34610 35443 <c.B>boots scuff the snow <c.new>(new)</c></c>
+foley.moves.B.turn1 0 153 0.9 34600 35433 <c.B>turns <c.new>(new)</c></c>
+foley.moves.B.turn2 0 208 0.9 35000 35833 <c.B>turns <c.new>(new)</c></c>
+hard.door.passenger.swing-shut 0 263 0.9 35000 35833 <c.B>passenger door swings shut <c.new>(new)</c></c>
+foley.scuff.B.2 2 268 0.9 35130 35963 <c.B>boots scuff the snow <c.new>(new)</c></c>
+foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 2 386 0.9 35179 39591 <c.A>walks, road</c>
+hard.door.passenger.latch 1 135 0.9 35600 36433 <c.B>passenger door shuts</c>
+foley.moves.B.walk2 2 0 0.9 35700 37800 <c.B><i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+hard.stop.car.rundown 0 153 0.9 36200 37033 the engine runs down
+foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 1 231 0.9 36228 37965 <c.B><i>walks, sidewalk</i></c>
+hard.tick.car.01 0 153 1 37700 38533 <i>hot metal ticks</i>
+hard.tick.car.02 0 153 1 38930 39764 <i>hot metal ticks</i>
+foley.feet.A.14+foley.feet.A.15+foley.feet.A.16 1 135 1 39733 40779 <c.A>walks, sidewalk</c>
+foley.moves.A.turn2 1 214 1 40600 41600 <c.A>turns <c.new>(new)</c></c>
+foley.scuff.A.2 1 275 1 40660 41528 <c.A>boots scuff the snow <c.new>(new)</c></c>
+hard.tick.car.03 0 153 1 40700 41534 hot metal ticks
+hard.tick.car.04 0 153 1 42968 43801 hot metal ticks
+foley.moves.A.walk3 0 153 1 44500 62000 <c.A>coat swishes with the walk <c.new>(new)</c></c>
+foley.moves.B.walk3 1 0 1 44500 62000 <c.B>jacket swishes with the walk <c.new>(new)</c></c>
+foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22 1 157 1 45530 57228 <c.B>walks, sidewalk</c>
+foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 0 311 1 45614 55402 <c.A>walks, sidewalk</c>
+hard.tick.car.05 0 390 1 46672 47505 <i>hot metal ticks</i>
+hard.tick.car.06 0 390 1 49665 50498 <i>hot metal ticks</i>
+hard.tick.car.07 0 390 1 52924 53757 <i>hot metal ticks</i>
+bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed 1 236 1 54000 112000 bridge: city, water, wind
+foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 0 311 1 55871 59927 <c.A>walks, deck</c>
+hard.tick.car.08 0 68 1 56307 57140 hot metal ticks
+foley.feet.B.23+foley.feet.B.24+foley.feet.B.25 1 157 1 57430 59681 <c.B>walks, deck</c>
+foley.feet.B.26+foley.feet.B.27+foley.feet.B.28 1 157 1 60404 62024 <c.B><i>walks, deck</i></c>
+foley.feet.A.34+foley.feet.A.35 0 311 1 60725 61991 <c.A><i>walks, deck</i></c>
+hard.tick.car.09 0 68 1 61101 61935 <i>hot metal ticks</i>
+foley.moves.A.lean 1 355 1 62000 63500 <c.A>leans on the parapet</c>
+foley.moves.B.lean 1 0 1 62000 63500 <c.B>leans on the parapet</c>
+foley.moves.A.rest 0 68 1 63448 64282 <c.A>forearms come to rest on the stone</c>
+foley.moves.B.rest 0 237 1 63451 64284 <c.B>forearms come to rest on the stone</c>
+hard.tick.car.10 1 355 1 65655 66488 <i>hot metal ticks</i>
+bg.ambience.wind.ease 1 355 1 68000 76000 the wind eases
+foley.moves.A.turn3 1 355 1 77500 78500 <c.A>turns into the lee</c>
+foley.scuff.A.3 1 0 1 77611 78444 <c.A><i>boots scuff the snow</i> <c.new>(new)</c></c>
+foley.moves.A.cup 0 68 1 78069 78903 <c.A>cups both hands round the lighter <c.new>(new)</c></c>
+foley.lighter.A.strike 0 259 1 78530 79363 <c.A>the lighter's wheel strikes</c>
+foley.lighter.A.flame 0 384 1 78600 80100 <c.A>the flame flutters</c>
+foley.lighter.A.release 1 355 1 80100 80933 <c.A>the lighter clicks shut</c>
+foley.drag.A.1 1 0 1 80200 81033 <c.A>draws on the cigarette</c>
+foley.breath.A.exhale1 1 103 1 81000 83800 <c.A>exhales <c.offered>(offered)</c></c>
+foley.moves.A.turn4 1 0 1 82000 84000 <c.A>turns out of the lee</c>
+foley.scuff.A.4 0 68 1 82538 83462 <c.A><i>boots scuff the snow</i> <c.new>(new)</c></c>
+foley.drag.A.2 1 355 1 89200 90033 <c.A>draws on the cigarette</c>
+foley.breath.A.exhale2 1 0 1 90000 92800 <c.A>exhales</c>
+foley.moves.A.shift1 1 355 1 94200 95800 <c.A>shifts closer <c.new>(new)</c></c>
+foley.moves.B.shift1 1 0 1 94200 95800 <c.B>shifts closer <c.new>(new)</c></c>
+foley.scuff.A.5 1 83 1 94454 95547 <c.A>boots scuff the snow <c.new>(new)</c></c>
+foley.scuff.B.3 0 68 1 94454 95547 <c.B>boots scuff the snow <c.new>(new)</c></c>
+foley.drag.A.3 1 355 1 97000 97833 <c.A>draws on the cigarette</c>
+foley.breath.A.exhale3 1 0 1 97800 100600 <c.A>exhales <c.offered>(offered)</c></c>
+bg.ambience.night.open 1 355 1 100000 108000 the night opens
+
+1 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed
+00:00:00.000 --> 00:00:14.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+
+2 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.rise
+00:00:14.000 --> 00:00:16.500 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car rises out of the quiet <c.new>(new)</c>
+
+3 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear
+00:00:16.500 --> 00:00:17.470 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+
+4 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell
+00:00:17.470 --> 00:00:19.038 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <c.new>(new)</c>
+
+5 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell hard.brake.car.pads1
+00:00:19.038 --> 00:00:20.601 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <c.new>(new)</c> · brakes <c.new>(new)</c>
+
+6 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell
+00:00:20.601 --> 00:00:21.987 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <c.new>(new)</c>
+
+7 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell hard.brake.car.pads2
+00:00:21.987 --> 00:00:28.381 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <c.new>(new)</c> · brakes <c.new>(new)</c>
+
+8 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell hard.brake.car.pads2 hard.brake.car.creak
+00:00:28.381 --> 00:00:29.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <c.new>(new)</c> · brakes <c.new>(new)</c> · brakes creak
+
+9 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip | hard.brake.car.creak hard.engine.car.exhaust-idle hard.engine.car.intake-idle
+00:00:29.000 --> 00:00:29.215 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the car settles on its springs
+brakes creak · <i>the exhaust idles</i> · <i>the engine idles</i>
+
+10 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip | hard.engine.car.exhaust-idle hard.engine.car.intake-idle
+00:00:29.215 --> 00:00:29.350 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the car settles on its springs
+<i>the exhaust idles</i> · <i>the engine idles</i>
+
+11 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip hard.settle.car.rebound | hard.engine.car.exhaust-idle hard.engine.car.intake-idle
+00:00:29.350 --> 00:00:29.700 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the car settles on its springs · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i>
+
+12 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip hard.settle.car.rebound | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake
+00:00:29.700 --> 00:00:29.833 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the car settles on its springs · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+
+13 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.rebound | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake
+00:00:29.833 --> 00:00:30.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+
+14 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.rebound hard.cabin.A.belt | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake
+00:00:30.000 --> 00:00:30.183 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the springs rebound   <c.A>A: seat belt comes off <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+
+15 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake
+00:00:30.183 --> 00:00:30.440 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: seat belt comes off <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+
+16 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake
+00:00:30.440 --> 00:00:30.500 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: seat belt comes off <c.new>(new)</c> · <i>driver door unlatches</i></c>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+
+17 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake | hard.engine.car.door-open
+00:00:30.500 --> 00:00:30.533 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: seat belt comes off <c.new>(new)</c> · <i>driver door unlatches</i> · <i>driver door swings open</i></c>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <c.new>(new)</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>
+
+18 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open
+00:00:30.533 --> 00:00:30.833 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: seat belt comes off <c.new>(new)</c> · <i>driver door unlatches</i> · <i>driver door swings open</i></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>
+
+19 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open
+00:00:30.833 --> 00:00:30.900 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>driver door unlatches</i> · <i>driver door swings open</i></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>
+
+20 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch hard.door.driver.swing-open hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open
+00:00:30.900 --> 00:00:31.100 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>driver door unlatches</i> · <i>driver door swings open</i> · slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>
+
+21 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch hard.door.driver.swing-open hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop
+00:00:31.100 --> 00:00:31.273 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>driver door unlatches</i> · <i>driver door swings open</i> · slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>
+
+22 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.swing-open hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop
+00:00:31.273 --> 00:00:31.333 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>driver door swings open</i> · slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>
+
+23 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop
+00:00:31.333 --> 00:00:31.500 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>
+
+24 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop hard.cabin.B.belt
+00:00:31.500 --> 00:00:31.756 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>   <c.B>B: seat belt comes off <c.new>(new)</c></c>
+
+25 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide foley.feet.A.01+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop hard.cabin.B.belt
+00:00:31.756 --> 00:00:31.800 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: slides off the seat <c.new>(new)</c> · steps, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>   <c.B>B: seat belt comes off <c.new>(new)</c></c>
+
+26 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise | hard.engine.car.door-open hard.door.driver.stop hard.cabin.B.belt
+00:00:31.800 --> 00:00:31.933 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>driver door stops, open</i> <c.new>(new)</c></c>   <c.B>B: seat belt comes off <c.new>(new)</c></c>
+
+27 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise | hard.engine.car.door-open hard.cabin.B.belt
+00:00:31.933 --> 00:00:31.940 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: seat belt comes off <c.new>(new)</c></c>
+
+28 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise | hard.engine.car.door-open hard.cabin.B.belt hard.door.passenger.unlatch
+00:00:31.940 --> 00:00:32.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: seat belt comes off <c.new>(new)</c> · passenger door unlatches</c>
+
+29 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.cabin.B.belt hard.door.passenger.unlatch
+00:00:32.000 --> 00:00:32.200 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: seat belt comes off <c.new>(new)</c> · passenger door unlatches</c>
+
+30 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.cabin.B.belt hard.door.passenger.unlatch
+00:00:32.200 --> 00:00:32.333 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: seat belt comes off <c.new>(new)</c> · passenger door unlatches</c>
+
+31 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch
+00:00:32.333 --> 00:00:32.400 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road</c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door unlatches</c>
+
+32 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch
+00:00:32.400 --> 00:00:32.589 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: steps, road · <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door unlatches</c>
+
+33 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch
+00:00:32.589 --> 00:00:32.600 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door unlatches</c>
+
+34 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch hard.door.passenger.stop
+00:00:32.600 --> 00:00:32.633 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: the seat springs back as A rises <c.new>(new)</c></c>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door unlatches · passenger door stops, open <c.new>(new)</c></c>
+
+35 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch hard.door.passenger.stop
+00:00:32.633 --> 00:00:32.773 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door unlatches · passenger door stops, open <c.new>(new)</c></c>
+
+36 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.stop
+00:00:32.773 --> 00:00:32.833 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.B>B: passenger door swings open</c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+37 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.passenger.stop
+00:00:32.833 --> 00:00:33.019 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+38 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open foley.feet.A.03 hard.door.passenger.stop
+00:00:33.019 --> 00:00:33.200 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: slides off the seat <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road</c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+39 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop
+00:00:33.200 --> 00:00:33.224 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+40 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop
+00:00:33.224 --> 00:00:33.233 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+41 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop
+00:00:33.233 --> 00:00:33.312 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+42 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop
+00:00:33.312 --> 00:00:33.433 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>   <c.B>B: passenger door stops, open <c.new>(new)</c></c>
+
+43 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1
+00:00:33.433 --> 00:00:33.800 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>
+
+44 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1
+00:00:33.800 --> 00:00:33.852 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road · jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road · <i>turns</i> <c.new>(new)</c></c>
+
+45 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.moves.A.turn1
+00:00:33.852 --> 00:00:33.900 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road · jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>turns</i> <c.new>(new)</c></c>
+
+46 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open foley.moves.A.turn1 hard.door.driver.swing-shut
+00:00:33.900 --> 00:00:34.033 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road · jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>   <c.B>B: the seat springs back as B rises <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: <i>turns</i> <c.new>(new)</c> · driver door swings shut <c.new>(new)</c></c>
+
+47 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 | hard.engine.car.door-open hard.door.driver.swing-shut
+00:00:34.033 --> 00:00:34.057 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road · jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c></c>
+
+48 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.swing-shut
+00:00:34.057 --> 00:00:34.146 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: lands on both boots, road · jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c></c>
+
+49 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.swing-shut
+00:00:34.146 --> 00:00:34.499 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: jacket swishes with the walk <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c></c>
+
+50 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02+foley.feet.B.03 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.swing-shut
+00:00:34.499 --> 00:00:34.500 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c></c>
+
+51 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02+foley.feet.B.03 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.swing-shut hard.door.driver.latch
+00:00:34.500 --> 00:00:34.600 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, road</c>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c> · driver door shuts</c>
+
+52 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 | hard.engine.car.door-open hard.door.driver.swing-shut hard.door.driver.latch
+00:00:34.600 --> 00:00:34.610 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, road · turns <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c> · driver door shuts</c>
+
+53 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.swing-shut hard.door.driver.latch
+00:00:34.610 --> 00:00:34.633 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, road · turns <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c> · driver door shuts</c>
+
+54 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.swing-shut hard.door.driver.latch
+00:00:34.633 --> 00:00:34.733 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: walks, road · turns <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door swings shut <c.new>(new)</c> · driver door shuts</c>
+
+55 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.latch
+00:00:34.733 --> 00:00:35.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: walks, road · turns <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door shuts</c>
+
+56 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.latch
+00:00:35.000 --> 00:00:35.130 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: walks, road · turns <c.new>(new)</c> · turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door shuts</c>
+
+57 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.latch foley.scuff.B.2
+00:00:35.130 --> 00:00:35.179 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: walks, road · turns <c.new>(new)</c> · turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door shuts</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+58 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03 foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.latch foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2
+00:00:35.179 --> 00:00:35.333 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: walks, road · turns <c.new>(new)</c> · turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: driver door shuts · walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+59 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2
+00:00:35.333 --> 00:00:35.433 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: turns <c.new>(new)</c> · turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+60 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2
+00:00:35.433 --> 00:00:35.443 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+61 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2
+00:00:35.443 --> 00:00:35.600 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<i>the idle, louder through an open door</i> <c.offered>(offered)</c>   <c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+62 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2
+00:00:35.600 --> 00:00:35.700 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts</c>
+<c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+
+63 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2 hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2 foley.moves.B.walk2
+00:00:35.700 --> 00:00:35.833 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.B>B: turns <c.new>(new)</c> · passenger door swings shut <c.new>(new)</c></c>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts</c>
+<c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c> · <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+64 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2 foley.moves.B.walk2
+00:00:35.833 --> 00:00:35.963 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts</c>
+<c.A>A: walks, road</c>   <c.B>B: boots scuff the snow <c.new>(new)</c> · <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+65 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:35.963 --> 00:00:36.200 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts</c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+66 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown | foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:36.200 --> 00:00:36.228 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the engine runs down
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts</c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+67 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown | foley.moves.A.walk2 hard.door.passenger.latch foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:36.228 --> 00:00:36.433 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the engine runs down
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: passenger door shuts · <i>walks, sidewalk</i></c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+68 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown | foley.moves.A.walk2 foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:36.433 --> 00:00:37.033 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · the engine runs down
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: <i>walks, sidewalk</i></c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+69 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:37.033 --> 00:00:37.700 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: <i>walks, sidewalk</i></c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+70 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2 foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2
+00:00:37.700 --> 00:00:37.800 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: <i>walks, sidewalk</i></c>
+<c.A>A: walks, road</c>   <c.B>B: <i>jacket swishes with the walk</i> <c.new>(new)</c></c>
+
+71 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2 foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13
+00:00:37.800 --> 00:00:37.965 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>   <c.B>B: <i>walks, sidewalk</i></c>
+<c.A>A: walks, road</c>
+
+72 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13
+00:00:37.965 --> 00:00:38.533 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<c.A>A: walks, road</c>
+
+73 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13
+00:00:38.533 --> 00:00:38.930 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<c.A>A: walks, road</c>
+
+74 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13
+00:00:38.930 --> 00:00:39.591 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+<c.A>A: walks, road</c>
+
+75 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2
+00:00:39.591 --> 00:00:39.733 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c></c>
+
+76 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2 foley.feet.A.14+foley.feet.A.15+foley.feet.A.16
+00:00:39.733 --> 00:00:39.764 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c> · walks, sidewalk</c>
+
+77 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 foley.feet.A.14+foley.feet.A.15+foley.feet.A.16
+00:00:39.764 --> 00:00:40.600 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: <i>coat swishes with the walk</i> <c.new>(new)</c> · walks, sidewalk</c>
+
+78 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.feet.A.14+foley.feet.A.15+foley.feet.A.16 foley.moves.A.turn2
+00:00:40.600 --> 00:00:40.660 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: walks, sidewalk · turns <c.new>(new)</c></c>
+
+79 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.feet.A.14+foley.feet.A.15+foley.feet.A.16 foley.moves.A.turn2 foley.scuff.A.2
+00:00:40.660 --> 00:00:40.700 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: walks, sidewalk · turns <c.new>(new)</c> · boots scuff the snow <c.new>(new)</c></c>
+
+80 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.feet.A.14+foley.feet.A.15+foley.feet.A.16 foley.moves.A.turn2 foley.scuff.A.2
+00:00:40.700 --> 00:00:40.779 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · hot metal ticks
+<c.A>A: walks, sidewalk · turns <c.new>(new)</c> · boots scuff the snow <c.new>(new)</c></c>
+
+81 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.moves.A.turn2 foley.scuff.A.2
+00:00:40.779 --> 00:00:41.528 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · hot metal ticks
+<c.A>A: turns <c.new>(new)</c> · boots scuff the snow <c.new>(new)</c></c>
+
+82 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.moves.A.turn2
+00:00:41.528 --> 00:00:41.534 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · hot metal ticks
+<c.A>A: turns <c.new>(new)</c></c>
+
+83 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.turn2
+00:00:41.534 --> 00:00:41.600 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+<c.A>A: turns <c.new>(new)</c></c>
+
+84 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed
+00:00:41.600 --> 00:00:42.968 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+
+85 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.04
+00:00:42.968 --> 00:00:43.801 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · hot metal ticks
+
+86 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed
+00:00:43.801 --> 00:00:44.500 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums
+
+87 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 | foley.moves.B.walk3
+00:00:44.500 --> 00:00:45.530 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c></c>
+
+88 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:45.530 --> 00:00:45.614 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+89 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:45.614 --> 00:00:46.672 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+90 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.05 foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:46.672 --> 00:00:47.505 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+91 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:47.505 --> 00:00:49.665 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+92 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.06 foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:49.665 --> 00:00:50.498 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+93 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:50.498 --> 00:00:52.924 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+94 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.07 foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:52.924 --> 00:00:53.757 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums · <i>hot metal ticks</i>   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+95 bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:53.757 --> 00:00:54.000 line:0 position:0% align:start size:100%
+street: city, wind · the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+<c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+96 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:54.000 --> 00:00:55.402 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+97 bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:55.402 --> 00:00:55.871 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+98 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:55.871 --> 00:00:56.307 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+99 bg.hum.lamp.bed hard.tick.car.08 foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:56.307 --> 00:00:57.140 line:0 position:0% align:start size:100%
+the lamp hums · hot metal ticks   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+100 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22
+00:00:57.140 --> 00:00:57.228 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, sidewalk</c>
+
+101 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3
+00:00:57.228 --> 00:00:57.430 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c></c>
+
+102 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.23+foley.feet.B.24+foley.feet.B.25
+00:00:57.430 --> 00:00:59.681 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · walks, deck</c>
+
+103 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3
+00:00:59.681 --> 00:00:59.927 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · walks, deck</c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c></c>
+
+104 bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3
+00:00:59.927 --> 00:01:00.404 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c></c>
+
+105 bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28
+00:01:00.404 --> 00:01:00.725 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+
+106 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28
+00:01:00.725 --> 00:01:01.101 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+
+107 bg.hum.lamp.bed hard.tick.car.09 foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28
+00:01:01.101 --> 00:01:01.935 line:0 position:0% align:start size:100%
+the lamp hums · <i>hot metal ticks</i>   <c.A>A: coat swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+
+108 bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28
+00:01:01.935 --> 00:01:01.991 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+
+109 bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28
+00:01:01.991 --> 00:01:02.000 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: coat swishes with the walk <c.new>(new)</c></c>
+bridge: city, water, wind   <c.B>B: jacket swishes with the walk <c.new>(new)</c> · <i>walks, deck</i></c>
+
+110 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean foley.feet.B.26+foley.feet.B.27+foley.feet.B.28 foley.moves.B.lean
+00:01:02.000 --> 00:01:02.024 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: leans on the parapet</c>   <c.B>B: <i>walks, deck</i> · leans on the parapet</c>
+
+111 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean foley.moves.B.lean
+00:01:02.024 --> 00:01:03.448 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: leans on the parapet</c>   <c.B>B: leans on the parapet</c>
+
+112 bg.hum.lamp.bed foley.moves.A.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean foley.moves.B.lean
+00:01:03.448 --> 00:01:03.451 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: forearms come to rest on the stone</c>
+bridge: city, water, wind   <c.A>A: leans on the parapet</c>   <c.B>B: leans on the parapet</c>
+
+113 bg.hum.lamp.bed foley.moves.A.rest foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean foley.moves.B.lean
+00:01:03.451 --> 00:01:03.500 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: forearms come to rest on the stone</c>   <c.B>B: forearms come to rest on the stone</c>
+bridge: city, water, wind   <c.A>A: leans on the parapet</c>   <c.B>B: leans on the parapet</c>
+
+114 bg.hum.lamp.bed foley.moves.A.rest foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:03.500 --> 00:01:04.282 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: forearms come to rest on the stone</c>   <c.B>B: forearms come to rest on the stone</c>
+bridge: city, water, wind
+
+115 bg.hum.lamp.bed foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:04.282 --> 00:01:04.284 line:0 position:0% align:start size:100%
+the lamp hums   <c.B>B: forearms come to rest on the stone</c>
+bridge: city, water, wind
+
+116 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:04.284 --> 00:01:05.655 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+117 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed hard.tick.car.10
+00:01:05.655 --> 00:01:06.488 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind · <i>hot metal ticks</i>
+
+118 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:06.488 --> 00:01:08.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+119 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed bg.ambience.wind.ease
+00:01:08.000 --> 00:01:16.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind · the wind eases
+
+120 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:16.000 --> 00:01:17.500 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+121 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3
+00:01:17.500 --> 00:01:17.611 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: turns into the lee</c>
+
+122 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3 foley.scuff.A.3
+00:01:17.611 --> 00:01:18.069 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: turns into the lee · <i>boots scuff the snow</i> <c.new>(new)</c></c>
+
+123 bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3 foley.scuff.A.3
+00:01:18.069 --> 00:01:18.444 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: cups both hands round the lighter <c.new>(new)</c></c>
+bridge: city, water, wind   <c.A>A: turns into the lee · <i>boots scuff the snow</i> <c.new>(new)</c></c>
+
+124 bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3
+00:01:18.444 --> 00:01:18.500 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: cups both hands round the lighter <c.new>(new)</c></c>
+bridge: city, water, wind   <c.A>A: turns into the lee</c>
+
+125 bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:18.500 --> 00:01:18.530 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: cups both hands round the lighter <c.new>(new)</c></c>
+bridge: city, water, wind
+
+126 bg.hum.lamp.bed foley.moves.A.cup foley.lighter.A.strike | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:18.530 --> 00:01:18.600 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: cups both hands round the lighter <c.new>(new)</c> · the lighter's wheel strikes</c>
+bridge: city, water, wind
+
+127 bg.hum.lamp.bed foley.moves.A.cup foley.lighter.A.strike foley.lighter.A.flame | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:18.600 --> 00:01:18.903 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: cups both hands round the lighter <c.new>(new)</c> · the lighter's wheel strikes · the flame flutters</c>
+bridge: city, water, wind
+
+128 bg.hum.lamp.bed foley.lighter.A.strike foley.lighter.A.flame | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:18.903 --> 00:01:19.363 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: the lighter's wheel strikes · the flame flutters</c>
+bridge: city, water, wind
+
+129 bg.hum.lamp.bed foley.lighter.A.flame | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:19.363 --> 00:01:20.100 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: the flame flutters</c>
+bridge: city, water, wind
+
+130 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.lighter.A.release
+00:01:20.100 --> 00:01:20.200 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: the lighter clicks shut</c>
+
+131 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.lighter.A.release foley.drag.A.1
+00:01:20.200 --> 00:01:20.933 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: the lighter clicks shut · draws on the cigarette</c>
+
+132 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.1
+00:01:20.933 --> 00:01:21.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette</c>
+
+133 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.1 foley.breath.A.exhale1
+00:01:21.000 --> 00:01:21.033 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette · exhales <c.offered>(offered)</c></c>
+
+134 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale1
+00:01:21.033 --> 00:01:22.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: exhales <c.offered>(offered)</c></c>
+
+135 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale1 foley.moves.A.turn4
+00:01:22.000 --> 00:01:22.538 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: exhales <c.offered>(offered)</c> · turns out of the lee</c>
+
+136 bg.hum.lamp.bed foley.scuff.A.4 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale1 foley.moves.A.turn4
+00:01:22.538 --> 00:01:23.462 line:0 position:0% align:start size:100%
+the lamp hums   <c.A>A: <i>boots scuff the snow</i> <c.new>(new)</c></c>
+bridge: city, water, wind   <c.A>A: exhales <c.offered>(offered)</c> · turns out of the lee</c>
+
+137 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale1 foley.moves.A.turn4
+00:01:23.462 --> 00:01:23.800 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: exhales <c.offered>(offered)</c> · turns out of the lee</c>
+
+138 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn4
+00:01:23.800 --> 00:01:24.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: turns out of the lee</c>
+
+139 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:24.000 --> 00:01:29.200 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+140 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.2
+00:01:29.200 --> 00:01:30.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette</c>
+
+141 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.2 foley.breath.A.exhale2
+00:01:30.000 --> 00:01:30.033 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette · exhales</c>
+
+142 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale2
+00:01:30.033 --> 00:01:32.800 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: exhales</c>
+
+143 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:32.800 --> 00:01:34.200 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+144 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.shift1 foley.moves.B.shift1
+00:01:34.200 --> 00:01:34.454 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: shifts closer <c.new>(new)</c></c>   <c.B>B: shifts closer <c.new>(new)</c></c>
+
+145 bg.hum.lamp.bed foley.scuff.B.3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.shift1 foley.scuff.A.5 foley.moves.B.shift1
+00:01:34.454 --> 00:01:35.547 line:0 position:0% align:start size:100%
+the lamp hums   <c.B>B: boots scuff the snow <c.new>(new)</c></c>
+bridge: city, water, wind   <c.A>A: shifts closer <c.new>(new)</c> · boots scuff the snow <c.new>(new)</c></c>   <c.B>B: shifts closer <c.new>(new)</c></c>
+
+146 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.shift1 foley.moves.B.shift1
+00:01:35.547 --> 00:01:35.800 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: shifts closer <c.new>(new)</c></c>   <c.B>B: shifts closer <c.new>(new)</c></c>
+
+147 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:35.800 --> 00:01:37.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind
+
+148 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.3
+00:01:37.000 --> 00:01:37.800 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette</c>
+
+149 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.3 foley.breath.A.exhale3
+00:01:37.800 --> 00:01:37.833 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: draws on the cigarette · exhales <c.offered>(offered)</c></c>
+
+150 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.breath.A.exhale3
+00:01:37.833 --> 00:01:40.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind   <c.A>A: exhales <c.offered>(offered)</c></c>
+
+151 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed bg.ambience.night.open foley.breath.A.exhale3
+00:01:40.000 --> 00:01:40.600 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind · the night opens   <c.A>A: exhales <c.offered>(offered)</c></c>
+
+152 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed bg.ambience.night.open
+00:01:40.600 --> 00:01:48.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind · the night opens
+
+153 bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed
+00:01:48.000 --> 00:01:52.000 line:0 position:0% align:start size:100%
+the lamp hums
+bridge: city, water, wind

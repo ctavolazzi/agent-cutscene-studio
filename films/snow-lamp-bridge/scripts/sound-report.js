@@ -98,7 +98,9 @@ const pseudo = { id: 'head', source: 'person', family: 'body' };
 const bodiesSeen = firstFrame((t) => IDS.some((id) => screenState({ camera, blockers }, pseudo, headAt(id, t), t).state === 'on'));
 const ORDERS = [
   { name: 'Light before the car: no car sound before the first frame that shows its light', kind: 'notBefore', t: firstLight, select: (c) => c.source.startsWith('car') },
-  { name: 'Feet before the people: until the first frame showing a head, every step and scuff lands on feet in frame', kind: 'onScreen', t0: 0, t1: bodiesSeen, select: (c) => c.family === 'feet' || c.family === 'scuff' },
+  // off screen is allowed: B's steps off screen right in shot 5 are kept on purpose (SOUND-PLAN 3.7) and show no body;
+  // hidden or behind the camera would put a sound on a person the frame could have shown
+  { name: 'Feet before the people: until the first frame showing a head, every step and scuff lands on feet in frame or out of it, never hidden or behind', kind: 'onScreen', allow: ['on', 'off'], t0: 0, t1: bodiesSeen, select: (c) => c.family === 'feet' || c.family === 'scuff' },
   { name: 'Anticipation before the moon: no onset while the moonlight rises', kind: 'noOnset', t0: moonRise, t1: moonFull, select: (c) => c.category !== 'bg' },
 ];
 
@@ -241,7 +243,9 @@ export function buildInput({ trace = null } = {}) {
     steady: STEADY,
     approach: [{ name: 'the car', point: carCentre, level: carDb, blockers: () => SET_BLOCKERS }],
     flams: { isContact: (c) => c.family === 'feet' || (c.family === 'moves' && ['rest', 'cup'].includes(c.meta.kind)) },
-    density: { select: (c) => c.category !== 'bg', body: (c) => c.person ?? c.source.split(':')[0] },
+    // the bars count bodies: a car's intake, exhaust and tyres fuse into one object the ear follows (Murch's two and a
+    // half is about streams the listener can follow), as one person's steps and cloth do
+    density: { select: (c) => c.category !== 'bg', body: (c) => c.person ?? c.source.split(':')[0], by: 'body' },
     silence: { windows: WINDOWS, select: (c) => c.category === 'hard' || c.category === 'foley' },
     safeBand: { story: (c) => c.sdh !== null, band: (c) => BANDS[c.family] ?? null, measured: false },
     thresholds: THRESHOLDS,

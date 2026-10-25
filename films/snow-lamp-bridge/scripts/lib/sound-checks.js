@@ -242,7 +242,7 @@ export function storyOrder(input) {
   for (const o of input.orders) {
     const sel = input.cues.filter((c) => c.enabled && o.select(c)), breach = [];
     if (o.kind === 'notBefore') for (const c of sel) { if (c.t0 < o.t - EPS) breach.push({ c, detail: `starts ${r(o.t - c.t0, 4)} s before ${r(o.t)}` }); }
-    else if (o.kind === 'onScreen') for (const c of sel) { if (c.t0 >= o.t0 - EPS && c.t0 < o.t1) { const s = S[c.id]?.[0]; if (!s || s.state !== 'on') breach.push({ c, detail: s ? `${s.state}${s.blocker ? ` (${s.blocker})` : ''}${s.side ? ` (${s.side})` : ''}` : 'unplaced' }); } }
+    else if (o.kind === 'onScreen') for (const c of sel) { if (c.t0 >= o.t0 - EPS && c.t0 < o.t1) { const s = S[c.id]?.[0]; if (!s || !(o.allow ?? ['on']).includes(s.state)) breach.push({ c, detail: s ? `${s.state}${s.blocker ? ` (${s.blocker})` : ''}${s.side ? ` (${s.side})` : ''}` : 'unplaced' }); } }
     else if (o.kind === 'noOnset') for (const c of sel) { if (c.t0 >= o.t0 - EPS && c.t0 < o.t1) breach.push({ c, detail: `starts at ${r(c.t0)}` }); }
     else throw new Error(`storyOrder: unknown kind ${o.kind}`);
     rows.push({ order: o.name, cue: null, t: null, detail: `${sel.length} cues judged, ${breach.length} breaches` });
@@ -503,11 +503,14 @@ const densityTicks = (input) => once(input, 'density', () => {
 });
 export function density(input) {
   const ticks = densityTicks(input), rows = [], rep = th(input, 'densityReport'), fail = th(input, 'densityFail');
+  // what the bars count: voice groups (the default), or the bodies they belong to when the caller says the ear fuses
+  // one body's groups into one stream (input.density.by 'body')
+  const byBody = input.density.by === 'body', count = (k) => (byBody ? k.bodies : k.n);
   let run = null, worst = 0, worstBodies = 0;
-  const close = () => { if (run) rows.push({ t0: r(run.t0, 2), t1: r(run.t1, 2), shot: shotAt(input, run.t0).n, peak: run.peak, bodies: run.bodies, streams: run.streams, fails: run.peak > fail }); run = null; };
+  const close = () => { if (run) rows.push({ t0: r(run.t0, 2), t1: r(run.t1, 2), shot: shotAt(input, run.t0).n, peak: run.peak, bodies: run.bodies, streams: run.streams, fails: (byBody ? run.bodies : run.peak) > fail }); run = null; };
   for (const k of ticks) {
     worst = Math.max(worst, k.n); worstBodies = Math.max(worstBodies, k.bodies);
-    if (k.n <= rep) { close(); continue; }
+    if (count(k) <= rep) { close(); continue; }
     if (!run) run = { t0: k.t, t1: k.t, peak: 0, bodies: 0, streams: '' };
     run.t1 = k.t + th(input, 'densityStep');
     run.bodies = Math.max(run.bodies, k.bodies);
@@ -515,7 +518,7 @@ export function density(input) {
   }
   close();
   const bad = rows.filter((x) => x.fails).length;
-  return entry(input, 'density', 11, 'Density', `Every ${th(input, 'densityStep') * 1000} ms: the foreground streams, voice groups within ${th(input, 'densityDb')} dB of the loudest sounding or with an onset in the last ${th(input, 'densityRecent') * 1000} ms${input.density.body ? '; the bodies they belong to counted beside them' : ''}`, `More than ${label(input, 'densityReport')} reported; more than ${label(input, 'densityFail')} fails`, ['densityReport', 'densityFail', 'densityDb'], bad ? 'fail' : 'pass', `peak ${worst} foreground streams (${worstBodies} bodies); ${rows.length} runs over ${rep}, ${bad} over ${fail}`, ['t0', 't1', 'shot', 'peak', 'bodies', 'streams', 'fails'], rows);
+  return entry(input, 'density', 11, 'Density', `Every ${th(input, 'densityStep') * 1000} ms: the foreground streams, voice groups within ${th(input, 'densityDb')} dB of the loudest sounding or with an onset in the last ${th(input, 'densityRecent') * 1000} ms${input.density.body ? '; the bodies they belong to counted beside them' : ''}`, `More than ${label(input, 'densityReport')} ${byBody ? 'bodies' : 'streams'} reported; more than ${label(input, 'densityFail')} fails`, ['densityReport', 'densityFail', 'densityDb'], bad ? 'fail' : 'pass', `peak ${worst} foreground streams (${worstBodies} bodies); the bars count ${byBody ? 'bodies' : 'streams'}; ${rows.length} runs over ${rep}, ${bad} over ${fail}`, ['t0', 't1', 'shot', 'peak', 'bodies', 'streams', 'fails'], rows);
 }
 
 // ---------- 12 voices ----------
