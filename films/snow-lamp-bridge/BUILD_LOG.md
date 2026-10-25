@@ -695,3 +695,10 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   coherently in the mix; Sound 1's blockers hide the exhaust behind its own car 229 frames; through A's own limiter
   curve the listener's B would reach +7.9 dBFS, so each set shares one curve from its loudest mix.
 - Style frame: the default (shots 4 to 6) against 4 to 5, 5 to 8 and 11 to 13, picked by rule.
+
+#### s2-options: the notes (after)
+- `review/round-05/notes-options.md` for the lead to merge: how each A/B was made, each option's definition, starting
+  values and why, numbers, clips, what a placeholder can and cannot show, the call, and my recommended default (no
+  muffle, the physical pan, the camera as listener, shots 4 to 6); three findings beyond the options.
+- Byte identity before this last commit: the default render 6f9c4925..., the design stage with the score unparked
+  f80b1542... (the S8.3 bytes), as before the branch.
