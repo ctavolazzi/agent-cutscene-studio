@@ -1,6 +1,7 @@
 // Checks for the audio engine (src/audio/): determinism, the loudness meter against ffmpeg, normalization, the peak
-// ceiling, stereo placement from the camera, the fade in, clicks at cuts, and the WAV file. Each has a planted fault.
-// Run: node --test tests/audio.test.mjs
+// ceiling, stereo placement from the camera, the fade in, clicks at cuts, and the WAV file, on the default stage
+// (config.audio.stage); the stage switch and the parking (SOUND-PLAN 3.1, 4.4); the sidecar scripts/sound.js writes
+// and how verify.js reads it. Each has a planted fault. Run: node --test tests/audio.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -9,14 +10,18 @@ import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONFIG } from '../src/config.js';
-import { SHOTS } from '../src/shots.js';
+import { SHOTS, cameraAt } from '../src/shots.js';
+import { makeCamera, add, mul } from '../scripts/lib/math.js';
 import { T_TOTAL } from '../src/world.js';
 import { mulberry32 } from '../src/prng.js';
-import { renderSoundtrack } from '../src/audio/index.js';
+import { STAGES, atStage, buildLayers, layerNames, renderSoundtrack } from '../src/audio/index.js';
+import { renderAll } from '../src/audio/mix.js';
 import { integratedLufs, normalize, samplePeak } from '../src/audio/loudness.js';
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
+import { limiterByShot, renderToWav } from '../scripts/sound.js';
+import { LEGACY_SOUND, madeBy } from '../scripts/verify.js';
 
 const SR = CONFIG.audio.sr;
 const dir = mkdtempSync(join(tmpdir(), 'audio-test-'));
@@ -48,9 +53,10 @@ test('determinism: two renders of the soundtrack give the same samples', () => {
   const a = master(), b = renderSoundtrack(CONFIG);
   assert.equal(hash(a.left, a.right), hash(b.left, b.right));
   assert.equal(a.left.length, Math.round(T_TOTAL * SR));
-  // control: another seed is another soundtrack
-  const other = renderSoundtrack({ ...CONFIG, seed: CONFIG.seed + 1 }, { only: ['ambience'], normalize: false });
-  const same = renderSoundtrack(CONFIG, { only: ['ambience'], normalize: false });
+  // control: another seed is another soundtrack (the stage's first layer, a stem)
+  const only = layerNames(CONFIG).slice(0, 1);
+  const other = renderSoundtrack({ ...CONFIG, seed: CONFIG.seed + 1 }, { only, normalize: false });
+  const same = renderSoundtrack(CONFIG, { only, normalize: false });
   assert.notEqual(hash(other.left, other.right), hash(same.left, same.right));
 });
 
@@ -93,6 +99,35 @@ test('placement: a source to the camera\'s right pans right, behind is quieter a
   assert.ok(far.gain < front.gain / 5 && far.hz < front.hz, 'far');
 });
 
+// Screen direction and pan width (SOUND-PLAN 4.0): the pan follows the frame. A point at screen x (0 left, 1 right,
+// at mid height, d metres deep) is the picture's own camera (scripts/lib/math.js makeCamera, with its roll) at
+// pos + f d + r (2x - 1) th d. The spatializer pans by the horizontal right, so it hears that point at
+// k / sqrt(1 + k * k), k = (2x - 1) th cos(roll): right of centre pans right, and the frame's edge pans to
+// sin(atan(th cos(roll))), 0.24 to 0.66 by lens. Checked at three times in every shot (shot 5 opens rolled 3 degrees).
+function framePanProblems(panOf) {
+  const p = [], { w, h } = CONFIG.res;
+  for (const s of SHOTS) for (const u of [0, 0.5, 0.9]) {
+    const t = s.start + (s.end - s.start) * u, c = cameraAt(s, t), cam = makeCamera(c, w, h), cr = Math.cos(c.roll * Math.PI / 180);
+    for (const d of [2, 8, 30]) for (const x of [0, 0.2, 0.4, 0.6, 0.8, 1]) {
+      const k = (2 * x - 1) * cam.th * cr, want = k / Math.sqrt(1 + k * k);
+      const pan = panOf(add(add(cam.pos, mul(cam.f, d)), mul(cam.r, (2 * x - 1) * cam.th * d)), t);
+      if (Math.sign(pan) !== Math.sign(2 * x - 1)) p.push(`shot ${s.n} t ${t.toFixed(2)}: screen x ${x} pans ${pan.toFixed(3)}`);
+      else if (!(Math.abs(pan - want) <= 1e-9)) p.push(`shot ${s.n} t ${t.toFixed(2)}: screen x ${x} pans ${pan.toFixed(4)}, the frame says ${want.toFixed(4)}`);
+    }
+  }
+  return p;
+}
+
+test('screen direction and pan width: right of frame pans right, the frame edge pans to sin(atan(th cos roll)), every shot', () => {
+  assert.deepEqual(framePanProblems((q, t) => placeAt(q, t).pan), []);
+  // the lenses' frame edges, 5 m deep at each shot's start: 0.24 to 0.66 (SOUND-PLAN 3.4)
+  const edges = SHOTS.map((s) => { const c = cameraAt(s, s.start), cam = makeCamera(c, CONFIG.res.w, CONFIG.res.h); return placeAt(add(add(c.pos, mul(cam.f, 5)), mul(cam.r, cam.th * 5)), s.start).pan; });
+  assert.deepEqual([Math.min(...edges), Math.max(...edges)].map((v) => +v.toFixed(2)), [0.24, 0.66]);
+  // controls: a mirrored spatializer, and one panning twice as wide
+  assert.ok(framePanProblems((q, t) => -placeAt(q, t).pan).length > 0, 'control: mirrored');
+  assert.ok(framePanProblems((q, t) => Math.max(-1, Math.min(1, 2 * placeAt(q, t).pan))).length > 0, 'control: doubled');
+});
+
 test('the fade in follows the picture: near silence at the first frame, full level after 3 s', () => {
   const m = master();
   assert.ok(db(rms(m.left, m.right, SR, 0, 0.05)) < db(rms(m.left, m.right, SR, 5, 6)) - 30);
@@ -128,4 +163,75 @@ test('the WAV: 16-bit PCM stereo at 48 kHz, the right length, readable by ffprob
   assert.deepEqual([s.codec_name, Number(s.sample_rate), s.channels], ['pcm_s16le', 48000, 2]);
   assert.ok(Math.abs(Number(s.duration) - T_TOTAL) < 1e-3);
   assert.equal(readFileSync(f).length, 44 + 4 * m.left.length);
+});
+
+// ---------- the stage switch and the parking (SOUND-PLAN 3.1, 4.4) ----------
+test('stages: each builds its own layers in mix order, minus the parked ones; an unknown stage or layer is refused', () => {
+  const names = (stage, parked) => layerNames(atStage(CONFIG, { stage, parked }));
+  assert.equal(CONFIG.audio.stage, 'blockout', 'the default from Sound 2 (SOUND-PLAN 4.4)');
+  assert.deepEqual(buildLayers(CONFIG).map((l) => l.name), ['bg', 'hard', 'foley'], 'the blockout builds only its own layers');
+  assert.deepEqual(names('blockout', []), ['bg', 'hard', 'foley'], 'and has no score to park');
+  assert.deepEqual(names('design', ['score']), ['ambience', 'car', 'foley']);
+  assert.deepEqual(names('design', []), ['ambience', 'car', 'foley', 'score'], 'the score comes back when unparked');
+  assert.deepEqual(buildLayers(atStage(CONFIG, { stage: 'design' }), ['car', 'foley']).map((l) => l.name), ['car', 'foley']);
+  for (const [stage, mods] of Object.entries(STAGES)) for (const name of Object.keys(mods)) assert.equal(typeof mods[name].build, 'function', `${stage} ${name}`);
+  // controls: a stage that does not exist, and a stem naming another stage's layer
+  assert.throws(() => names('look', []), /audio stage 'look'/);
+  assert.throws(() => layerNames(CONFIG, ['car']), /no layer 'car' in the blockout stage/);
+  assert.throws(() => layerNames(atStage(CONFIG, { stage: 'design' }), ['nope']), /no layer 'nope' in the design stage/);
+});
+
+test('parking: the score is parked by default and the music bus renders silence; a planted enabled score is heard', () => {
+  assert.ok(CONFIG.audio.parked.includes('score'), 'parked by default (SOUND-PLAN 3.1)');
+  // everything a config builds that goes to the music bus, mixed alone
+  const musicPeak = (config) => {
+    const r = renderAll({ layers: buildLayers(config).filter((l) => l.bus === 'music'), config, sr: SR, total: T_TOTAL, reverb: false, normalize: false });
+    return samplePeak(r.left, r.right);
+  };
+  const design = atStage(CONFIG, { stage: 'design' });
+  assert.equal(musicPeak(design), 0, 'the design stage with the score parked');
+  assert.deepEqual(layerNames(design, ['score']), [], 'a stem of a parked layer is empty: the parking holds for stems');
+  // control: the score planted back in, enabled, is heard on the music bus
+  assert.ok(musicPeak(atStage(design, { parked: [] })) > 1e-3);
+});
+
+test('sidecar: scripts/sound.js names the stage, the parked and the built layers; both files are the same bytes every run', () => {
+  const out = join(dir, 'stem.wav'), run = () => {
+    renderToWav({ out, stage: 'design', only: ['ambience'], raw: true, log: () => {} });
+    return [readFileSync(out), readFileSync(`${out}.json`)];
+  };
+  const [wav1, json1] = run(), [wav2, json2] = run();
+  assert.ok(wav1.equals(wav2) && json1.equals(json2), 'no clock in either file');
+  const side = JSON.parse(json1);
+  assert.deepEqual([side.stage, side.parked, side.layers], ['design', CONFIG.audio.parked, ['ambience']]);
+  assert.equal(side.renderSeconds, undefined, 'render time is not written: it differs every run');
+  assert.equal(side.limiter, null, 'a raw render is not limited');
+});
+
+test('sidecar: the limiter report finds the shot the limiter acts in, by how much, and nothing elsewhere', () => {
+  const sr = 1000, n = 4 * sr, shots = [{ n: 1, start: 0, end: 2 }, { n: 2, start: 2, end: 4 }], g = 2;
+  const raw = { left: Float32Array.from({ length: n }, (_, i) => 0.1 * Math.sin(i)), right: Float32Array.from({ length: n }, (_, i) => 0.1 * Math.cos(i)) };
+  const out = { left: raw.left.map((x) => x * g), right: raw.right.map((x) => x * g) };
+  assert.deepEqual(limiterByShot(raw, out, sr, shots, 0.1).map((x) => x.maxDb), [0, 0]);
+  // control: a peak in shot 2 held 6 dB under its gained value
+  raw.left[3000] = 0.8; out.left[3000] = 0.8 * g / 2;
+  const r = limiterByShot(raw, out, sr, shots, 0.1);
+  assert.deepEqual([r[0].maxDb, r[1].shot, r[1].at], [0, 2, 3]);
+  assert.ok(Math.abs(r[1].maxDb - 20 * Math.log10(2)) < 0.01, `${r[1].maxDb} dB`);
+});
+
+test('verify check 5: a sidecar without stage or parked was made before the stage switch, score in', () => {
+  // the S8.3 listening copy's sidecar has neither field
+  const s83 = { file: 'out/sound.wav', sr: SR, seconds: T_TOTAL, layers: 'all', renderSeconds: 11.86, sha256: 'f80b1542', stats: {} };
+  const legacy = madeBy(s83);
+  assert.deepEqual(legacy, { ...LEGACY_SOUND, parked: [] });
+  assert.deepEqual(layerNames(atStage(CONFIG, legacy)), ['ambience', 'car', 'foley', 'score'], 'rendered again with the S8.3 layers');
+  assert.ok(legacy.made.includes('before the stage switch'));
+  // a sidecar with the fields is read as written; no sidecar is the config as it is
+  assert.deepEqual(madeBy({ ...s83, stage: 'blockout', parked: ['score'] }).stage, 'blockout');
+  assert.deepEqual(madeBy({ ...s83, stage: 'design', parked: [] }).parked, []);
+  assert.deepEqual([madeBy(null).stage, madeBy(null).parked], [CONFIG.audio.stage, CONFIG.audio.parked]);
+  // controls: only one missing field is enough; a written stage is never overridden by the legacy reading
+  assert.equal(madeBy({ ...s83, stage: 'blockout' }).made, LEGACY_SOUND.made);
+  assert.notEqual(madeBy({ ...s83, stage: 'blockout', parked: [] }).made, LEGACY_SOUND.made);
 });

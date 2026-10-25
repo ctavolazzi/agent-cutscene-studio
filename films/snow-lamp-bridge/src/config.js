@@ -52,6 +52,11 @@ export const CONFIG = {
   // with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades match the
   // picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
   audio: {
+    // The sound's stage (SOUND-PLAN 4.4), as `stage` is the picture's: 'blockout' (placeholders at the cue times,
+    // src/audio/layers/blockout/, Sound 2 and 3) or 'design' (the first-pass layers below, kept as they are until
+    // Sound 4). `parked` names layers kept in the code and out of every render: the score, until its own plan (3.1).
+    stage: 'blockout',
+    parked: ['score'],
     sr: 48000,
     targetLufs: -16,
     ceilingDb: -2.0,

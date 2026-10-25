@@ -1,15 +1,25 @@
-// Checks for the soundtrack's layers (src/audio/layers/): every scheduled sound starts on its cue, the car is placed
-// where the picture puts it, nothing sounds before or after its time, and the balance follows the brief in SOUND.md.
-// Each check has a planted fault. Run: node --test tests/sound-layers.test.mjs
+// Checks for the design stage's layers (src/audio/layers/, the first pass, parked until Sound 4): every scheduled sound
+// starts on its cue, the car is placed where the picture puts it, nothing sounds before or after its time, and the
+// balance follows the brief in SOUND.md. Their regression test: it renders the 'design' stage explicitly, whatever the
+// default stage is. The score's checks run only while the score is unparked (config.audio.parked, SOUND-PLAN 3.1); the
+// other checks never depended on it. Each check has a planted fault. Run: node --test tests/sound-layers.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { CONFIG } from '../src/config.js';
+import { atStage } from '../src/audio/index.js';
 import { carTimes, LIGHTER, EMBER, EXHALE, FPS } from '../src/world.js';
 import { footprintList } from '../src/fx/footprints.js';
 import { placeAt } from '../src/audio/spatial.js';
 import { carPoint, DOOR_EVENTS } from '../src/audio/layers/car.js';
 import { footsteps, surfaceOf } from '../src/audio/layers/foley.js';
 import { BELLS, CHORDS } from '../src/audio/layers/score.js';
-import { balanceDb, firstSoundAfter, lastSoundBefore, lufsOf, matchOnsets, onsets, rms, db, stem, stemWith } from '../scripts/lib/audio-analysis.mjs';
+import { balanceDb, firstSoundAfter, lastSoundBefore, integratedLufsOf, matchOnsets, onsets, rms, db, stem as stemAt, stemWith as stemWithAt } from '../scripts/lib/audio-analysis.mjs';
+
+// the design stage, with the parking as configured
+const DESIGN = atStage(CONFIG, { stage: 'design' });
+const stem = (only) => stemAt(only, DESIGN);
+const stemWith = (layer, opts) => stemWithAt(layer, opts, DESIGN);
+const SCORE_PARKED = DESIGN.audio.parked.includes('score') && 'the score is parked (config.audio.parked, SOUND-PLAN 3.1): its checks run once it is unparked';
 
 const FRAME = 1 / FPS;
 // how many of the expected times have a detected onset within one frame
@@ -41,11 +51,14 @@ test('foley: every footstep lands within a frame of its print, for each person',
   }
 });
 
-test('foley and score: the lighter strikes on LIGHTER.t0 and every bell note on its time', () => {
+test('foley: the lighter strikes on LIGHTER.t0', () => {
   const l = stemWith('foley', { keep: ['lighterGain'] });
   const dl = onsets(l.left, l.right, l.sr, { from: LIGHTER.t0 - 1, to: LIGHTER.t0 + 0.5 });
   assert.equal(onCue([LIGHTER.t0], dl), 1);
   assert.equal(onCue([LIGHTER.t0 - THREE_FRAMES], dl), 0, 'control');
+});
+
+test('score: every bell note on its time', { skip: SCORE_PARKED }, () => {
   const b = stemWith('score', { keep: ['bellGain'] });
   const times = BELLS.map((x) => x.t);
   const db_ = onsets(b.left, b.right, b.sr, { from: 60, to: 112, minGap: 0.3, ratioDb: 6 });
@@ -65,12 +78,19 @@ test('foley: the lean, each drag and the exhale sound in their windows, and not 
   assert.ok(!(rise(d, 85, 85.4, 84, 84.5) > 20));
 });
 
-test('silence: no car before it appears, no engine after the run-down, no score before 40 s', () => {
+test('silence: no car before it appears, no engine after the run-down', () => {
   const car = stem('car');
   assert.ok(lastSoundBefore(car, carTimes.start) < 0, 'car before 14.0');
   assert.ok(firstSoundAfter(car, 0) >= carTimes.start - 0.001, 'the car starts at 14.0');
   const engine = stemWith('car', { keep: ['exhaustGain', 'intakeGain'] });
   assert.ok(firstSoundAfter(engine, carTimes.lightsOff0 + 0.5) === Infinity, 'engine after the run-down');
+  // control: a single planted sample before 14.0 is found
+  const bad = { ...car, left: Float32Array.from(car.left) };
+  bad.left[Math.round((carTimes.start - 1) * car.sr)] = 1e-4; // -80 dBFS
+  assert.ok(lastSoundBefore(bad, carTimes.start) > 0);
+});
+
+test('score: nothing before 40 s', { skip: SCORE_PARKED }, () => {
   const score = stem('score');
   assert.ok(firstSoundAfter(score, 0) >= CHORDS[0].t, 'score before 40 s');
   // control: a single planted sample before 40 s is found
@@ -96,13 +116,19 @@ test('placement: the engine sits in the stereo field where the picture puts it, 
   assert.ok(leaning.filter((r) => Math.abs(r.swapped - r.want) > 0.5).length > leaning.length * 0.9);
 });
 
-test('balance, as the brief has it: the car is the loud thing, the score enters under the bed and opens at moonrise', () => {
-  const amb = stem('ambience'), car = stem('car'), score = stem('score'), foley = stem('foley');
-  assert.ok(lufsOf(car, 15, 19) > lufsOf(amb, 15, 19) + 6, 'the car over the bed as it drives');
-  assert.ok(lufsOf(car, 15, 19) > lufsOf(car, 30, 33.5) + 6, 'the idle is quieter than the drive');
-  assert.ok(lufsOf(score, 40, 43) < lufsOf(amb, 40, 43) - 6, 'the score creeps in');
-  assert.ok(lufsOf(score, 70, 76) > lufsOf(score, 46, 54) + 3, 'and opens at moonrise');
-  assert.ok(lufsOf(foley, 40, 52) > lufsOf(amb, 40, 52) - 6, 'footsteps read over the bed');
+test('balance, as the brief has it: the car is the loud thing, the idle under the drive, the steps over the bed', () => {
+  const amb = stem('ambience'), car = stem('car'), foley = stem('foley');
+  assert.ok(integratedLufsOf(car, 15, 19) > integratedLufsOf(amb, 15, 19) + 6, 'the car over the bed as it drives');
+  assert.ok(integratedLufsOf(car, 15, 19) > integratedLufsOf(car, 30, 33.5) + 6, 'the idle is quieter than the drive');
+  assert.ok(integratedLufsOf(foley, 40, 52) > integratedLufsOf(amb, 40, 52) - 6, 'footsteps read over the bed');
   // control: the same comparison the other way round fails
-  assert.ok(!(lufsOf(amb, 15, 19) > lufsOf(car, 15, 19) + 6));
+  assert.ok(!(integratedLufsOf(amb, 15, 19) > integratedLufsOf(car, 15, 19) + 6));
+});
+
+test('balance, the score: it enters under the bed and opens at moonrise', { skip: SCORE_PARKED }, () => {
+  const amb = stem('ambience'), score = stem('score');
+  assert.ok(integratedLufsOf(score, 40, 43) < integratedLufsOf(amb, 40, 43) - 6, 'the score creeps in');
+  assert.ok(integratedLufsOf(score, 70, 76) > integratedLufsOf(score, 46, 54) + 3, 'and opens at moonrise');
+  // control: the same comparison the other way round fails
+  assert.ok(!(integratedLufsOf(score, 46, 54) > integratedLufsOf(score, 70, 76) + 3));
 });
