@@ -1155,3 +1155,21 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   the second look at the images, and the findings F1 to F7 with what was done.
 - Gate: npm test exit 0 (271 tests, 268 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
   hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+
+#### lead: Sound 2.10 and 2.11, the panel and one fix round
+- Panel (independent, read-only): four reviewers by shot group (1 to 3, 4 to 6, 7 to 9, 10 to 15) with every lens, one on
+  the decisions, a skeptic per reviewer, a completeness critic. A usage limit stopped it once; resumed. 42 findings: 29
+  confirmed, 8 refuted, 5 from the critic. No blocker survived. `review/round-05/findings.json` (the picture's schema,
+  with a verdict and a disposition each).
+- Fixed now: the preview's soft caption track was the default (the mp4 muxer enables the first text track whatever
+  -disposition says), so a player could draw it over the burned band: `capture.js` clears the track's enabled bit when
+  burned (`disableTextTrack` in captions.js; tests/capture.test.mjs checks both ways); the preview re-captured and
+  re-checked (every check passes, the soft track default 0). README: do not re-export during the blockout. The branch
+  notes marked superseded where the engine fix moved their numbers. `notes.md`: the measures, the preview, the
+  self-review corrected (S1 by DEC-04, S8 withdrawn by G10-3), the rulings R1 to R5, the known items K1 to K7, the tests
+  changed, what is carried, and the questions rewritten in plain words (A, B, C, E, F, G, H, L, N, O1 to O3, P, R, S).
+- Carried: K1 to K4 and K7 to Sound 3 (sync from drawn motion, the hold rule, placeholder bands apart, the idle under the
+  drive), K6 to Sound 4 (phone energy for the hum, the city, the latches).
+- Gate page (Sound 2.13): a private Artifact, the preview first, then the questions with their clips, the known items and
+  the evidence; answers saved to its store (`answers/<question>`), read back with the Artifact tool. Gate: 274 tests, 271
+  pass, 0 fail, 3 skipped; check pass; the design stage still sha256 f80b1542.

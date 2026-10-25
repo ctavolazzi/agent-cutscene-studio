@@ -46,6 +46,13 @@ node scripts/capture.js --profile 4k --audio out/sound.wav   # out/snowy-bridge-
 node scripts/verify.js --profile 4k
 ```
 
+**While the sound is in its blockout (Sound 2 and 3), do not re-export.** `config.audio.stage` defaults to
+`'blockout'`: `npm run export`, `npm run sound` and the player all render the placeholder beeps at -23 LUFS, and an
+export would overwrite `out/sound.wav` and `out/snowy-bridge.mp4`, the S8.3 listening copy (the first mix, with the
+score). To render that mix again: `node scripts/sound.js --stage design --parked ''` (sha256 `f80b1542...`). The
+blockout's own review set is `node scripts/sound-review.js --round 05 --measure --stills --sheet` and the preview in
+`review/round-05/` (its notes say how it was captured).
+
 `npm run export:4k` also works but rebuilds first; capture both from one build when they must match exactly.
 `npm run preview` captures a quick 480x270 MP4 with the shot overlay burned in. `npm run storyboard` redraws the
 contact sheet in `storyboard/`.

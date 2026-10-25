@@ -565,10 +565,8 @@ export function subtitleStyle(file) {
   if (r.status !== 0) throw new Error(`subtitles of ${file}: ${r.stderr}`);
   return { ...softStyle(r.stdout), alignment: Number(assStyleField(r.stdout, 'Alignment')), sizeOverrides: (r.stdout.match(/\\fs\d/g) ?? []).length };
 }
-// The 3GPP text sample entries (tx3g) in a file's moov box: where each one's justification bytes sit, its values, and
-// its default style's font size (TS 26.245: after the display flags, the justification, the background colour and the
-// default text box come the style record's start, end, font id and face flags, then the size)
-function tx3gEntries(fd, file) {
+// A file's moov box, read whole: { pos, size, box }
+function moovOf(fd, file) {
   const head = Buffer.alloc(16);
   let pos = 0, moov = null;
   for (let n = 0; n < 64 && !moov; n++) {
@@ -582,6 +580,13 @@ function tx3gEntries(fd, file) {
   if (!moov) throw new Error(`no moov box in ${file}`);
   const box = Buffer.alloc(moov.size);
   readSync(fd, box, 0, moov.size, moov.pos);
+  return { ...moov, box };
+}
+// The 3GPP text sample entries (tx3g) in a file's moov box: where each one's justification bytes sit, its values, and
+// its default style's font size (TS 26.245: after the display flags, the justification, the background colour and the
+// default text box come the style record's start, end, font id and face flags, then the size)
+function tx3gEntries(fd, file) {
+  const { box, ...moov } = moovOf(fd, file);
   const hits = [];
   for (let i = box.indexOf('tx3g'); i >= 4; i = box.indexOf('tx3g', i + 4)) {
     // a sample entry: its size, 'tx3g', six reserved zero bytes, data reference index 1, displayFlags, then the two
@@ -600,6 +605,34 @@ export function topJustify(file) {
     if (hits.length !== 1) throw new Error(`${file} has ${hits.length} tx3g sample entries, want 1`);
     writeSync(fd, Buffer.from([0, 0]), 0, 2, hits[0].at);
     return { was: hits[0].justification, now: [0, 0] };
+  } finally {
+    closeSync(fd);
+  }
+}
+// The track headers (tkhd) of a file's text tracks (a trak whose hdlr names 'sbtl' or 'text'): where each one's flags
+// sit and their value (ISO 14496-12: bit 0x1 enabled, which players and ffprobe read as the default track)
+function textTrackHeaders(fd, file) {
+  const { box, pos } = moovOf(fd, file), hits = [];
+  for (let i = box.indexOf('trak'); i >= 4; i = box.indexOf('trak', i + 4)) {
+    const end = i - 4 + box.readUInt32BE(i - 4), trak = box.subarray(i - 4, end), h = trak.indexOf('hdlr'), t = trak.indexOf('tkhd');
+    if (h < 0 || t < 0) continue;
+    const kind = trak.toString('latin1', h + 12, h + 16); // size, 'hdlr', version and flags, pre_defined, then the type
+    if (kind === 'sbtl' || kind === 'text') hits.push({ at: pos + (i - 4) + t + 5, flags: trak.readUIntBE(t + 5, 3) });
+  }
+  return hits;
+}
+// ffmpeg's mp4 muxer marks the first track of each kind enabled whatever -disposition says, and a player shows an
+// enabled text track by default. Clears the enabled bit of the one text track in place, so a burned capture's soft copy
+// is drawn only when the viewer picks it. Returns the flags before and after.
+export function disableTextTrack(file) {
+  const fd = openSync(file, 'r+');
+  try {
+    const hits = textTrackHeaders(fd, file);
+    if (hits.length !== 1) throw new Error(`${file} has ${hits.length} text tracks, want 1`);
+    const now = hits[0].flags & ~1, b = Buffer.alloc(3);
+    b.writeUIntBE(now, 0, 3);
+    writeSync(fd, b, 0, 3, hits[0].at);
+    return { was: hits[0].flags, now };
   } finally {
     closeSync(fd);
   }

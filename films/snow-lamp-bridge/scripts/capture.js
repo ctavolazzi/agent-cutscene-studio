@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { openScene, ROOT } from './lib/browser.mjs';
 import { AUDIO, encodeArgs, ffprobe, profileSize, PROFILES } from './lib/ffmpeg.mjs';
-import { burnFilter, clipVtt, parseVtt, probeSubtitles, subtitleStyle, toAss, topJustify, writeSoftAss } from './lib/captions.js';
+import { burnFilter, clipVtt, disableTextTrack, parseVtt, probeSubtitles, subtitleStyle, toAss, topJustify, writeSoftAss } from './lib/captions.js';
 import { CONFIG } from '../src/config.js';
 
 export const DEFAULT_OUT = { preview: 'out/preview.mp4', full: 'out/snowy-bridge.mp4', '4k': 'out/snowy-bridge-4k.mp4' };
@@ -40,7 +40,10 @@ export function captionArgs(args, { vtt, burn = false, from, to, fps, tmp, audio
     a[vf + 1] = `${a[vf + 1]},${burnFilter(files.ass)}`;
   }
   a.splice(vf, 0, '-i', files.soft); // after the frames and the soundtrack, so it is input 1, or 2 with a soundtrack
-  // with a soundtrack the video and audio are mapped already; otherwise naming the subtitles needs the video named too
+  // with a soundtrack the video and audio are mapped already; otherwise naming the subtitles needs the video named too.
+  // Burned, the soft copy must not be the default track: a player that shows default text would draw it over the burned
+  // band, in the same corner, and neither could be read (round 05's panel, CC-01). The mp4 muxer enables the first text
+  // track whatever -disposition says, so capture() clears the track's enabled bit after the encode (disableTextTrack).
   a.push(...(audio ? [] : ['-map', '0:v:0']), '-map', `${audio ? 2 : 1}:s:0`, '-c:s', 'mov_text', '-metadata:s:s:0', 'language=eng', '-metadata:s:s:0', 'handler_name=Review captions', output);
   return { args: a, soft };
 }
@@ -126,12 +129,14 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
     if (Math.abs(probe.duration - n / fps) > (audio ? 1 : 0.5) / fps) problems.push(`duration is ${probe.duration}, want ${n / fps}`);
     if (audio && !(Math.abs(probe.audioDuration - n / fps) <= 1 / fps)) problems.push(`audio duration is ${probe.audioDuration}, want ${n / fps}`);
     // the captions: one stream (an MP4 carries text subtitles only as mov_text; this ffmpeg refuses webvtt there), no
-    // longer than the picture, at the fitted font size, then justified top left; none without
-    let justification = null, style = null;
+    // longer than the picture, at the fitted font size, then justified top left, and, burned, not the default track
+    // (captionArgs); none without
+    let justification = null, style = null, trackFlags = null;
     if (subtitles.streams !== (captions ? 1 : 0)) problems.push(`subtitle streams ${subtitles.streams}, want ${captions ? 1 : 0}`);
     else if (captions) {
       if (!(subtitles.duration > 0 && subtitles.duration <= n / fps + 1 / fps)) problems.push(`subtitle duration is ${subtitles.duration}, want up to ${n / fps}`);
       justification = topJustify(tmpPath);
+      if (burnCaptions) trackFlags = disableTextTrack(tmpPath);
       style = subtitleStyle(tmpPath);
       if (style.size !== cap.soft.size) problems.push(`the soft font size is ${style.size}, want ${cap.soft.size}`);
     }
@@ -145,7 +150,7 @@ export async function capture({ profile, from = 0, to, out, overlay, file, audio
       file, profile, from, to, overlay, fps, firstFrame: i0, lastFrame: i1 - 1, frames: n,
       res: scene.info.res, size, seconds: +seconds.toFixed(3), loadSeconds: +loadSeconds.toFixed(3), msPerFrame: +msPerFrame.toFixed(2),
       ffmpeg: ['ffmpeg', ...args.slice(0, -1), file], ffprobe: probe, problems,
-      ...(captions ? { captions: { file: captions, burned: burnCaptions, subtitles, justification, soft: cap.soft, style } } : {}),
+      ...(captions ? { captions: { file: captions, burned: burnCaptions, subtitles, justification, trackFlags, soft: cap.soft, style } } : {}),
     };
     writeFileSync(`${file}.json`, `${JSON.stringify(sidecar, null, 1)}\n`);
     log(`done: ${n} frames in ${seconds.toFixed(1)} s, ${msPerFrame.toFixed(1)} ms/frame (load ${loadSeconds.toFixed(1)} s)`);

@@ -1,5 +1,7 @@
 # Round 05, the measurement half: Sound 2.5 to 2.7 (branch s2-measure)
 
+> **Superseded numbers.** Written by its branch before the engine fix (the intake's and exhaust's placeholders were in phase) and before the merge. `notes.md` and the JSON files (`measure.json`, `decisions/decisions.json`) hold the current numbers; where this file disagrees with them, they win (round 05 panel, DEC-01 and DEC-07).
+
 For the lead to merge into `notes.md`. Everything below is measured by `node scripts/sound-review.js --round 05
 --measure` (4.4 minutes alone on this 4 CPU machine) and written to `measure.json`; a number here that is not in that
 file says where it comes from. The blockout is the placeholders of SOUND-PLAN 4.4, so the measures time, place and

@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 97.942,
- "loadSeconds": 0.582,
- "msPerFrame": 36.44,
+ "seconds": 97.622,
+ "loadSeconds": 0.653,
+ "msPerFrame": 36.32,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",
@@ -132,6 +132,10 @@
     0,
     0
    ]
+  },
+  "trackFlags": {
+   "was": 3,
+   "now": 2
   },
   "soft": {
    "from": 16,

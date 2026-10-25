@@ -285,7 +285,7 @@ published. Built on the defaults; the questions come to you at Sound gate 2.
 
 ---
 
-## Sound 1: Sound storyboard
+## Sound 1: Sound storyboard (done: review/round-04)
 
 **Goal.** Plan every sound effect on paper, from the data: where it is, when, how loud and where in the stereo field
 from each camera. Every check is measured before any sound is made.
@@ -393,7 +393,7 @@ new ones marked. Tell me any sound to add, drop or move. Everything else is my e
 
 ---
 
-## Sound 2: Sound blockout
+## Sound 2: Sound blockout (done: review/round-05; waiting at Sound gate 2)
 
 **Goal.** Hear every planned cue as a placeholder over the finished picture, at its exact time, place and planned
 level. Timing, placement, presence and density are judged before any sound is designed. Balance is reported, not

@@ -1,5 +1,7 @@
 # Round 05: Sound 2.12, the options measured before asking (branch s2-options)
 
+> **Superseded numbers.** Written by its branch before the engine fix (the intake's and exhaust's placeholders were in phase) and before the merge. `notes.md` and the JSON files (`measure.json`, `decisions/decisions.json`) hold the current numbers; where this file disagrees with them, they win (round 05 panel, DEC-01 and DEC-07).
+
 ROADMAP Sound 2.12: the muffle on the hidden engine done the PS1 way, a narrower pan for sync foley, the second listener
 model, and the style-frame scene, each measured before it becomes a question at Sound gate 2. This file is for the lead
 to merge into `notes.md`. Every number below is in `decisions/decisions.json`, made by

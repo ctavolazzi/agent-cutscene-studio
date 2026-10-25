@@ -749,6 +749,9 @@ test('capture.js --burn-captions: only the caption band changes, never the HUD s
   };
   const soft = run('soft', []), burned = run('burned', ['--burn-captions']);
   assert.equal(JSON.parse(readFileSync(`${burned}.json`, 'utf8')).captions.burned, true);
+  // burned, the soft copy is not the default text track (a player would draw both); soft alone, it is
+  const isDefault = (f) => JSON.parse(spawnSync('ffprobe', ['-v', 'error', '-select_streams', 's', '-show_entries', 'stream_disposition=default', '-of', 'json', f], { encoding: 'utf8' }).stdout).streams[0].disposition.default;
+  assert.deepEqual([isDefault(soft), isDefault(burned)], [1, 0]);
   // the encoder works in 16 px macroblocks and its deblocking filter reaches 3 px across a block edge, so a change in
   // the band may touch the rows of the blocks that hold it and 3 more (measured: rows 64 and 65 by 5 levels, then 0)
   const MB = 16, DEBLOCK = 3, blocks = Math.ceil(LANE.bottom / MB) * MB + DEBLOCK;
