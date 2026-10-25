@@ -1019,3 +1019,23 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - `node scripts/sound-options.js --round 05`: all three A/Bs still measure over the audibility bar (ask the director).
   The engine clip under the muffle by the set: -0.89 dB with the volume drop, -0.49 dB with the swap (it was -1.33 and
   -1.00 with the buzzes in phase); -3.93 and -1.67 dB over the 1.4 s the intake is hidden at full level.
+
+#### lead: Sound 2.8, the preview (before)
+- Capture the blockout preview: `node scripts/sound.js --out out/round-05/blockout.wav`, then `node scripts/capture.js
+  --profile preview --audio out/round-05/blockout.wav --captions review/round-04/captions/review.vtt --burn-captions
+  --out review/round-05/preview.mp4` (cues.js is unchanged since round 04, so its review track is the round's). Check it
+  with a new `scripts/sound-preview.js`: the streams, the audio lag against the WAV, and nothing drawn in the bottom 30 px.
+
+#### lead: Sound 2.8, the preview (after)
+- `review/round-05/preview.mp4` (13.6 MB, 480x270, the overlay, 2688 frames): the blockout at -23 LUFS integrated
+  (-23.06 measured on the AAC), the review track soft (mov_text, 112 s) and burned. `preview-check.json`: one video,
+  one audio and one subtitle stream, each 112 s; the audio 0 samples from the WAV in all three windows (correlation
+  0.99876 to 0.99998); the burn leaves the bottom 30 rows' bytes untouched (exact, before the encode, at 31 to 33 and 79
+  to 81 s) and draws in the caption band (the control); encoded, the bottom rows differ from a plain capture by at most
+  12 and 30 levels, inside the encoder's spread in the undrawn middle rows (45 and 76).
+- Per shot (integrated, the preview's AAC): the car's shots 4 and 5 at -19.4 and -19.1 LUFS; shot 7, the two walkers in
+  step, at -20.8, within 1.7 LU of them; shot 3, the car's drive, at -23.8. For the panel: the plan wants the car the
+  only loud thing. Balance is reported at Sound 2, not judged (placeholders have no real spectrum).
+- `scripts/sound-preview.js` and `tests/sound-preview.test.mjs` (3 tests, each with a planted fault: 3 samples of lag
+  either way; text in the bottom rows or none in the band; the review track pinned to the foot of the frame).
+- Gate: 252 tests, 249 pass, 0 fail, 3 skipped (the parked score); check pass.
