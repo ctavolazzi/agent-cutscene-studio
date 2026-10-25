@@ -677,6 +677,9 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - After, every switch off: the same two sha256, byte for byte. Measured: the hidden state matches Sound 1's check 2
   (19 voiced cues, the same frames); each switch moves exactly the cues it names (0 stray, 0 stray samples in the
   mix); the A master replays `normalize` sample for sample.
+- Gate (added at the fix pass, F8: no gate result was kept for this commit): re-run then from a `git archive e94f193`
+  copy, npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
 
 #### s2-options: the options script, its measurements and clips (before)
 - Plan: `node scripts/sound-options.js --round 05` measures options 1 to 3 cue by cue (A against B), checks what each
@@ -695,6 +698,12 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   coherently in the mix; Sound 1's blockers hide the exhaust behind its own car 229 frames; through A's own limiter
   curve the listener's B would reach +7.9 dBFS, so each set shares one curve from its loudest mix.
 - Style frame: the default (shots 4 to 6) against 4 to 5, 5 to 8 and 11 to 13, picked by rule.
+- Gate (added at the fix pass, F8: no gate result was kept for this commit): re-run then from a `git archive 0143d4e`
+  copy, npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run check exit 0 (the same three PASS lines).
+
+#### s2-options: the notes (before)
+- Added at the fix pass (F8); no 'before' entry was written at the time. The step, from its commit a7b262d: write
+  review/round-05/notes-options.md from decisions.json for the lead to merge into notes.md.
 
 #### s2-options: the notes (after)
 - `review/round-05/notes-options.md` for the lead to merge: how each A/B was made, each option's definition, starting
@@ -702,6 +711,9 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   muffle, the physical pan, the camera as listener, shots 4 to 6); three findings beyond the options.
 - Byte identity before this last commit: the default render 6f9c4925..., the design stage with the score unparked
   f80b1542... (the S8.3 bytes), as before the branch.
+- Gate (added at the fix pass, F8, from the builder's own logs, written 02:35 to 02:41, just before this commit at
+  02:41; no exit status was kept): npm test 214 tests, 207 pass, 0 fail, 7 skipped; npm run check, forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15.
 
 #### s2-options: the checker's findings F1 to F9, the plan (before)
 - Before: HEAD a7b262d. The checker's gate there: npm test exit 0 (214 tests, 207 pass, 0 fail, 7 skipped), npm run
@@ -769,3 +781,21 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
   determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). Default render 6f9c4925... and `a.wav` the
   same bytes; the design stage with the score unparked f80b1542... (S8.3).
+
+#### s2-options: F6, F8 and F9, the notes and this log (before)
+- Plan: rewrite review/round-05/notes-options.md from the rerun decisions.json (the muffle by the set and by Sound 1's
+  rule, the still master and the clips' A against today's master, the listener's definition, the continuous cues' gap,
+  the phantom as an inference, the checks, the checker's findings with what changed and one disagreement); add the
+  missing 'before' entry and the gate results to the first three sub-entries above, marked as added at this pass.
+
+#### s2-options: F6, F8 and F9, the notes and this log (after)
+- Actions: review/round-05/notes-options.md rewritten from the rerun decisions.json: the muffle by the set and by
+  Sound 1's rule with the engine clip by part and a recommendation reworded on that split; the listener's still
+  master and every clip's A against today's master; the listener as the people out of the car, seen or not, with the
+  continuous cues' 6.92 dB gap to the onset prediction and why; the phantom as an inference; 15 checks; the checker's
+  findings and what changed, with one measured disagreement (F2: the hum's stem balance is 0.82 dB from A's by
+  design, so balances are held to the camera's pan law). The rampSec reason in the script now counts the block
+  latency (55 ms, not "8 ms into the next frame"); the rerun gave the same 12 clips byte for byte and a decisions.json
+  that differs only in that sentence. This log: the gates of the first three commits and the notes' 'before'.
+- Gate: npm test exit 0 (220 tests, 213 pass, 0 fail, 7 skipped); npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).

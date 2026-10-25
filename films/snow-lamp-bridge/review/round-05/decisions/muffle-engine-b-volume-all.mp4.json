@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 9.14,
- "loadSeconds": 0.525,
- "msPerFrame": 54.4,
+ "seconds": 15.052,
+ "loadSeconds": 0.912,
+ "msPerFrame": 89.6,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",

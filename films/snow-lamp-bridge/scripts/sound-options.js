@@ -47,7 +47,7 @@ const HEARD_DB = 20;
 const WHY = {
   dropDb: 'one tier of the level plan (SOUND-PLAN 1.3: a foreground sound sits at least 6 dB over the background, the midground 0 to 6 dB), so a hidden sound steps down by the gap between the two',
   lowpassHz: 'an octave under the darkest the air law reaches with distance (spatial.js SPATIAL.minAirHz, 1800 Hz), so the muffle reads as something in the way rather than far away; two 2-pole sections, as the placeholders build their bands (voices.js band)',
-  rampSec: 'the backgrounds\' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click, and done 8 ms into the frame after the one whose state changed',
+  rampSec: 'the backgrounds\' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click. A change of state is read at the next block (BLOCK samples, at most 5.3 ms after its frame), so the muffle has moved fully 50 to 55 ms after the frame that changes it',
   widthRatio: 'halfway between the physical pan (1) and the centre (0): a midpoint to find out whether a narrower pan is audible at all, not a designed width. It puts the frame edge at 0.12 to 0.33 by lens instead of 0.24 to 0.66 (SOUND-PLAN 3.4)',
   kinds: 'the sync foley the task and the plan name: the steps, the scuffs and the hands\' contacts (the forearms coming to rest on the parapet, the hands cupping the lighter). Cloth on the walks, turns and shifts is not a contact and keeps its pan',
   listener: 'the storyboard\'s own characters model (scripts/sound-report.js hear), so the render can be checked against what Sound 1 predicted at every cut',

@@ -141,7 +141,7 @@
     },
     "rampSec": {
      "v": 0.05,
-     "why": "the backgrounds' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click, and done 8 ms into the frame after the one whose state changed"
+     "why": "the backgrounds' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click. A change of state is read at the next block (BLOCK samples, at most 5.3 ms after its frame), so the muffle has moved fully 50 to 55 ms after the frame that changes it"
     }
    },
    "variants": {
