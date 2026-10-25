@@ -1,9 +1,12 @@
 // Checks for the blockout's measurement tooling (scripts/lib/audio-analysis.mjs, ROADMAP Sound 2.5, SOUND-PLAN 4.5):
 // onsets to the sample, one-to-one matching, cue ends, sync judged on a measured onset, pan from a stem window, the
 // momentary and short-term meters against ffmpeg, the third-octave bank on pure tones, the limiter's loss, the mono
-// fold-down and the phone, the loudest window and the measured density. Each has a planted fault that must be found:
-// a cue 5 ms late measured 5 ms late and one 6 ms late failing the 5 ms renderer bar, a cue one frame late failing
-// sync, swapped channels failing the pan bar, and an onset that a nearest-match rule hands to the wrong cue.
+// fold-down and the phone, the loudest window and the measured density; then the review's measures
+// (scripts/sound-review.js). Each has a planted fault that must be found: a cue 5 ms late measured 5 ms late, and one
+// 5.5 ms late that the 1 ms hop reads inside the 5 ms bar and the sample outside it; each cue of the closest pairs
+// played 6 ms early or late, and a stem holding it there; a cue one frame late failing sync, and one on a frame time
+// 10 ms late not excused as the reading's lag; swapped channels failing the pan bar; and an onset that a nearest-match
+// rule hands to the wrong cue.
 // Run: node --test tests/sound-measure.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -21,7 +24,7 @@ import { FPS, T_TOTAL } from '../src/world.js';
 import { buildInput, syncRule } from '../scripts/sound-report.js';
 import {
   densityEntry, determinismEntry, driftEntry, driftTol, levelEntry, makeSession, maskingAndPhone, measureGroup, panEntry,
-  rendererEntry, silenceEntry, stemsEntry, syncEntry, targetEntry, targetSweep, voicesEntry,
+  readLagSec, rendererEntry, silenceEntry, stemsEntry, syncEntry, targetEntry, targetSweep, voicesEntry,
 } from '../scripts/sound-review.js';
 import {
   THIRD_OCTAVES, balanceDb, bandLevels, energyBlocks, foldDown, limiterLoss, loudestWindow, matchOnsets, matchOneToOne,
@@ -36,6 +39,10 @@ const quiet = CUES.filter((c) => c.voices === 0);
 // one voice group's stem before the master, from cues.js's catalogue with some cues replaced or added
 const groupOf = (source, swap = []) => preMaster([...quiet, ...CUES.filter((c) => c.source === source && c.voices > 0 && !swap.some((x) => x.id === c.id)), ...swap]);
 const moveBy = (c, dt) => ({ ...c, sync: c.sync + dt, t0: c.t0 + dt, t1: c.t1 + dt });
+// a cue played dt later in every respect: its span moved, and its place and track read dt earlier. moveBy moves only
+// the span, and a voice whose level follows the picture waits for it: the flame, whose level is lighterFlicker's,
+// moved 6 ms early by moveBy still starts at the first flame frame
+const shiftBy = (c, dt) => ({ ...moveBy(c, dt), place: c.place && ((t) => c.place(t - dt)), track: c.track && ((t) => c.track(t - dt)) });
 const own = (source) => CUES.filter((c) => c.enabled && c.voices > 0 && c.source === source).sort((a, b) => a.t0 - b.t0);
 // the detector's gap within one voice group (tests/sound-blockout.test.mjs): half the group's closest onsets, at most
 // 80 ms, never under cues.js's flam merge
@@ -43,13 +50,15 @@ const minGapOf = (list) => Math.max(DESIGN.STEP.flam, Math.min(0.08, ...list.sli
 
 // ---------- onsets to the sample, and matching one to one ----------
 // The renderer bar (ROADMAP Sound 2.6): an onset within 5 ms of its cue time. onsets() reports the 1 ms hop an
-// attack crosses its line in, so a cue 6 ms late can read 5 (tests/sound-blockout.test.mjs plants 7 ms for that
-// reason); preciseOnsets() reads the sample, so 5 ms late reads 5 ms late and 6 ms late fails. Measured: this step on
-// time reads 0.083 ms after its t0 (the first sample of its attack over the detector's line), so 5 ms late reads
-// 5.083 ms against its cue time and exactly 5 ms (240 samples) against its own reading on time; the bar on that shift
-// is one sample. The time is read within READ_TOL, the renderer bar is RENDER_TOL.
+// attack crosses its line in, which rounds the attack down by less than a millisecond; preciseOnsets() reads the
+// sample. Measured: this step on time reads 0.083 ms after its t0 (the first sample of its attack over the detector's
+// line), so 5 ms late reads 5.083 ms against its cue time and exactly 5 ms (240 samples) against its own reading on
+// time; the bar on that shift is one sample. A whole millisecond keeps an attack's place in its hop, so 6 ms late
+// reads over 5 ms on the hop too, and only a fractional shift tells the two apart: 5.5 ms late, this step's attack
+// lands 0.77 ms into its hop, onsets() reads it 4.81 ms late, inside the bar, and preciseOnsets() 5.58, outside it
+// (the test checks that premise). The time is read within READ_TOL, the renderer bar is RENDER_TOL.
 const RENDER_TOL = 0.005, READ_TOL = 0.01;
-test('onsets to the sample: a step 5 ms late reads 5 ms late, one 6 ms late fails the 5 ms renderer bar', () => {
+test('onsets to the sample: a step 5 ms late reads 5 ms late; 5.5 ms late the hop reads it inside the 5 ms bar, the sample outside', () => {
   const g = 'A:feet', c = byId('foley.feet.A.05'), times = own(g).map((x) => x.t0);
   const read = (stem, tol) => matchOneToOne(times, preciseOnsets(stem.left, stem.right, SR, { minGap: minGapOf(own(g)) }), tol);
   const at = (m) => m.pairs.find((x) => x.expected === c.t0);
@@ -61,6 +70,13 @@ test('onsets to the sample: a step 5 ms late reads 5 ms late, one 6 ms late fail
   const late6 = read(groupOf(g, [moveBy(c, 0.006)]), RENDER_TOL);
   assert.deepEqual(late6.missed, [c.t0]);
   assert.ok(Math.abs(at(read(groupOf(g, [moveBy(c, 0.006)]), READ_TOL)).diff - at(real).diff - 0.006) <= 1 / SR + 1e-9);
+  // the hop against the sample: 5.5 ms late, its attack lands far enough into its hop that the hop's time is inside the
+  // bar (premise), so onsets() would pass it and preciseOnsets() fails it
+  const s55 = groupOf(g, [moveBy(c, 0.0055)]), attack = at(read(s55, READ_TOL)).detected;
+  assert.ok((attack * 1000) % 1 > 0.5 + at(real).diff * 1000, `premise: the attack lands ${((attack * 1000) % 1).toFixed(3)} ms into its hop`);
+  const byHop = at(matchOneToOne(times, onsets(s55.left, s55.right, SR, { minGap: minGapOf(own(g)) }), RENDER_TOL));
+  assert.ok(byHop && byHop.diff <= RENDER_TOL, 'control: on the hop it reads inside the bar');
+  assert.deepEqual(read(s55, RENDER_TOL).missed, [c.t0], 'to the sample it is outside the bar');
   // onsets() is unchanged by the refactor into a shared detector, and still rounds to the millisecond
   const s = groupOf(g), hop = onsets(s.left, s.right, SR, { minGap: minGapOf(own(g)) }), fine = preciseOnsets(s.left, s.right, SR, { minGap: minGapOf(own(g)) });
   assert.equal(hop.length, fine.length);
@@ -262,30 +278,89 @@ test('measured density: groups sounding together are counted, within 6 dB of the
 // On a few voice groups of the real blockout (one session, each stem rendered once) or on small made-up signals.
 const session = makeSession({ log: () => {} });
 const INPUT = buildInput();
-const nearest = (e, d, tol) => ({ pairs: matchOnsets(e, d).filter((x) => Math.abs(x.diff) <= tol), missed: [], extra: [] });
 const failing = (e) => e.rows.filter((x) => x.ok === false).map((x) => x.cue ?? x.note);
+const rowsOf = (e, kind) => e.rows.filter((x) => x.kind === kind);
 
-test('renderer measure: steps, ticks and a door pass; a step 6 ms late, a ghost cue and an onset where no cue sounds fail', () => {
-  assert.equal(rendererEntry(['A:feet', 'car:engine-bay', 'car:door:driver'].map((g) => measureGroup(session, g))).status, 'pass');
-  const c = byId('foley.feet.A.05');
-  assert.deepEqual(failing(rendererEntry([measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [moveBy(c, 0.006)]) })])), [c.id]);
-  // a ghost cue 3 ms after a real tick, never rendered: one to one leaves it without an onset; nearest match does not
+// The renderer measure reads each voiced cue's onset on its own render (the first sample that is not zero) and checks
+// each group's stem against the sum of its cues alone. The detector on the stem could not: on a tail still sounding it
+// fires again every minGap, and the later cue of a close pair read a re-fire wherever its audio was (round 05's checker:
+// 5 of the 93 one-shots passed with their audio 6 ms early, foley.feet.B.03 at 50 ms). Planted on the closest pairs,
+// 6 ms early and late, two ways: the renderer playing the cue there (`played`: its render alone and the stem both
+// move), which its own row fails; and a stem holding it there while the cue alone does not (a voice leaking into the
+// group), which only the sum sees.
+const PAIRS = [
+  ['foley.feet.B.02', 'foley.feet.B.03'], ['foley.feet.A.12', 'foley.feet.A.13'], ['hard.door.driver.unlatch', 'hard.door.driver.swing-open'],
+  ['hard.door.passenger.unlatch', 'hard.door.passenger.swing-open'], ['foley.lighter.A.flame', 'foley.lighter.A.release'],
+];
+test('renderer measure: the closest pairs\' groups pass; each cue of a pair played 6 ms early or late fails on its own row; a stem holding it there fails the sum', () => {
+  const groups = [...new Set(PAIRS.map(([a]) => byId(a).source)), 'car:engine-bay', 'bg:wind'];
+  const real = rendererEntry(groups.map((g) => measureGroup(session, g)));
+  assert.equal(real.status, 'pass', JSON.stringify(failing(real)));
+  assert.equal(rowsOf(real, 'sum').length, groups.length);
+  const problems = [];
+  for (const pair of PAIRS) {
+    for (const id of pair) {
+      for (const dt of [-0.006, 0.006]) {
+        const c = byId(id), moved = shiftBy(c, dt), say = `${id} ${dt > 0 ? '+' : ''}${dt * 1000} ms`;
+        // the renderer plays it there: its own row fails, by the shift; its partner and the sum pass (a stray is allowed:
+        // the unlatch 6 ms early sounds before any cue of its door)
+        const played = rendererEntry([measureGroup(session, c.source, { played: [moved] })]), bad = rowsOf(played, 'onset').filter((x) => !x.ok);
+        if (bad.length !== 1 || bad[0].cue !== id || Math.abs(bad[0].diffMs - dt * 1000) > 0.05 || !rowsOf(played, 'sum')[0].ok) problems.push(`${say} played: ${JSON.stringify(failing(played))}`);
+        // the stem holds it there, its render alone does not: every onset row passes, the sum fails inside its span
+        const leak = rendererEntry([measureGroup(session, c.source, { stem: groupOf(c.source, [moved]) })]), sum = rowsOf(leak, 'sum')[0];
+        if (!rowsOf(leak, 'onset').every((x) => x.ok) || sum.ok || !(sum.at >= Math.min(c.t0, moved.t0) - 1e-3 && sum.at <= Math.max(c.t1, moved.t1) + 0.02)) problems.push(`${say} in the stem: ${JSON.stringify(failing(leak))}`);
+      }
+    }
+  }
+  assert.deepEqual(problems, []);
+});
+
+test('renderer measure: a ghost cue the renderer never played, a stray onset and continuous voices played 30 ms late fail', () => {
+  // a ghost cue 3 ms after a real tick, never rendered: alone it plays on time, so only the sum finds the stem without it
   const real = byId('hard.tick.car.03'), ghost = { ...real, id: 'hard.tick.car.ghost', sync: real.sync + 0.003, t0: real.t0 + 0.003, t1: real.t1 + 0.003 };
   const both = [...own(real.source), ghost].sort((a, b) => a.t0 - b.t0);
-  assert.deepEqual(failing(rendererEntry([measureGroup(session, real.source, { own: both })])), [ghost.id]);
-  assert.equal(rendererEntry([measureGroup(session, real.source, { own: both, match: nearest })]).status, 'pass', 'control: nearest match passes the ghost');
-  // a step rendered where no cue of the group sounds (the cue list does not know it)
+  const e = rendererEntry([measureGroup(session, real.source, { own: both })]), sum = rowsOf(e, 'sum')[0];
+  assert.deepEqual([e.status, sum.ok, rowsOf(e, 'onset').every((x) => x.ok)], ['fail', false, true]);
+  assert.ok(sum.at >= ghost.t0 && sum.at < ghost.t1 + 0.01, `the stem departs from the sum at ${sum.at}`);
+  // control: the list without the ghost passes
+  assert.equal(rendererEntry([measureGroup(session, real.source)]).status, 'pass');
+  // a step rendered where no cue of the group sounds (the cue list does not know it): a stray, and the sum
   const stray = moveBy(byId('foley.feet.A.02'), 0.7);
-  assert.deepEqual([...new Set(failing(rendererEntry([measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [byId('foley.feet.A.02'), stray]) })])))], ['an onset where no cue of its group sounds']);
+  const s = rendererEntry([measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [byId('foley.feet.A.02'), stray]) })]);
+  assert.deepEqual([...new Set(s.rows.filter((x) => !x.ok).map((x) => x.kind))].sort(), ['stray', 'sum']);
+  assert.ok(rowsOf(s, 'stray').some((x) => Math.abs(x.onset - stray.t0) < 0.002));
+  // continuous voices (SOUND-PLAN 4.5's bar is not only for one-shots): cloth, a brake, a drag and the bridge's wind
+  // bed (judged from bedSpan's start, half the crossfade early), each played 30 ms late, fail on their own rows
+  for (const id of ['foley.moves.B.walk1', 'hard.brake.car.pads1', 'foley.drag.A.1', 'bg.wind.bridge.bed']) {
+    const c = byId(id), late = rendererEntry([measureGroup(session, c.source, { played: [shiftBy(c, 0.03)] })]);
+    assert.deepEqual(rowsOf(late, 'onset').filter((x) => !x.ok).map((x) => [x.cue, Math.round(x.diffMs)]), [[id, 30]]);
+    assert.equal(rowsOf(rendererEntry([measureGroup(session, c.source)]), 'onset').find((x) => x.cue === id).ok, true, `${id} on time`);
+  }
 });
 
 test('sync measure: a step one frame late against its picture event fails, where it passed on time', () => {
   const c = byId('foley.feet.A.05'), real = syncEntry(measureGroup(session, 'A:feet').rows, INPUT);
   assert.equal(real.rows.find((x) => x.cue === c.id).ok, true);
-  const late = syncEntry(measureGroup(session, 'A:feet', { stem: groupOf('A:feet', [moveBy(c, 1 / FPS)]) }).rows, INPUT);
+  const late = syncEntry(measureGroup(session, 'A:feet', { played: [shiftBy(c, 1 / FPS)] }).rows, INPUT);
   const row = late.rows.find((x) => x.cue === c.id);
   assert.deepEqual([late.status, row.ok, row.cueOk], ['fail', false, true]);
   assert.match(row.note, /ms after its frame$/);
+});
+
+// An instant on its frame's own time passes on its cue time with nothing to spare, and its onset, the first sample
+// that is not zero (one after its voice's start), reads 0.02 ms after the frame: that, and only that, is the reading's
+// lag (readLagSec, 1.5 samples). A cue on a frame time played 10 ms late is late, and its note says so plainly.
+test('sync measure: an instant on its frame\'s own time reads the reading\'s lag after it, noted so; played 10 ms late it is plainly late', () => {
+  for (const id of ['hard.door.driver.latch', 'hard.engine.car.intake']) {
+    const c = byId(id), row = (m) => syncEntry(m.rows, INPUT).rows.find((x) => x.cue === id);
+    const on = row(measureGroup(session, c.source));
+    assert.deepEqual([on.ok, on.cueOk], [false, true], id);
+    assert.match(on.note, /on the frame's own time/);
+    assert.ok(-on.aheadMs > 0 && -on.aheadMs <= readLagSec(SR) * 1000 + 1e-6, `${id} reads ${-on.aheadMs} ms after its frame`);
+    const late = row(measureGroup(session, c.source, { played: [shiftBy(c, 0.01)] }));
+    assert.deepEqual([late.ok, late.cueOk], [false, true]);
+    assert.match(late.note, /^10\.02 ms after its frame$/, `${id}: ${late.note}`);
+  }
 });
 
 test('pan measure: the driver\'s door passes; swapped channels fail every one of its cues', () => {

@@ -730,3 +730,55 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   (222 pass, 7 skipped), forbidden, build, determinism, cameras pass (one gate was stopped by a time limit while the
   other builder's gate shared the CPUs, and rerun alone: 417 s). The design stage with the score unparked renders
   sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-measure: the checker's findings and the fix plan (before)
+- An independent checker found nine things (F1 to F9). High: the detector fires again on a tail that is still
+  sounding, once every minGap, and the renderer accepted those re-fires inside a cue's span, so 5 of the 93 one-shots
+  passed with their own audio moved 6 ms early (some at 30 to 50 ms), and 6 committed onsets were hop times after a
+  re-fire (F1); the "onsets to the sample" control could not fail (F2). Medium: the sync edge note had no upper bound
+  (F3); the 49 continuous voices had no renderer bar (F4); the stems' sum was claimed for the AAC files, where it holds
+  only for the float renders (F5). Low: the schema left out `hush` (F6); the drift notes misread the rustles (F7);
+  check 5 said nothing about a WAV from before the per-stage target (F8); comments and SOUND.md (F9).
+- Checked before planning (scratch, builder-s2-measure): each of the 142 voiced cues rendered alone starts within
+  0.031 ms of its expected start (one sample after t0; a background half the crossfade before), and every group's stem
+  equals the sum of its cues rendered alone within 8.2e-8 of its peak; the 142 alone renders take 35 s. Moving a cue
+  in the cue list does move its audio (B.03 moved -6 ms changes the stem from 34.594 s), so both kinds of plant are
+  misplacements; only the detector missed them.
+- Plan, four gated commits: (1) the renderer reads every voiced cue's onset on its own render, cross-checks each group's
+  stem against the sum of its cues alone, and judges every voiced cue (F1, F4); the sync edge note bounded by that
+  reading's lag (F3); the hop control (F2); the schema and comments (F6, F9); (2) the listening stems: the float sum
+  tested, the AAC files' own error measured (F5); (3) verify check 5 and SOUND.md (F8, F9); (4) measure.json,
+  stems.json and the notes rerun on the fixed code (F7's correction there).
+
+#### s2-measure: the renderer reads each cue alone (before)
+- Plan: `measureGroup` reads every voiced cue's onset as the first sample that is not zero of the cue rendered alone
+  (memoised by cue, renders not kept), and the group's stem against the sum of its cues alone (a planted cue played
+  at another time through `played`, or a stem that is not that sum). `rendererEntry` judges all 142 voiced cues
+  (a background against bedSpan's start), one row per group for the sum, and the detector's strays as before. The sync
+  edge note only within the reading's lag (1.5 samples). The hop control planted at 5.5 ms. Tests for each, on the
+  closest pairs (B.02 and B.03, A.12 and A.13, both doors' unlatch and swing open, the flame and the release) 6 ms
+  early and late, each shown to fail.
+
+#### s2-measure: the renderer reads each cue alone (after)
+- `scripts/sound-review.js`: the session keeps each cue's onset (the first sample that is not zero of the cue alone)
+  and each group's sum of its cues alone; `measureGroup` reads every onset there (`played` plants a cue the renderer
+  misplaced, `stem` one that is not the sum), and its `method` column is now `read` (where the end and the window are
+  read, the stem or the cue alone). `rendererEntry` judges every voiced cue against `startOf` (t0, or bedSpan's first
+  sample for a background), one `sum` row per group (bar 1e-6 of the peak, the stems' starting value) and the strays.
+  The sync edge note only within `readLagSec` (1.5 samples). Comments for the exports the checker named; the schema
+  names `hush`.
+- Measured on all 142 voiced cues (scratch sens2.mjs): every cue played 6 ms early and 6 ms late in every respect
+  (its span, place and track) fails on its own row and no other, and every one-shot's audio moved 6 ms early in the
+  stem alone fails its group's sum: 372 of 377 plants found. The 5 not found are the three cues that start with the
+  film (the street's wind and city beds and the lamp's hum, t0 0): an onset before the film's first sample cannot be
+  read, and the beds start half the crossfade before t0, clipped at 0, so a shift under 25 ms either way stays there.
+- `moveBy` alone does not misplace a voice whose level follows the picture: the flame moved 6 ms early by moveBy still
+  starts at its first flame frame (lighterFlicker), so the tests plant with `shiftBy`, its track and place moved too.
+- `tests/sound-measure.test.mjs`: 25 tests (23 before): the hop plant (A.05 5.5 ms late: its attack 0.77 ms into
+  its hop, onsets() reads 4.81 ms, preciseOnsets() 5.58); the closest pairs played 6 ms early and late (own row) and
+  held there by the stem (the sum); a ghost (the sum), a stray (stray and sum), four continuous voices 30 ms late; the
+  latch and the intake on time (the edge note) and 10 ms late (plain "10.02 ms after its frame"). The renderer
+  test's nearest-match control is gone with the matching (the tooling test keeps it). 91 s alone (28 s before).
+- Gate: 231 tests (224 pass, 7 skipped: the parked score, and 4 reel tests with no published export in this
+  worktree); forbidden, build, determinism, cameras pass. The design stage with the score unparked renders sha256
+  f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.

@@ -93,7 +93,12 @@ function detect(left, right, sr, { ratioDb = 12, floorDb = -60, minGap = 0.08, l
   return { hop, hits };
 }
 // onsets() to the sample: each detection moved to the first sample of its hop, in either channel, over the detector's
-// own line. The hop's time rounds an attack down by up to a millisecond, so a cue 6 ms late can read 5; this reads 6.
+// own line. The hop's time rounds an attack down by less than a millisecond, so a cue 6 ms late always reads over 5 ms
+// there, but one 5.5 ms late can read under 5 (its attack far enough into its hop); this reads 5.5
+// (tests/sound-measure.test.mjs).
+// Like onsets(), it fires again on a tail that is still sounding, once every minGap, so a detection near an attack
+// that starts on another voice's tail can be a re-fire, held back by the gap (scripts/sound-review.js reads each cue's
+// onset on its own render instead).
 export function preciseOnsets(left, right, sr, opts = {}) {
   const { hop, hits } = detect(left, right, sr, opts);
   return hits.map(({ j, line }) => {
@@ -282,10 +287,13 @@ export function loudnessSeries(blocks, windowSec) {
   }
   return { hopSec: blocks.hopSec, windowSec, firstEnd: w * blocks.hopSec, lufs };
 }
+// The momentary loudness series of a signal: 400 ms windows every 100 ms (EBU Tech 3341's M)
 export const momentary = (s) => loudnessSeries(kBlocks(s), 0.4);
+// The short-term loudness series of a signal: 3 s windows every 100 ms (EBU Tech 3341's S)
 export const shortTerm = (s) => loudnessSeries(kBlocks(s), 3);
-// The largest, the median and the smallest reading of the series' windows that lie inside [t0, t1), and how many
+// a time comparison's slack: block ends are sums of 0.1 s steps, which floating point does not hit exactly
 const EPS_T = 1e-9;
+// The largest, the median and the smallest reading of the series' windows that lie inside [t0, t1), and how many
 export function seriesSummary(series, t0, t1) {
   const v = [];
   series.lufs.forEach((x, k) => { const e = series.firstEnd + k * series.hopSec; if (e - series.windowSec >= t0 - EPS_T && e <= t1 + EPS_T) v.push(x); });

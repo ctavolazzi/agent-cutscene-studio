@@ -10,10 +10,14 @@
 //
 // measure.json:
 //   { round, stage, parked, seed, sr, seconds, targetLufs, gainDb, cues, voiced, streetDb,
+//     hush:     [t0, t1]                                      the run-down's end to the end of the shot after it (s)
 //     groups:   [{ source, body, category, cues, file }]      each voice group, and its measuring stem under out/
 //     renders:  { raw, again, mastered: { sha256, stats } }   the blockout before the master's normalization (twice) and after
 //     measures: [entry]                                       one per measure of SOUND-PLAN 4.5, numbered in its order
-//     table:    { columns, rows }                             one row per voiced cue: everything measured on it
+//     table:    { columns, rows }                             one row per voiced cue: everything measured on it. `onset`
+//               is the first sample that is not zero of the cue rendered alone (the renderer measure checks that each
+//               group's stem is the sum of its cues alone); `read` says where its end and loudest window are read: its
+//               group's stem, or its own render alone
 //     bands:    { nominal: [Hz], cues: { [id]: { t, cue: [dB], masker: [dB] } } }   third octaves of each cue's loudest
 //               100 ms and of everything else sounding in it (Infinity-free: a silent band is null)
 //     series:   { hopSec, momentary: { windowSec, firstEnd, lufs }, shortTerm: { ... } }   the mastered mix, every 100 ms;
@@ -49,13 +53,14 @@ import { allocate, maskingBed, safeBand } from './lib/sound-checks.js';
 import { buildInput, syncRule } from './sound-report.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+// the config at the blockout stage, parked as the config has it: what the review measures
 export const BLOCKOUT = atStage(CONFIG, { stage: 'blockout' });
 // the parked design layers, score parked (Sound 2.7): ambience, car, foley
 export const DESIGN_PARKED = atStage(CONFIG, { stage: 'design', parked: ['score'] });
 
 // The bars and the measuring choices, each with where it comes from. A starting value is labelled one.
 export const BARS = Object.freeze({
-  onsetSec: { v: 0.005, starting: false, source: 'ROADMAP Sound 2.6 and SOUND-PLAN 4.5: the renderer and the detector, onset against cue time (the S8.2 layers reached it)' },
+  onsetSec: { v: 0.005, starting: false, source: 'ROADMAP Sound 2.6 and SOUND-PLAN 4.5: the renderer, onsets against cue times, every voiced cue (the S8.2 layers reached it)' },
   panDb: { v: 0.5, starting: false, source: 'SOUND-PLAN 4.5: today\'s car test; S8.2 measured 0.11 dB' },
   sumRatio: { v: 1e-6, starting: true, source: 'tests/sound-blockout.test.mjs: the stems against the mix measured one float32 step (1.3e-7 of the peak); about eight steps' },
   limiterDb: { v: 1, starting: true, source: 'Sound 2.6: a click limited for a few ms is not a level change, a pumped idle is; 1 dB in any 400 ms window' },
@@ -85,12 +90,18 @@ export const minGapOf = (own, flam = DESIGN.STEP.flam) => Math.max(flam, Math.mi
 export const bodyOf = (source) => (source.startsWith('bg:') || source === 'lamp' ? 'night' : source.split(':')[0]);
 
 // ---------- the session: every render once ----------
+// The first sample that is not zero of a render, in seconds (null when silent)
+const firstSound = (s) => { const z = A.nonzeroSpan(s); return z ? z[0] / s.sr : null; };
 export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log } = {}) {
   const memo = new Map(), once = (k, f) => { if (!memo.has(k)) memo.set(k, f()); return memo.get(k); };
   const sr = config.audio.sr, quiet = cues.filter((c) => c.voices === 0), voiced = cues.filter((c) => c.enabled && c.voices > 0);
   const groups = [...new Set(voiced.map((c) => c.source))];
   const copy = (s) => ({ sr: s.sr, left: Float32Array.from(s.left), right: Float32Array.from(s.right) });
   const of = (pred) => [...quiet, ...voiced.filter(pred)];
+  // per cue, keyed by the cue itself (a changed copy is another cue): its render alone, kept only for the cues read
+  // alone (s.alone), and its onset (s.onsetOf), for every cue
+  const renders = new WeakMap(), onsets = new WeakMap();
+  const render = (c) => renders.get(c) ?? A.preMaster([...quiet, c], config);
   const s = {
     config, cues, sr, log, quiet, voiced, groups,
     own: (g) => voiced.filter((c) => c.source === g).sort((a, b) => a.t0 - b.t0 || (a.id < b.id ? -1 : 1)),
@@ -100,10 +111,23 @@ export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log 
     peaks: () => once('peaks', () => truePeakEnvelope(s.raw().left, s.raw().right)),
     // normalized at the stage's target, as renderSoundtrack would
     mastered: () => once('mastered', () => { const m = copy(s.raw()); m.stats = normalize(m.left, m.right, config.audio, sr, 4, s.peaks()); return m; }),
-    // before the master: everything, one voice group, one cue alone, the unplaced backgrounds
+    // before the master: everything, one voice group, one cue alone (kept), the unplaced backgrounds
     pre: () => once('pre', () => A.preMaster(cues, config)),
     group: (g) => once(`group:${g}`, () => A.preMaster(of((c) => c.source === g), config)),
-    alone: (c) => once(`alone:${c.id}`, () => A.preMaster([...quiet, c], config)),
+    alone: (c) => { if (!renders.has(c)) renders.set(c, A.preMaster([...quiet, c], config)); return renders.get(c); },
+    // a cue's onset: the first sample that is not zero of the cue rendered alone, where its voice starts (every voice
+    // starts from zero, so one sample after its start); a render made only for this is not kept (142 would hold 6 GB)
+    onsetOf: (c) => { if (!onsets.has(c)) onsets.set(c, firstSound(render(c))); return onsets.get(c); },
+    // the sum of a voice group's cues rendered alone (float64, both channels), which its stem must equal if no voice
+    // leaks into another; each cue's onset is kept on the way
+    aloneSum: (g) => once(`sum:${g}`, () => {
+      const n = Math.round(T_TOTAL * sr), left = new Float64Array(n), right = new Float64Array(n);
+      for (const c of s.own(g)) { const a = render(c); if (!onsets.has(c)) onsets.set(c, firstSound(a)); for (let i = 0; i < n; i++) { left[i] += a.left[i]; right[i] += a.right[i]; } }
+      return { sr, left, right };
+    }),
+    // a cue rendered alone: its kept render, or one made for the call and not kept (a cue played otherwise, a plant);
+    // its onset is kept on the way
+    renderAlone: (c) => { const a = render(c); if (!onsets.has(c)) onsets.set(c, firstSound(a)); return a; },
     beds: () => once('beds', () => A.preMaster(of((c) => c.category === 'bg' && !c.place), config)),
     // the full render of some voice groups (a body, the street background) before normalization, reverb included
     renderOf: (key, pred) => once(`render:${key}`, () => renderSoundtrack(config, { cues: of(pred), normalize: false })),
@@ -113,69 +137,91 @@ export function makeSession({ config = BLOCKOUT, cues = CUES, log = console.log 
 
 // ---------- one voice group measured: onsets, ends, the loudest window, pan ----------
 const LOOK_SEC = 0.05; // a continuous voice is read on its group's stem only if the stem is silent this long before it
-// Each voiced cue of group g, measured on the group's stem before the master:
-//   onset   one-shots: the detector (preciseOnsets, the group's gap), matched one to one within that gap (half the
-//           group's closest cue times, so no detection can belong to two cues); the renderer judges it against its bar;
-//           continuous voices: the first sample that is not zero, read where the stem was silent for LOOK_SEC before
-//           (a voice that follows another of its group without a gap, the engine's idle after the drive, and an
-//           unplaced background, crossfaded into the next of its family, are read on their own render: 'alone')
+// Where a cue's voice should start: its t0, or for an unplaced background the first sample bedSpan gives it (half the
+// crossfade early, on purpose: voices.js)
+export const startOf = (c, sr) => (c.place ? c.t0 : bedSpan(c, sr)[0] / sr);
+
+// A group's stem against the sum of its cues rendered alone, as the renderer played them (`rendered`): the largest
+// difference in either channel over the stem's peak, and where. It starts from the session's sum of its own cues and
+// adds or takes away each cue played or listed otherwise, so a plant costs a render or two, not the group's.
+function sumCheck(session, g, rendered, stem) {
+  const base = session.own(g), inBase = new Set(base), inNow = new Set(rendered), sum = session.aloneSum(g);
+  const add = rendered.filter((c) => !inBase.has(c)), sub = base.filter((c) => !inNow.has(c));
+  let { left, right } = sum;
+  if (add.length || sub.length) {
+    left = Float64Array.from(left); right = Float64Array.from(right);
+    for (const [list, k] of [[add, 1], [sub, -1]]) {
+      for (const c of list) { const a = session.renderAlone(c); for (let i = 0; i < left.length; i++) { left[i] += k * a.left[i]; right[i] += k * a.right[i]; } }
+    }
+  }
+  let worst = 0, peak = 0, at = 0;
+  for (let i = 0; i < stem.left.length; i++) {
+    const d = Math.max(Math.abs(stem.left[i] - left[i]), Math.abs(stem.right[i] - right[i]));
+    if (d > worst) { worst = d; at = i; }
+    peak = Math.max(peak, Math.abs(stem.left[i]), Math.abs(stem.right[i]));
+  }
+  return { worst, peak, ratio: peak > 0 ? worst / peak : worst > 0 ? Infinity : 0, at: at / stem.sr };
+}
+
+// Each voiced cue of group g as the cue list has it (`own`), measured before the master:
+//   onset   the first sample that is not zero of the cue rendered alone, as the renderer played it (session.onsetOf):
+//           where its voice starts, whatever sounds with it. Not the detector: on a tail that is still sounding it
+//           fires again every minGap, and the next cue's onset then reads a re-fire (round 05's checker found 5 of the
+//           93 one-shots passing with their audio moved 6 ms early that way). That each onset read alone is where the
+//           stem plays it is the group's `sum`: the stem against the sum of its cues alone
 //   end     soundingEnd from the onset to the next cue of the group (or the end), BARS.endFloorDb
 //   window  the loudest 100 ms of its own samples (to its t1 and the ring: events.js drops a voice in the block it ends
 //           in, so its lowpass rings on to that block's end) and its level; for an unplaced background
 //           its level over its span between its crossfades, as the level rule sets it (voices.js)
-// Options for the tests: another stem or cue list, and another matching rule (`match`, matchOneToOne's shape).
-export function measureGroup(session, g, { stem = session.group(g), own = session.own(g), aloneOf = (c) => session.alone(c), match = A.matchOneToOne } = {}) {
-  const sr = session.sr, ring = BLOCK / sr, gap = minGapOf(own), det = A.preciseOnsets(stem.left, stem.right, sr, { minGap: gap });
-  const m = match(own.map((c) => c.t0), det, gap);
+//   read    where the end and the window are read: 'stem', the group's stem up to the next cue of the group; or
+//           'alone', the cue's own render, for a continuous voice that follows another of its group with less than
+//           LOOK_SEC of silence (the engine's idle after the drive) and an unplaced background (crossfaded into the next
+//           of its family)
+// The detections (preciseOnsets on the stem, the group's gap) are for the strays and the silence windows.
+// Options for the tests: another cue list (`own`); cues the renderer played in place of the list's (`played`, by id: a
+// misplaced cue, whose render alone and the stem both move); another stem (one that is not the sum of its cues).
+export function measureGroup(session, g, { own = session.own(g), played = [], stem = null } = {}) {
+  const sr = session.sr, ring = BLOCK / sr, swap = new Map(played.map((p) => [p.id, p])), rendered = own.map((c) => swap.get(c.id) ?? c);
+  stem ??= played.length ? A.preMaster([...session.quiet, ...rendered], session.config) : session.group(g);
+  const sum = sumCheck(session, g, rendered, stem), det = A.preciseOnsets(stem.left, stem.right, sr, { minGap: minGapOf(own) });
   const rows = own.map((c, i) => {
-    const next = own[i + 1], winEnd = next ? next.t0 : T_TOTAL;
-    let src = stem, method, onset = null, limit = winEnd;
-    if (c.shape === 'oneshot') {
-      method = 'detector';
-      onset = m.pairs.find((x) => x.expected === c.t0)?.detected ?? null;
-    } else if (!c.place || A.nonzeroSpan(stem, A.idx(c.t0 - LOOK_SEC, sr), A.idx(c.t0, sr))) {
-      method = 'alone'; src = aloneOf(c); limit = T_TOTAL;
-      const z = A.nonzeroSpan(src); onset = z ? z[0] / sr : null;
-    } else {
-      method = 'first sample';
-      const z = A.nonzeroSpan(stem, A.idx(c.t0 - LOOK_SEC, sr), A.idx(winEnd, sr)); onset = z ? z[0] / sr : null;
-    }
+    const p = rendered[i], next = own[i + 1], winEnd = next ? next.t0 : T_TOTAL;
+    const alone = c.shape !== 'oneshot' && (!c.place || A.nonzeroSpan(stem, A.idx(c.t0 - LOOK_SEC, sr), A.idx(c.t0, sr)) !== null);
+    const src = alone ? session.alone(p) : stem, limit = alone ? T_TOTAL : winEnd, onset = session.onsetOf(p);
     const e = A.soundingEnd(src, onset ?? c.t0, limit, BARS.endFloorDb.v);
     const spanEnd = Math.min(c.t1 + ring, limit), h = TIMBRE.crossfadeSec / 2;
     const w = c.place ? A.loudestWindow(src, c.t0, spanEnd, BARS.windowSec.v) : { t: c.t0 + h, db: A.powerDb(src, c.t0 + h, c.t1 - h) };
-    return { c, src, method, onset, end: e?.end ?? null, last: e?.last ?? null, window: w, spanEnd };
+    return { c, src, read: alone ? 'alone' : 'stem', onset, expected: startOf(c, sr), end: e?.end ?? null, last: e?.last ?? null, window: w, spanEnd };
   });
-  return { g, stem, detections: det, match: m, rows };
+  return { g, stem, detections: det, sum, rows };
 }
 
 // the predicted pan (spatial.js placeAt, the cue's law) of a placed cue at t: fixed where it starts for an 'onset' one
 const panOf = (c) => { const p0 = c.placement === 'onset' ? c.place(c.t0) : null; return (t) => { const q = p0 ?? c.place(t); return q ? placeAt(q, t, undefined, LAWS[c.law]).pan : 0; }; };
 
 // ---------- the measures, each an entry of measure.json ----------
-// 1 the renderer: every enabled one-shot's onset on its own group's stem (measureGroup), judged against the bar; and no
-// detection where no cue of its group sounds (an unplaced background sounds over bedSpan: its span widened by half the
-// crossfade at each end)
-const soundsFrom = (c, sr) => (c.place ? c.t0 : bedSpan(c, sr)[0] / sr);
+// 1 the renderer: every voiced cue's onset (measureGroup: the first sample of its own render) against where its voice
+// should start (startOf); each group's stem against the sum of its cues alone; and no detection on a stem where no cue
+// of its group sounds (from each cue's start to its end and the ring, within the onset bar)
 export function rendererEntry(measured) {
-  const rows = [];
-  let bad = 0, n = 0;
-  for (const { g, rows: cs, match } of measured) {
+  const rows = [], tol = BARS.onsetSec.v;
+  for (const { g, rows: cs, detections, sum } of measured) {
     for (const x of cs) {
-      if (x.c.shape !== 'oneshot') continue;
-      n++;
-      const ok = x.onset !== null && Math.abs(x.onset - x.c.t0) <= BARS.onsetSec.v;
-      if (!ok) bad++;
-      rows.push({ cue: x.c.id, group: g, t0: r(x.c.t0, 6), onset: r(x.onset, 6), diffMs: x.onset === null ? null : r((x.onset - x.c.t0) * 1000), ok, note: ok ? null : x.onset === null ? `no onset within ${r(minGapOf(cs.map((y) => y.c)) * 1000, 1)} ms (the group's gap)` : `${r(Math.abs(x.onset - x.c.t0) * 1000, 3)} ms ${x.onset > x.c.t0 ? 'late' : 'early'}, past ${BARS.onsetSec.v * 1000} ms` });
+      const d = x.onset === null ? null : x.onset - x.expected, ok = d !== null && Math.abs(d) <= tol;
+      rows.push({ kind: 'onset', cue: x.c.id, group: g, shape: x.c.shape, expected: r(x.expected, 6), onset: r(x.onset, 6), diffMs: d === null ? null : r(d * 1000), ok, note: ok ? null : d === null ? 'silent alone' : `${r(Math.abs(d) * 1000, 3)} ms ${d > 0 ? 'late' : 'early'}, past ${tol * 1000} ms` });
     }
-    for (const d of match.extra) {
-      const inside = cs.some((x) => d >= soundsFrom(x.c, x.src.sr) - BARS.onsetSec.v && d < x.spanEnd + BARS.onsetSec.v);
-      if (!inside) { bad++; rows.push({ cue: null, group: g, t0: null, onset: r(d, 6), diffMs: null, ok: false, note: 'an onset where no cue of its group sounds' }); }
-    }
+    const sok = sum.ratio <= BARS.sumRatio.v;
+    rows.push({ kind: 'sum', cue: null, group: g, sumRatio: Number.isFinite(sum.ratio) ? Number(sum.ratio.toExponential(3)) : null, at: r(sum.at, 6), ok: sok, note: sok ? null : `the stem is not the sum of its cues alone: ${sum.ratio.toExponential(2)} of its peak at ${r(sum.at, 4)} s` });
+    for (const t of detections) if (!cs.some((x) => t >= x.expected - tol && t < x.spanEnd + tol)) rows.push({ kind: 'stray', cue: null, group: g, onset: r(t, 6), ok: false, note: 'an onset where no cue of its group sounds' });
   }
-  const diffs = rows.filter((x) => x.diffMs !== null).map((x) => Math.abs(x.diffMs));
-  return entry('renderer', 1, 'Renderer', 'Every enabled one-shot\'s onset, detected to the sample on its own voice group\'s stem before the master (preciseOnsets, the group\'s own gap), matched one to one against the cue times of its group; and no detection outside every cue span of its group. A renderer and detector test, not sync', `Within ${bar('onsetSec')} s`, BARS.onsetSec.source, BARS.onsetSec.starting, bad ? 'fail' : 'pass', `${n} one-shots, ${n - rows.filter((x) => x.cue && !x.ok).length} within ${BARS.onsetSec.v * 1000} ms (worst ${r(Math.max(0, ...diffs), 3)} ms); ${rows.filter((x) => !x.cue).length} onsets outside their group's cues`, ['cue', 'group', 't0', 'onset', 'diffMs', 'ok', 'note'], rows);
+  const on = rows.filter((x) => x.kind === 'onset'), sums = rows.filter((x) => x.kind === 'sum'), bad = rows.filter((x) => !x.ok).length;
+  const worstMs = Math.max(0, ...on.filter((x) => x.diffMs !== null).map((x) => Math.abs(x.diffMs))), worstSum = Math.max(0, ...sums.map((x) => x.sumRatio ?? Infinity));
+  return entry('renderer', 1, 'Renderer', 'Every voiced cue\'s onset, the first sample that is not zero of the cue rendered alone before the master (where its voice starts, whatever sounds with it), against its cue time (an unplaced background against the first sample bedSpan gives it, half the crossfade early); each voice group\'s stem against the sum of its cues rendered alone, so each onset read alone is where the stem plays it and no voice leaks into another or sounds where no cue is; and no detection on the stem (preciseOnsets, the group\'s gap) outside every cue span of its group. A renderer test, not sync. The onsets are not the detector\'s: on a tail that is still sounding it fires again every minGap', `Within ${bar('onsetSec')} s; each stem the sum of its cues alone within ${bar('sumRatio')} of its peak`, `${BARS.onsetSec.source}; the sum: ${BARS.sumRatio.source}`, BARS.onsetSec.starting || BARS.sumRatio.starting, bad ? 'fail' : 'pass', `${on.length} voiced cues (${on.filter((x) => x.shape === 'oneshot').length} one-shots), ${on.filter((x) => x.ok).length} within ${tol * 1000} ms of their start (worst ${r(worstMs, 3)} ms); ${sums.filter((x) => x.ok).length} of ${sums.length} group stems the sum of their cues alone (worst ${worstSum.toExponential(2)} of the peak); ${rows.filter((x) => x.kind === 'stray').length} onsets outside their group's cues`, ['kind', 'cue', 'group', 'shape', 'expected', 'onset', 'diffMs', 'sumRatio', 'at', 'ok', 'note'], rows);
 }
 
+// How late an onset read alone can be against its cue time: the first sample that is not zero is the one after its
+// voice's start (every voice starts from zero), and the start is the cue time rounded to the sample: 1.5 samples
+export const readLagSec = (sr) => 1.5 / sr;
 // 2 sync: each sync cue's measured onset against the first frame that shows its event (check 4's rule and bar)
 export function syncEntry(table, input, rule = syncRule) {
   const T = input.thresholds, opts = { fps: FPS, search: T.syncSearch.v, ahead: T.syncAhead.v }, rows = [];
@@ -183,26 +229,25 @@ export function syncEntry(table, input, rule = syncRule) {
   for (const x of table) {
     const c = x.c, rl = c.category === 'bg' ? null : rule(c);
     if (!rl) continue;
-    if (rl.reason) { rows.push({ cue: c.id, family: c.family, event: null, t0: r(c.t0, 6), onset: r(x.onset, 6), method: x.method, frame: null, aheadMs: null, leadMs: r(c.lead * 1000, 2), ok: null, cueOk: null, note: `not judged: ${rl.reason}` }); continue; }
+    if (rl.reason) { rows.push({ cue: c.id, family: c.family, event: null, t0: r(c.t0, 6), onset: r(x.onset, 6), frame: null, aheadMs: null, leadMs: r(c.lead * 1000, 2), ok: null, cueOk: null, note: `not judged: ${rl.reason}` }); continue; }
     judged++;
     const at = x.onset === null ? null : A.syncOf(rl, x.onset, c.lead, opts), cue = A.syncOf(rl, c.t0, c.lead, opts);
     const ok = at ? at.ok : false;
     if (!ok) bad++;
-    // an instant on its frame's own time passes on its cue time with 0 ms to spare; the measured onset trails the cue
-    // time by the measurement's own lag (a voice's first sample is zero, the detector's line is a little into the
-    // attack), so it can read a fraction of a millisecond after the frame
-    const edge = !ok && cue.ok && at && at.pastMs < 0 && Math.abs(cue.pastMs) < 1e-6;
-    rows.push({ cue: c.id, family: c.family, event: rl.event, t0: r(c.t0, 6), onset: r(x.onset, 6), method: x.method, frame: at ? r(at.frame, 6) : null, aheadMs: at ? r(at.aheadMs, 2) : null, leadMs: r(c.lead * 1000, 2), ok, cueOk: cue.ok, note: at ? (edge ? `${at.note}: its instant is on the frame's own time (0 ms ahead on its cue time), the onset trails by the measurement's lag` : at.note) : 'no measured onset' });
+    // an instant on its frame's own time passes on its cue time with 0 ms to spare, and its onset, read one sample
+    // after its voice's start, then reads after the frame: within the reading's lag, and only then, that is the note
+    const lagMs = readLagSec(x.src.sr) * 1000, edge = !ok && cue.ok && at && at.pastMs < 0 && -at.pastMs <= lagMs + 1e-6 && Math.abs(cue.pastMs) < 1e-6;
+    rows.push({ cue: c.id, family: c.family, event: rl.event, t0: r(c.t0, 6), onset: r(x.onset, 6), frame: at ? r(at.frame, 6) : null, aheadMs: at ? r(at.aheadMs, 2) : null, leadMs: r(c.lead * 1000, 2), ok, cueOk: cue.ok, note: at ? (edge ? `${at.note}: its instant is on the frame's own time (0 ms ahead on its cue time), and its onset trails that by the reading's lag (at most ${r(lagMs, 4)} ms: a voice's first sample is zero)` : at.note) : 'no measured onset' });
   }
   const flips = rows.filter((x) => x.ok !== null && x.ok !== x.cueOk).length, edges = rows.filter((x) => /on the frame's own time/.test(x.note ?? '')), late = edges.map((x) => -x.aheadMs);
-  return entry('sync', 2, 'Sync with the picture', 'Each sync cue\'s measured onset (the renderer\'s, or a continuous voice\'s first sample) against the first frame that shows its event, the picture\'s own state functions sampled at frame times (scripts/sound-report.js syncRule, sound-checks showingFrame); cueOk is check 4\'s verdict on the cue time. Modifiers have no voice and are not listed', `Onset 0 to ${T.syncAhead.v} s ahead of that frame (starting value), past its named lead; audio after the frame fails`, 'ITU-R BT.1359 via SOUND-PLAN 3.3 and check 4 (secondary)', T.syncAhead.starting, bad ? 'fail' : 'pass', `${judged} judged, ${bad} off their frame: ${bad - edges.length} miss on their cue times too (check 4's), ${edges.length} have their instant on the frame's own time and read ${late.length ? `${r(Math.min(...late), 2)} to ${r(Math.max(...late), 2)}` : 'no'} ms after it (${flips} judged otherwise than on their cue times); ${rows.length - judged} not judged (no event the picture shows)`, ['cue', 'family', 'event', 't0', 'onset', 'method', 'frame', 'aheadMs', 'leadMs', 'ok', 'cueOk', 'note'], rows);
+  return entry('sync', 2, 'Sync with the picture', 'Each sync cue\'s measured onset (the first sample of the cue rendered alone, the renderer measure\'s) against the first frame that shows its event, the picture\'s own state functions sampled at frame times (scripts/sound-report.js syncRule, sound-checks showingFrame); cueOk is check 4\'s verdict on the cue time. Modifiers have no voice and are not listed', `Onset 0 to ${T.syncAhead.v} s ahead of that frame (starting value), past its named lead; audio after the frame fails`, 'ITU-R BT.1359 via SOUND-PLAN 3.3 and check 4 (secondary)', T.syncAhead.starting, bad ? 'fail' : 'pass', `${judged} judged, ${bad} off their frame: ${bad - edges.length} miss on their cue times too (check 4's), ${edges.length} have their instant on the frame's own time and read ${late.length ? `${r(Math.min(...late), 2)} to ${r(Math.max(...late), 2)}` : 'no'} ms after it, the reading's lag (${flips} judged otherwise than on their cue times); ${rows.length - judged} not judged (no event the picture shows)`, ['cue', 'family', 'event', 't0', 'onset', 'frame', 'aheadMs', 'leadMs', 'ok', 'cueOk', 'note'], rows);
 }
 
 // 3 cue ends: where each voice stops sounding against its t1
 export function endsEntry(table) {
-  const rows = table.map((x) => ({ cue: x.c.id, family: x.c.family, shape: x.c.shape, t1: r(x.c.t1, 6), end: r(x.end, 6), endMs: x.end === null ? null : r((x.end - x.c.t1) * 1000, 2), last: r(x.last, 6), method: x.method, note: x.end === null ? 'silent' : null }));
+  const rows = table.map((x) => ({ cue: x.c.id, family: x.c.family, shape: x.c.shape, t1: r(x.c.t1, 6), end: r(x.end, 6), endMs: x.end === null ? null : r((x.end - x.c.t1) * 1000, 2), last: r(x.last, 6), read: x.read, note: x.end === null ? 'silent' : null }));
   const d = rows.filter((x) => x.endMs !== null).map((x) => x.endMs).sort((a, b) => a - b);
-  return entry('ends', 3, 'Cue ends', `Where each cue's own voice stops sounding in its voice group's stem: just after its last sample within ${BARS.endFloorDb.v} dB of its loudest (end), and just after its last sample that is not zero (last, the spatializer's ring), against its t1`, 'Reported', BARS.endFloorDb.source, false, 'report', `${rows.length} voices; end minus t1 from ${d[0]} to ${d[d.length - 1]} ms, median ${d[Math.floor(d.length / 2)]} ms`, ['cue', 'family', 'shape', 't1', 'end', 'endMs', 'last', 'method', 'note'], rows);
+  return entry('ends', 3, 'Cue ends', `Where each cue's own voice stops sounding, in its voice group's stem or alone (read): just after its last sample within ${BARS.endFloorDb.v} dB of its loudest (end), and just after its last sample that is not zero (last, the spatializer's ring), against its t1`, 'Reported', BARS.endFloorDb.source, false, 'report', `${rows.length} voices; end minus t1 from ${d[0]} to ${d[d.length - 1]} ms, median ${d[Math.floor(d.length / 2)]} ms`, ['cue', 'family', 'shape', 't1', 'end', 'endMs', 'last', 'read', 'note'], rows);
 }
 
 // 4 pan: each cue's balance in its own stem window against what its placement predicts (a background against centre)
@@ -361,7 +406,11 @@ export const DESIGN_PARTS = Object.freeze([
   { name: 'rustles', layer: 'foley', keep: ['rustleGain'], plays: (c) => c.family === 'moves' && c.shape === 'oneshot' },
 ]);
 const MAX_DRIFT_TOL = 0.5;
+// The matching tolerance for one part: half the closest spacing of its cue times, at most MAX_DRIFT_TOL, so no design
+// onset can be matched to two cues. One number per part: a cue far from its neighbours is judged as tightly as the
+// closest pair (the rustles' 1.25 ms for A's cup, though its next cue is 15 s away)
 export const driftTol = (times) => Math.min(MAX_DRIFT_TOL, ...times.slice(1).map((t, i) => (t - times[i]) / 2));
+// 14 the drift: each part's onsets against its cues, from `stemOfPart(part)` (the part rendered alone)
 export function driftEntry(cues, stemOfPart, parts = DESIGN_PARTS) {
   const shots = cues.filter((c) => c.enabled && c.voices > 0 && c.shape === 'oneshot'), rows = [];
   for (const c of shots.filter((x) => !parts.some((p) => p.plays(x)))) rows.push({ cue: c.id, family: c.family, part: null, t0: r(c.t0, 6), onset: null, driftMs: null, status: 'no part plays it' });
@@ -402,6 +451,7 @@ export function targetSweep({ raw, peaks, audio, street, hush, log = () => {} })
   const chosen = rows.find((x) => x.meets) ?? null;
   return { rows, chosen, monotone: rows.every((x, i) => !rows[i - 1]?.meets || x.meets) };
 }
+// 15 the target: the sweep's rows, and whether the configured blockout target is the one the rule chooses
 export function targetEntry(sweep, configured) {
   const ch = sweep.chosen, ok = ch !== null && configured === ch.target;
   return entry('target', 15, 'The blockout\'s loudness target', `The raw blockout normalized to integrated targets from ${BARS.sweepFromLufs.v} LUFS down in ${BARS.sweepStepDb.v} dB steps until nothing is limited: per target the limiter's largest loss in any 400 ms window (the raw RMS times the gain against the output's, on a 100 ms hop), where, how many windows lose more than ${BARS.limiterDb.v} dB, the largest loss of one sample and where, the samples limited, the integrated loudness, the true peak (4x), and the momentary loudness of the street background (the beds alone, reverb in) and of the whole mix in the hush (the run-down's end to the end of the shot after it)`, `The loudest target at which no 400 ms window loses more than ${bar('limiterDb')} dB; the configured blockout target must be that one`, BARS.limiterDb.source, BARS.limiterDb.starting, ok ? 'pass' : 'fail', ch ? `chosen ${ch.target} LUFS (gain ${ch.gainDb} dB, worst 400 ms ${ch.worstWindowDb} dB, worst sample ${ch.worstSampleDb} dB, true peak ${ch.truePeakDb} dBTP, the street background in the hush ${ch.hushStreetMedian} LUFS momentary); configured ${configured}; ${sweep.monotone ? 'every quieter target meets the rule too' : 'not monotone: a quieter target fails'}` : `no target from ${BARS.sweepFromLufs.v} down meets the rule; configured ${configured}`, ['target', 'gainDb', 'integrated', 'truePeakDb', 'limitedSamples', 'worstWindowDb', 'worstWindowAt', 'worstShot', 'windowsOver', 'worstSampleDb', 'worstSampleAt', 'hushStreetMedian', 'hushStreetMin', 'hushStreetMax', 'hushMixMedian', 'meets'], sweep.rows);
@@ -459,15 +509,18 @@ export function listeningStems(session, { round, gainDb, targetLufs, reviewDir, 
 // The per-cue table of measure.json, from the group measurements and the pan and level entries
 function cueTable(table, entries) {
   const pan = new Map(entries.pan.rows.map((x) => [x.cue, x])), level = new Map(entries.level.rows.map((x) => [x.cue, x]));
-  const columns = ['cue', 'group', 'family', 'category', 'shape', 'shot', 't0', 't1', 'onset', 'onsetMs', 'method', 'end', 'endMs', 'last', 'levelT', 'levelDb', 'overStreetDb', 'predictedDb', 'overBedDb', 'balanceDb', 'predictedBalanceDb'];
+  const columns = ['cue', 'group', 'family', 'category', 'shape', 'shot', 't0', 't1', 'onset', 'onsetMs', 'read', 'end', 'endMs', 'last', 'levelT', 'levelDb', 'overStreetDb', 'predictedDb', 'overBedDb', 'balanceDb', 'predictedBalanceDb'];
   const rows = table.map((x) => {
     const c = x.c, p = pan.get(c.id), l = level.get(c.id);
-    return { cue: c.id, group: c.source, family: c.family, category: c.category, shape: c.shape, shot: shotAt(c.t0).n, t0: r(c.t0, 6), t1: r(c.t1, 6), onset: r(x.onset, 6), onsetMs: x.onset === null ? null : r((x.onset - c.t0) * 1000), method: x.method, end: r(x.end, 6), endMs: x.end === null ? null : r((x.end - c.t1) * 1000, 2), last: r(x.last, 6), levelT: l.t, levelDb: l.levelDb, overStreetDb: l.overStreetDb, predictedDb: l.predictedDb, overBedDb: l.overBedDb, balanceDb: p.balanceDb, predictedBalanceDb: p.predictedDb };
+    return { cue: c.id, group: c.source, family: c.family, category: c.category, shape: c.shape, shot: shotAt(c.t0).n, t0: r(c.t0, 6), t1: r(c.t1, 6), onset: r(x.onset, 6), onsetMs: x.onset === null ? null : r((x.onset - c.t0) * 1000), read: x.read, end: r(x.end, 6), endMs: x.end === null ? null : r((x.end - c.t1) * 1000, 2), last: r(x.last, 6), levelT: l.t, levelDb: l.levelDb, overStreetDb: l.overStreetDb, predictedDb: l.predictedDb, overBedDb: l.overBedDb, balanceDb: p.balanceDb, predictedBalanceDb: p.predictedDb };
   });
   return { columns, rows };
 }
 const seriesOut = (s) => ({ windowSec: s.windowSec, firstEnd: r(s.firstEnd, 3), lufs: [...s.lufs].map((v) => r(v, 2)) });
 
+// The --measure step: the 15 measures on one session, then measure.json, the measuring stems (out/round-NN/stems/, not
+// committed) and the listening stems with stems.json (review/round-NN/stems/). Returns the report, and leaves it on
+// the session for the steps after it
 export async function measureStep(session, { round, reviewDir, outDir, log = console.log }) {
   const start = performance.now(), say = (msg) => log(`[${((performance.now() - start) / 1000).toFixed(1)} s] ${msg}`);
   const input = buildInput(), cfg = session.config, sr = session.sr, stemOf = (g) => session.group(g);
