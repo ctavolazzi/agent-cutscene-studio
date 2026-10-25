@@ -1,5 +1,5 @@
 {
- "file": "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4",
+ "file": "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4",
  "profile": "preview",
  "from": 32.8333,
  "to": 39.8333,
@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 12.787,
- "loadSeconds": 0.854,
- "msPerFrame": 76.11,
+ "seconds": 7.34,
+ "loadSeconds": 0.544,
+ "msPerFrame": 43.69,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",
@@ -40,7 +40,7 @@
   "-to",
   "39.833333333333336",
   "-i",
-  "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/out/round-05/options/sync-pan.wav",
+  "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/out/round-05/options/sync-pan.wav",
   "-vf",
   "vflip,scale=480:270:flags=neighbor:out_color_matrix=bt709:out_range=tv",
   "-c:v",
@@ -73,10 +73,10 @@
   "bt709",
   "-color_range",
   "tv",
-  "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4"
+  "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4"
  ],
  "ffprobe": {
-  "file": "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4",
+  "file": "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/sync-pan-b.mp4",
   "format": "mov,mp4,m4a,3gp,3g2,mj2",
   "duration": 7,
   "width": 480,
@@ -97,8 +97,8 @@
   "audioRate": 48000,
   "audioChannels": 2,
   "audioDuration": 7,
-  "bitRate": 841626,
-  "size": 736423,
+  "bitRate": 824283,
+  "size": 721248,
   "moovFirst": true
  },
  "problems": []

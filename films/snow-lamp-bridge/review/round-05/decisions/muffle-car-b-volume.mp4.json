@@ -1,5 +1,5 @@
 {
- "file": "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4",
+ "file": "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4",
  "profile": "preview",
  "from": 28.25,
  "to": 35.25,
@@ -16,9 +16,9 @@
   "w": 480,
   "h": 270
  },
- "seconds": 14.708,
- "loadSeconds": 0.786,
- "msPerFrame": 87.55,
+ "seconds": 7.724,
+ "loadSeconds": 0.545,
+ "msPerFrame": 45.97,
  "ffmpeg": [
   "ffmpeg",
   "-hide_banner",
@@ -40,7 +40,7 @@
   "-to",
   "35.25",
   "-i",
-  "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/out/round-05/options/muffle-volume.wav",
+  "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/out/round-05/options/muffle-volume.wav",
   "-vf",
   "vflip,scale=480:270:flags=neighbor:out_color_matrix=bt709:out_range=tv",
   "-c:v",
@@ -73,10 +73,10 @@
   "bt709",
   "-color_range",
   "tv",
-  "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4"
+  "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4"
  ],
  "ffprobe": {
-  "file": "/tmp/claude-0/-home-user/53271b71-5eeb-52db-8af5-e83b1d41b3fe/scratchpad/sound/wt/s2-options/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4",
+  "file": "/home/user/agent-cutscene-studio/films/snow-lamp-bridge/review/round-05/decisions/muffle-car-b-volume.mp4",
   "format": "mov,mp4,m4a,3gp,3g2,mj2",
   "duration": 7,
   "width": 480,
@@ -97,8 +97,8 @@
   "audioRate": 48000,
   "audioChannels": 2,
   "audioDuration": 7,
-  "bitRate": 610506,
-  "size": 534193,
+  "bitRate": 607740,
+  "size": 531773,
   "moovFirst": true
  },
  "problems": []

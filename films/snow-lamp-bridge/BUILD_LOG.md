@@ -1008,3 +1008,14 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   text says so.
 - Gate: 249 tests, 246 pass, 0 fail, 3 skipped (the parked score); check pass (forbidden 0, determinism, cameras 191
   comparisons, worst 2.00e-15). The design stage still renders the S8.3 bytes (sha256 f80b1542).
+
+#### lead: measure.json, the stems and the options regenerated on the fixed engine
+- `node scripts/sound-review.js --round 05 --measure` (255 s): renderer pass (142 cues, worst 0.031 ms); sync fail, 12
+  off (Sound 1's), the 8 on-frame instants on their frames by the ruling; pan pass (worst 0.101 dB); silence, voices,
+  density, determinism and stems pass; phone and mono fail on the two latches only (a placeholder's band, Sound 4); the
+  target still -23 LUFS by the rule (worst 400 ms window 0.961 dB at -23: the driver's unlatch, 3.15 dB on one sample,
+  ducks its window through the limiter's release). The raw blockout reads -22.83 LUFS (it was -22.19 with the engine in
+  phase): 3270 samples limited at -23, all in shot 5 at 30.4 s.
+- `node scripts/sound-options.js --round 05`: all three A/Bs still measure over the audibility bar (ask the director).
+  The engine clip under the muffle by the set: -0.89 dB with the volume drop, -0.49 dB with the swap (it was -1.33 and
+  -1.00 with the buzzes in phase); -3.93 and -1.67 dB over the 1.4 s the intake is hidden at full level.

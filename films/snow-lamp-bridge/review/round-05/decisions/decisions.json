@@ -9,36 +9,36 @@
  },
  "clipSeconds": 7,
  "master": {
-  "lufsBefore": -22.194,
-  "gainDb": 7.9,
-  "limitedSamples": 960753,
-  "passes": 4,
-  "lufs": -16.033,
+  "lufsBefore": -22.831,
+  "gainDb": -0.169,
+  "limitedSamples": 3270,
+  "passes": 1,
+  "lufs": -23.015,
   "ceilingDb": -2,
-  "targetLufs": -16,
+  "targetLufs": -23,
   "what": "the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option's set of mixes then goes through A's gain and one limiter curve from the loudest of the set at each sample (joint), or through one static gain low enough that none is limited (still, the characters' listener), so B over A is the option alone and nothing passes the ceiling",
   "sets": {
    "muffle": {
     "how": "joint",
-    "samples": 272259,
-    "maxDb": 1.5,
-    "at": 35.386
+    "samples": 2647,
+    "maxDb": 0.13,
+    "at": 34.501
    },
    "sync-pan": {
     "how": "joint",
-    "samples": 98907,
-    "maxDb": 0.5,
-    "at": 61.725
+    "samples": 0,
+    "maxDb": 0,
+    "at": null
    },
    "listener": {
     "how": "still",
-    "gainDb": -4.11,
-    "belowDb": 12.01,
-    "at": 34.501,
+    "gainDb": -3.315,
+    "belowDb": 3.15,
+    "at": 30.442,
     "jointWould": {
-     "samples": 474980,
-     "maxDb": 9.94,
-     "at": 56.94
+     "samples": 15408,
+     "maxDb": 2.45,
+     "at": 31.943
     }
    }
   }
@@ -46,82 +46,82 @@
  "wavs": {
   "a": {
    "file": "out/round-05/options/a.wav",
-   "sha256": "6f9c4925b58beaf80d2e385932b921532d3d7a558952ea589922718a18f51cb7",
+   "sha256": "449d70b8ba92b34a94a8fac024a743fb2a542a1e75c05ae4ae5e970b55806af6",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.015
    }
   },
   "a-muffle": {
    "file": "out/round-05/options/a-muffle.wav",
-   "sha256": "ffa8b47919dfd87e30588d3e59feb3822f6a6ddf7e55c012fecf0f6c720e764e",
+   "sha256": "91c66cc8f10964c0bd9828f423dab764157ca4c59943832fa3b535fbfd9ccafc",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.02
    }
   },
   "muffle-volume": {
    "file": "out/round-05/options/muffle-volume.wav",
-   "sha256": "d49a0f9259636d0f0aec2d6ad83ce2a610fd46e5642892051e36a4e4b22b65db",
+   "sha256": "d7d3d0a8ebea8f2654cf5b8e69bdc1dd0540d7804593c38006d40cae2b406203",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.02
    }
   },
   "muffle-swap": {
    "file": "out/round-05/options/muffle-swap.wav",
-   "sha256": "cae0826d6e0be6fd7b0be73935cad1ec2562ccb4b1c82fc24a0c86e7915720e9",
+   "sha256": "d4c19789d256654459781941766179d79eddbb2577b14b5e38bd965fcd6a87e1",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.005
    }
   },
   "muffle-volume-all": {
    "file": "out/round-05/options/muffle-volume-all.wav",
-   "sha256": "13de666f206ed5648c74b2cc9b0b45464ad12a3458ad4f1968551b0e986bb49c",
+   "sha256": "22d6b6227398bb58715364e4d6f2a11b7d852977af4149a32753283f0048878d",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.02
    }
   },
   "muffle-swap-all": {
    "file": "out/round-05/options/muffle-swap-all.wav",
-   "sha256": "6439dab59b68771db1cd8b9763f31e88c8e97204c79b9cd8e17ca665776ae839",
+   "sha256": "dc00efbf17a8457351735748544780495e5175d8d72dca29b23f5ebba167fba0",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.005
    }
   },
   "a-sync-pan": {
    "file": "out/round-05/options/a-sync-pan.wav",
-   "sha256": "8bb796812ea08f7eae69b7b8ab6e1c7cc6bdf96d0644166e6ae67e2486f2217c",
+   "sha256": "449d70b8ba92b34a94a8fac024a743fb2a542a1e75c05ae4ae5e970b55806af6",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.015
    }
   },
   "sync-pan": {
    "file": "out/round-05/options/sync-pan.wav",
-   "sha256": "d32c5cd0310af8371720d2e303934409cb7fe7373b68fcd49c8dafa840d374f6",
+   "sha256": "4a4b2a63bdcfd98cf81211026f6bd313af7f22b642b2951c7cc426baec669fd5",
    "over": {
     "samples": 0,
-    "peakDb": -2
+    "peakDb": -2.013
    }
   },
   "a-listener": {
    "file": "out/round-05/options/a-listener.wav",
-   "sha256": "23c6b79db1a7b8c9ce51b0391ca94bc55770acfc159e0b35b47632954a1ee82a",
+   "sha256": "e49d75976946a893bdbeaea9a0f589781624b4ec327520b8a8d6df100af68015",
    "over": {
     "samples": 0,
-    "peakDb": -2.826
+    "peakDb": -2.037
    }
   },
   "listener": {
    "file": "out/round-05/options/listener.wav",
-   "sha256": "93c6722e64ff10df5d501f96eb88bdad703a2974bc070011d78ef7cc11c3f058",
+   "sha256": "ca8a45827ddacca03a30c43c62af3f69d7592da2494dd3695192207d09782456",
    "over": {
     "samples": 0,
-    "peakDb": -2.003
+    "peakDb": -2.037
    }
   }
  },
@@ -194,7 +194,7 @@
       "swap": {
        "engine": {
         "cues": 2,
-        "largestHiddenDb": -1.92,
+        "largestHiddenDb": -1.91,
         "largestCentroidOct": -0.139,
         "atOrOverBar": 2,
         "byBlocker": [
@@ -207,7 +207,7 @@
             "frames": 111,
             "from": 14,
             "to": 18.625,
-            "dHiddenDb": -1.92
+            "dHiddenDb": -1.91
            }
           ]
          },
@@ -283,7 +283,7 @@
           "hiddenSec": 4.625,
           "from": 14,
           "to": 18.625,
-          "levelHiddenA": -2.28,
+          "levelHiddenA": -2.3,
           "dHiddenDb": -6
          }
         ],
@@ -291,9 +291,9 @@
         "from": 14,
         "to": 18.625,
         "by": "building SE",
-        "levelHiddenA": -2.28,
+        "levelHiddenA": -2.3,
         "dHiddenDb": -6,
-        "dCueDb": -0.36,
+        "dCueDb": -0.37,
         "dLoudestDb": 0,
         "centroidA": 628,
         "centroidB": 628,
@@ -761,21 +761,21 @@
           "hiddenSec": 4.625,
           "from": 14,
           "to": 18.625,
-          "levelHiddenA": -2.28,
-          "dHiddenDb": -1.92
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -1.91
          }
         ],
         "hiddenSec": 4.625,
         "from": 14,
         "to": 18.625,
         "by": "building SE",
-        "levelHiddenA": -2.28,
-        "dHiddenDb": -1.92,
-        "dCueDb": -0.17,
+        "levelHiddenA": -2.3,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.18,
         "dLoudestDb": 0,
         "centroidA": 628,
         "centroidB": 571,
-        "dCentroidOct": -0.138
+        "dCentroidOct": -0.137
        },
        {
         "cue": "hard.engine.car.intake",
@@ -1250,7 +1250,7 @@
             "frames": 229,
             "from": 18.625,
             "to": 29,
-            "dHiddenDb": -5.98
+            "dHiddenDb": -5.99
            }
           ]
          },
@@ -1279,8 +1279,8 @@
       "swap": {
        "engine": {
         "cues": 2,
-        "largestHiddenDb": -1.95,
-        "largestCentroidOct": -0.142,
+        "largestHiddenDb": -1.93,
+        "largestCentroidOct": -0.141,
         "atOrOverBar": 2,
         "byBlocker": [
          {
@@ -1292,7 +1292,7 @@
             "frames": 111,
             "from": 14,
             "to": 18.625,
-            "dHiddenDb": -1.92
+            "dHiddenDb": -1.91
            },
            {
             "by": "car body",
@@ -1300,7 +1300,7 @@
             "frames": 229,
             "from": 18.625,
             "to": 29,
-            "dHiddenDb": -1.95
+            "dHiddenDb": -1.93
            }
           ]
          },
@@ -1377,7 +1377,7 @@
           "hiddenSec": 4.625,
           "from": 14,
           "to": 18.625,
-          "levelHiddenA": -2.28,
+          "levelHiddenA": -2.3,
           "dHiddenDb": -6
          },
          {
@@ -1387,20 +1387,20 @@
           "hiddenSec": 9.542,
           "from": 18.625,
           "to": 29,
-          "levelHiddenA": 3.52,
-          "dHiddenDb": -5.98
+          "levelHiddenA": 3.45,
+          "dHiddenDb": -5.99
          }
         ],
         "hiddenSec": 14.167,
         "from": 14,
         "to": 29,
         "by": "building SE, car body",
-        "levelHiddenA": 2.33,
+        "levelHiddenA": 2.26,
         "dHiddenDb": -5.99,
         "dCueDb": -5.29,
-        "dLoudestDb": -2.96,
-        "centroidA": 632,
-        "centroidB": 632,
+        "dLoudestDb": -3.16,
+        "centroidA": 630,
+        "centroidB": 630,
         "dCentroidOct": 0
        },
        {
@@ -2036,8 +2036,8 @@
           "hiddenSec": 4.625,
           "from": 14,
           "to": 18.625,
-          "levelHiddenA": -2.28,
-          "dHiddenDb": -1.92
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -1.91
          },
          {
           "by": "car body",
@@ -2046,21 +2046,21 @@
           "hiddenSec": 9.542,
           "from": 18.625,
           "to": 29,
-          "levelHiddenA": 3.52,
-          "dHiddenDb": -1.95
+          "levelHiddenA": 3.45,
+          "dHiddenDb": -1.93
          }
         ],
         "hiddenSec": 14.167,
         "from": 14,
         "to": 29,
         "by": "building SE, car body",
-        "levelHiddenA": 2.33,
-        "dHiddenDb": -1.95,
-        "dCueDb": -1.81,
-        "dLoudestDb": -1.93,
-        "centroidA": 632,
-        "centroidB": 573,
-        "dCentroidOct": -0.142
+        "levelHiddenA": 2.26,
+        "dHiddenDb": -1.93,
+        "dCueDb": -1.8,
+        "dLoudestDb": -1.94,
+        "centroidA": 630,
+        "centroidB": 571,
+        "dCentroidOct": -0.141
        },
        {
         "cue": "hard.engine.car.intake",
@@ -2719,26 +2719,26 @@
     ],
     "all": {
      "volume": {
-      "buzzes": 1.633,
-      "all": 1.52
+      "buzzes": 1,
+      "all": 1.005
      },
      "swap": {
-      "buzzes": 0.949,
-      "all": 0.957
+      "buzzes": 0.996,
+      "all": 1.003
      }
     },
     "A": {
-     "buzzes": 1.901,
-     "all": 1.757
+     "buzzes": 1,
+     "all": 1.004
     },
     "set": {
      "volume": {
-      "buzzes": 1.851,
-      "all": 1.723
+      "buzzes": 1.001,
+      "all": 1.005
      },
      "swap": {
-      "buzzes": 1.713,
-      "all": 1.618
+      "buzzes": 1,
+      "all": 1.003
      }
     }
    },
@@ -2749,31 +2749,31 @@
      "what": "the engine from its first hidden frame (building SE, shot 3) through the car coming into view",
      "mix": {
       "muffle-volume": {
-       "dLevelDb": -1.33,
-       "dBalanceDb": 0.26
+       "dLevelDb": -0.89,
+       "dBalanceDb": 0.18
       },
       "muffle-swap": {
-       "dLevelDb": -1,
-       "dBalanceDb": 0.24
+       "dLevelDb": -0.49,
+       "dBalanceDb": 0.11
       },
       "muffle-volume-all": {
-       "dLevelDb": -2.19,
-       "dBalanceDb": 0.01
+       "dLevelDb": -1.41,
+       "dBalanceDb": -0.04
       },
       "muffle-swap-all": {
-       "dLevelDb": -2.56,
-       "dBalanceDb": -0.15
+       "dLevelDb": -0.73,
+       "dBalanceDb": 0.01
       }
      },
      "aAgainstDefault": {
       "dLevelDb": 0,
       "dBalanceDb": 0,
-      "mostDb": 0.03,
+      "mostDb": 0,
       "windows": {
        "windows": 700,
        "overOneDb": 0,
        "overThreeDb": 0,
-       "worstDb": -0.02
+       "worstDb": 0
       }
      },
      "parts": [
@@ -2782,10 +2782,10 @@
        "t1": 16.5,
        "what": "the rise out of the quiet (hard.arrival.car.rise)",
        "mix": {
-        "muffle-volume": -1.78,
-        "muffle-swap": -0.85,
-        "muffle-volume-all": -1.78,
-        "muffle-swap-all": -0.85
+        "muffle-volume": -1.16,
+        "muffle-swap": -0.56,
+        "muffle-volume-all": -1.16,
+        "muffle-swap-all": -0.56
        }
       },
       {
@@ -2793,10 +2793,10 @@
        "t1": 17.875,
        "what": "the intake behind building SE at full level",
        "mix": {
-        "muffle-volume": -4.59,
-        "muffle-swap": -1.71,
-        "muffle-volume-all": -4.59,
-        "muffle-swap-all": -1.71
+        "muffle-volume": -3.93,
+        "muffle-swap": -1.67,
+        "muffle-volume-all": -3.93,
+        "muffle-swap-all": -1.67
        }
       },
       {
@@ -2804,10 +2804,10 @@
        "t1": 21,
        "what": "the intake in view; the set still hides the exhaust and the tyres for a few frames, Sound 1's rule the exhaust behind its own car",
        "mix": {
-        "muffle-volume": -0.41,
-        "muffle-swap": -0.76,
-        "muffle-volume-all": -1.55,
-        "muffle-swap-all": -3.41
+        "muffle-volume": -0.23,
+        "muffle-swap": -0.17,
+        "muffle-volume-all": -0.9,
+        "muffle-swap-all": -0.5
        }
       }
      ]
@@ -2818,31 +2818,31 @@
      "what": "the 7 s where the muffle takes the most off the other hidden cues (10 onsets, all hidden by the car body)",
      "mix": {
       "muffle-volume": {
-       "dLevelDb": -0.11,
+       "dLevelDb": -0.1,
        "dBalanceDb": -0.03
       },
       "muffle-swap": {
        "dLevelDb": -0.12,
-       "dBalanceDb": -0.04
+       "dBalanceDb": -0.05
       },
       "muffle-volume-all": {
        "dLevelDb": -0.24,
        "dBalanceDb": -0.07
       },
       "muffle-swap-all": {
-       "dLevelDb": -0.34,
-       "dBalanceDb": -0.16
+       "dLevelDb": -0.2,
+       "dBalanceDb": -0.07
       }
      },
      "aAgainstDefault": {
-      "dLevelDb": -0.05,
+      "dLevelDb": 0,
       "dBalanceDb": 0,
-      "mostDb": 1.25,
+      "mostDb": 0.13,
       "windows": {
        "windows": 700,
-       "overOneDb": 2,
+       "overOneDb": 0,
        "overThreeDb": 0,
-       "worstDb": -1.11
+       "worstDb": -0.04
       }
      }
     }
@@ -2852,7 +2852,7 @@
      "file": "review/round-05/decisions/muffle-engine-a.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-a.mp4.json",
      "wav": "out/round-05/options/a-muffle.wav",
-     "bytes": 931875,
+     "bytes": 905246,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2860,7 +2860,7 @@
      "file": "review/round-05/decisions/muffle-engine-b-volume.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-volume.mp4.json",
      "wav": "out/round-05/options/muffle-volume.wav",
-     "bytes": 926845,
+     "bytes": 901849,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2868,7 +2868,7 @@
      "file": "review/round-05/decisions/muffle-engine-b-swap.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-swap.mp4.json",
      "wav": "out/round-05/options/muffle-swap.wav",
-     "bytes": 923208,
+     "bytes": 903183,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2876,7 +2876,7 @@
      "file": "review/round-05/decisions/muffle-engine-b-volume-all.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-volume-all.mp4.json",
      "wav": "out/round-05/options/muffle-volume-all.wav",
-     "bytes": 923489,
+     "bytes": 901246,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2884,7 +2884,7 @@
      "file": "review/round-05/decisions/muffle-engine-b-swap-all.mp4",
      "sidecar": "review/round-05/decisions/muffle-engine-b-swap-all.mp4.json",
      "wav": "out/round-05/options/muffle-swap-all.wav",
-     "bytes": 921747,
+     "bytes": 903992,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2892,7 +2892,7 @@
      "file": "review/round-05/decisions/muffle-car-a.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-a.mp4.json",
      "wav": "out/round-05/options/a-muffle.wav",
-     "bytes": 536940,
+     "bytes": 531067,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2900,7 +2900,7 @@
      "file": "review/round-05/decisions/muffle-car-b-volume.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-b-volume.mp4.json",
      "wav": "out/round-05/options/muffle-volume.wav",
-     "bytes": 534193,
+     "bytes": 531773,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -2908,7 +2908,7 @@
      "file": "review/round-05/decisions/muffle-car-b-swap.mp4",
      "sidecar": "review/round-05/decisions/muffle-car-b-swap.mp4.json",
      "wav": "out/round-05/options/muffle-swap.wav",
-     "bytes": 536906,
+     "bytes": 531967,
      "seconds": 7,
      "audioSeconds": 7
     }
@@ -3854,18 +3854,18 @@
      "mix": {
       "sync-pan": {
        "dLevelDb": 0,
-       "dBalanceDb": -0.49
+       "dBalanceDb": -0.57
       }
      },
      "aAgainstDefault": {
-      "dLevelDb": -0.01,
+      "dLevelDb": 0,
       "dBalanceDb": 0,
-      "mostDb": 0.23,
+      "mostDb": 0,
       "windows": {
        "windows": 700,
        "overOneDb": 0,
        "overThreeDb": 0,
-       "worstDb": -0.22
+       "worstDb": 0
       }
      }
     }
@@ -3875,7 +3875,7 @@
      "file": "review/round-05/decisions/sync-pan-a.mp4",
      "sidecar": "review/round-05/decisions/sync-pan-a.mp4.json",
      "wav": "out/round-05/options/a-sync-pan.wav",
-     "bytes": 736963,
+     "bytes": 728088,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -3883,7 +3883,7 @@
      "file": "review/round-05/decisions/sync-pan-b.mp4",
      "sidecar": "review/round-05/decisions/sync-pan-b.mp4.json",
      "wav": "out/round-05/options/sync-pan.wav",
-     "bytes": 736423,
+     "bytes": 721248,
      "seconds": 7,
      "audioSeconds": 7
     }
@@ -4063,10 +4063,10 @@
      "shot": 5,
      "t0": 29,
      "t1": 36.2,
-     "loudestA": 4.85,
+     "loudestA": 4.79,
      "dCueDb": 0.7,
-     "dLoudestDb": 0.65,
-     "dWorstDb": 1.93,
+     "dLoudestDb": 0.71,
+     "dWorstDb": 1.92,
      "worstAt": 35.9,
      "predictedDb": 0
     },
@@ -5805,20 +5805,20 @@
       }
      },
      "aAgainstDefault": {
-      "dLevelDb": -11.81,
-      "dBalanceDb": 0.09,
-      "mostDb": 12.01,
+      "dLevelDb": -3.15,
+      "dBalanceDb": 0,
+      "mostDb": 3.15,
       "todaysLimiter": {
        "windows": 700,
-       "overOneDb": 11,
-       "overThreeDb": 2,
-       "worstDb": -4.45
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": 0
       },
       "jointWouldTake": {
        "windows": 700,
-       "overOneDb": 107,
-       "overThreeDb": 55,
-       "worstDb": -8.68
+       "overOneDb": 2,
+       "overThreeDb": 0,
+       "worstDb": -1.34
       }
      }
     }
@@ -5828,7 +5828,7 @@
      "file": "review/round-05/decisions/listener-a.mp4",
      "sidecar": "review/round-05/decisions/listener-a.mp4.json",
      "wav": "out/round-05/options/a-listener.wav",
-     "bytes": 870914,
+     "bytes": 870821,
      "seconds": 7,
      "audioSeconds": 7
     },
@@ -5836,7 +5836,7 @@
      "file": "review/round-05/decisions/listener-b.mp4",
      "sidecar": "review/round-05/decisions/listener-b.mp4.json",
      "wav": "out/round-05/options/listener.wav",
-     "bytes": 871014,
+     "bytes": 871477,
      "seconds": 7,
      "audioSeconds": 7
     }

@@ -1,31 +1,31 @@
 {
  "round": "05",
  "stage": "blockout",
- "gainDb": -0.806,
+ "gainDb": -0.169,
  "targetLufs": -23,
  "codec": "aac",
  "bitrate": "96k",
  "note": "each body at the mastered mix's own gain, unlimited. The float stems (out/round-NN/listen/*.wav) sum to the mix before its limiter: sumRatio is their largest difference over the raw mix's peak. The AAC files are coded, so they do not: aacSum is their decoded sum against that mix at the same gain (the largest difference over its peak, where, and the error's power under the mix's), and each body's aac.errorDb its own coding error under its float stem (aac.lagSamples the lag that aligns them). lufs and peakDb are the float signal's, aac.lufs and aac.truePeakDb the encoded file's (ffmpeg ebur128)",
- "sumRatio": 8.997e-8,
+ "sumRatio": 1.415e-7,
  "aacSum": {
-  "ratio": 0.3803,
-  "at": 30.4411,
-  "errorDb": -13.03
+  "ratio": 0.3761,
+  "at": 31.9426,
+  "errorDb": -12.36
  },
  "bodies": [
   {
    "name": "night",
    "file": "night.m4a",
-   "sha256": "9618b413c582b01d2e4952b8af22f54bfd255dd95378e59c30afd7eb5d9a90a2",
-   "bytes": 1374573,
+   "sha256": "1bda7953204662264e4c9b278214ba1541c6cf0562ab1bb79d09a1b3fcfeff1c",
+   "bytes": 1373185,
    "seconds": 112,
-   "lufs": -27.92,
-   "peakDb": -14.72,
+   "lufs": -27.28,
+   "peakDb": -14.08,
    "aac": {
-    "lufs": -27.6,
-    "truePeakDb": -14.8,
+    "lufs": -26.9,
+    "truePeakDb": -14.5,
     "lagSamples": 0,
-    "errorDb": -9.61
+    "errorDb": -9.7
    },
    "groups": [
     "bg:city",
@@ -45,16 +45,16 @@
   {
    "name": "car",
    "file": "car.m4a",
-   "sha256": "e93de96f3f0c7f26d17d985e377205416e77084aff93ea61bef563ee1137dec7",
-   "bytes": 416976,
+   "sha256": "7370679964a085daf5a0839f4398a790ca00db693e6466b690d2307b8c157227",
+   "bytes": 414627,
    "seconds": 112,
-   "lufs": -20.5,
-   "peakDb": 0.44,
+   "lufs": -22,
+   "peakDb": 1.08,
    "aac": {
-    "lufs": -20.5,
-    "truePeakDb": 1.7,
+    "lufs": -22,
+    "truePeakDb": 1.8,
     "lagSamples": 0,
-    "errorDb": -17.59
+    "errorDb": -15.57
    },
    "groups": [
     "car:exhaust",
@@ -118,16 +118,16 @@
   {
    "name": "A",
    "file": "A.m4a",
-   "sha256": "3b90f57929324ccf9f125dcef750dec0bfdd11da937272964ae3ae1326738832",
-   "bytes": 609406,
+   "sha256": "a57edcc0ca52b01dca660fea9f10ed57cef0988c9e701af1f6906deb4a8c5deb",
+   "bytes": 610040,
    "seconds": 112,
-   "lufs": -25.67,
-   "peakDb": -3.6,
+   "lufs": -25.04,
+   "peakDb": -2.97,
    "aac": {
-    "lufs": -25.8,
+    "lufs": -25.2,
     "truePeakDb": -3,
     "lagSamples": 0,
-    "errorDb": -17.68
+    "errorDb": -17.81
    },
    "groups": [
     "A:feet",
@@ -202,16 +202,16 @@
   {
    "name": "B",
    "file": "B.m4a",
-   "sha256": "f95fcf499e844e11eb5e69493abd415e00b701c645bb391d356eaeb183974077",
-   "bytes": 388932,
+   "sha256": "e65210cff64ca8f25434e29f4c0430471f6f857cca58b48fd0d24f46976282a2",
+   "bytes": 388960,
    "seconds": 112,
-   "lufs": -25.81,
-   "peakDb": -4.83,
+   "lufs": -25.17,
+   "peakDb": -4.2,
    "aac": {
-    "lufs": -25.9,
-    "truePeakDb": -4.8,
+    "lufs": -25.3,
+    "truePeakDb": -4.3,
     "lagSamples": 0,
-    "errorDb": -15.6
+    "errorDb": -15.63
    },
    "groups": [
     "B:feet",
