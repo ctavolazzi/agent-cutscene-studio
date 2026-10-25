@@ -20,6 +20,7 @@ import { averageSpectrum, centroidHz } from './audio-analysis.mjs';
 import { allocate, density, framesOf, screenState } from './sound-checks.js';
 
 const r = (x, d = 2) => (x === null || x === undefined || !Number.isFinite(x) ? null : Math.round(x * 10 ** d) / 10 ** d);
+// The cues an option can move: enabled, with a voice, placed (the backgrounds are unplaced and read no option)
 export const voicedPlaced = (cues = CUES) => cues.filter((c) => c.enabled && c.voices > 0 && c.place);
 const shotOf = (t) => (SHOTS.find((s) => t >= s.start && t < s.end) ?? SHOTS[SHOTS.length - 1]).n;
 
@@ -94,6 +95,7 @@ export function renderCue(c, ctx, { cues = CUES, pad = 0 } = {}) {
 }
 // The samples [a, b) of a cue render that fall in [t0, t1) of the film
 const span = (x, t0, t1) => [Math.max(0, Math.round(t0 * x.sr) - x.i0), Math.min(x.left.length, Math.round(t1 * x.sr) - x.i0)];
+// both channels' summed squares over the samples [a, b) of a cue render
 const powerOf = (x, a, b) => { let s = 0; for (let i = a; i < b; i++) s += x.left[i] * x.left[i] + x.right[i] * x.right[i]; return s; };
 // The level of a render over some stretches of the film, [[t0, t1], ...]: both channels' power, in dB over the street
 // background (the level rule's unit, voices.js: LEVEL.refDb is the street background's RMS over both channels). Null

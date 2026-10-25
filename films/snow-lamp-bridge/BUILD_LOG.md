@@ -677,3 +677,21 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - After, every switch off: the same two sha256, byte for byte. Measured: the hidden state matches Sound 1's check 2
   (19 voiced cues, the same frames); each switch moves exactly the cues it names (0 stray, 0 stray samples in the
   mix); the A master replays `normalize` sample for sample.
+
+#### s2-options: the options script, its measurements and clips (before)
+- Plan: `node scripts/sound-options.js --round 05` measures options 1 to 3 cue by cue (A against B), checks what each
+  moves, masters each set through A's gain and one limiter curve, captures 7 s preview clips at each option's moment
+  into `review/round-05/decisions/`, tabulates the style-frame candidates, and writes `decisions.json`.
+
+#### s2-options: the options script, its measurements and clips (after)
+- Actions: `scripts/sound-options.js` (`--round 05`, about 5 min; `--no-clips` about 2). `review/round-05/decisions/`:
+  `decisions.json` and 10 preview clips of 7 s (7.3 MB) with their capture sidecars; the mastered WAVs in
+  `out/round-05/options/`. Two runs give the same WAVs and the same rows.
+- Measured (per cue, before the master): the volume muffle takes 6.00 dB off all 19 hidden cues; the swap 1.9 dB off
+  the engine (its 650 Hz buzz is under the 900 Hz cutoff), 57 to 59 dB off the cabin's clicks. The narrower pan moves
+  28 of 74 sync foley cues by 0.1 or more (up to 0.40, B's off-screen steps in shot 5). The characters' listener moves
+  98 of 125 cues by 1 dB or more, all louder, up to +11.4 dB (shot 8's far steps). All three: ask the director.
+- Found: the intake and exhaust placeholders are phase-locked (the same saw from the same rpm track) and add
+  coherently in the mix; Sound 1's blockers hide the exhaust behind its own car 229 frames; through A's own limiter
+  curve the listener's B would reach +7.9 dBFS, so each set shares one curve from its loudest mix.
+- Style frame: the default (shots 4 to 6) against 4 to 5, 5 to 8 and 11 to 13, picked by rule.
