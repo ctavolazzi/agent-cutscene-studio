@@ -13,21 +13,51 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { CONFIG } from '../src/config.js';
 import { atStage, layerNames, renderSoundtrack } from '../src/audio/index.js';
+import { LEVEL } from '../src/audio/layers/blockout/timbre.js';
+import { normalize } from '../src/audio/loudness.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { mulberry32, hashString } from '../src/prng.js';
+import { SHOTS } from '../src/shots.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// The sidecar names the stage and the parked layers, so verify.js can render the same soundtrack again (check 5).
+// What the master's limiter takes off each shot: per window of the level plan's 100 ms, the raw mix's peak times the
+// normalization's gain against the output's peak, in dB; the largest in each shot, and where. The gain is read from
+// the samples (the largest output over raw ratio: the limiter only takes off), not from normalize's report. A click's
+// peak sits about 20 dB over its level (voices.js), so a fixed integrated target can limit hard (SOUND-PLAN 3.18).
+export function limiterByShot(raw, out, sr, shots = SHOTS, windowSec = LEVEL.windowSec) {
+  let g = 0;
+  for (let i = 0; i < raw.left.length; i++) {
+    if (Math.abs(raw.left[i]) > 1e-4) g = Math.max(g, out.left[i] / raw.left[i]);
+    if (Math.abs(raw.right[i]) > 1e-4) g = Math.max(g, out.right[i] / raw.right[i]);
+  }
+  const w = Math.round(windowSec * sr), rows = [];
+  for (let a = 0; a < raw.left.length; a += w) {
+    let pr = 0, po = 0;
+    for (let i = a; i < Math.min(raw.left.length, a + w); i++) { pr = Math.max(pr, Math.abs(raw.left[i]), Math.abs(raw.right[i])); po = Math.max(po, Math.abs(out.left[i]), Math.abs(out.right[i])); }
+    rows.push({ t: a / sr, db: po > 0 ? Math.max(0, 20 * Math.log10(pr * g / po)) : 0 });
+  }
+  return shots.map((s) => {
+    const r = rows.filter((x) => x.t >= s.start && x.t < s.end), top = r.reduce((m, x) => (x.db > m.db ? x : m), r[0]);
+    const maxDb = +top.db.toFixed(2);
+    return { shot: s.n, maxDb, at: maxDb > 0 ? +top.t.toFixed(1) : null };
+  });
+}
+
+// The sidecar names the stage and the parked layers, so verify.js can render the same soundtrack again (check 5), and
+// what the limiter took off each shot. The raw mix is normalized here exactly as renderAll would, so the bytes match.
 export function renderToWav({ out = resolve(ROOT, 'out/sound.wav'), stage, parked, only = null, raw = false, reverb = true, spectrogram = false, log = console.log } = {}) {
   const config = atStage(CONFIG, { stage, parked });
-  const r = renderSoundtrack(config, { only, reverb, normalize: !raw });
+  const r = renderSoundtrack(config, { only, reverb, normalize: false });
+  const before = raw ? null : { left: Float32Array.from(r.left), right: Float32Array.from(r.right) };
+  const stats = raw ? null : normalize(r.left, r.right, config.audio, r.sr);
   const bytes = encodeWav(r.left, r.right, r.sr, mulberry32((config.seed ^ hashString('audio:dither')) >>> 0));
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, bytes);
   const report = {
     file: out, sr: r.sr, seconds: r.left.length / r.sr, stage: config.audio.stage, parked: config.audio.parked,
-    layers: layerNames(config, only), only: only ?? null, raw, reverb, sha256: createHash('sha256').update(bytes).digest('hex'), stats: r.stats,
+    layers: layerNames(config, only), only: only ?? null, raw, reverb, sha256: createHash('sha256').update(bytes).digest('hex'), stats,
+    limiter: before ? limiterByShot(before, r, r.sr) : null,
   };
   if (spectrogram) {
     const png = out.replace(/\.wav$/, '.png');
@@ -36,7 +66,8 @@ export function renderToWav({ out = resolve(ROOT, 'out/sound.wav'), stage, parke
     report.spectrogram = png;
   }
   writeFileSync(`${out}.json`, `${JSON.stringify(report, null, 1)}\n`);
-  log(`sound: ${report.seconds.toFixed(2)} s at ${r.sr} Hz, stage ${report.stage} (${report.layers.join(', ')}; parked ${report.parked.join(', ') || 'none'})${r.stats ? `, ${r.stats.lufs} LUFS, peak ${r.stats.peakDb} dBFS (gain ${r.stats.gainDb} dB, ${r.stats.limitedSamples} samples limited)` : ' (raw)'}, ${out}`);
+  const worst = report.limiter?.reduce((m, x) => (x.maxDb > m.maxDb ? x : m));
+  log(`sound: ${report.seconds.toFixed(2)} s at ${r.sr} Hz, stage ${report.stage} (${report.layers.join(', ')}; parked ${report.parked.join(', ') || 'none'})${stats ? `, ${stats.lufs} LUFS, peak ${stats.peakDb} dBFS (gain ${stats.gainDb} dB, ${stats.limitedSamples} samples limited, at most ${worst.maxDb} dB, shot ${worst.shot} at ${worst.at} s)` : ' (raw)'}, ${out}`);
   return report;
 }
 

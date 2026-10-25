@@ -1,26 +1,28 @@
 // Checks for the blockout stage (src/audio/layers/blockout/, SOUND-PLAN 4.4, ROADMAP Sound 2.3 and 2.4): one voice per
 // sounding cue at its planned level; every one-shot's onset on its cue, on stems by voice group, matched one to one;
-// each cue's pan where the camera hears it; nothing starting in the bed-only windows; the families told apart by
-// their spectra; the same bytes twice; the stems summing to the mix; a changed picture moving the sound; and layers
-// that read only cues.js. Each check is a function returning its problems: the real render gives none, a planted
-// fault gives some. Run: node --test tests/sound-blockout.test.mjs
+// every voice, continuous ones too, starting and stopping on its cue's samples when rendered alone; one attack per
+// one-shot; each cue's pan where the camera hears it; nothing starting in the bed-only windows; the backgrounds'
+// equal-power crossfade at the place change; the families told apart by their spectra; the same bytes twice; the stems
+// summing to the mix; a changed picture moving the sound; and layers that read only cues.js. Each check is a function
+// returning its problems: the real render gives none, a planted fault gives some.
+// Run: node --test tests/sound-blockout.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { CONFIG } from '../src/config.js';
-import { CUES, DESIGN, LAWS, WORLD, makeCues } from '../src/audio/cues.js';
+import { CUES, DESIGN, LAWS, LOCATIONS, WORLD, makeCues } from '../src/audio/cues.js';
 import { STAGES, atStage, buildLayers, makeContext, renderSoundtrack } from '../src/audio/index.js';
-import { renderAll } from '../src/audio/mix.js';
+import { BLOCK, renderAll } from '../src/audio/mix.js';
 import { placeAt } from '../src/audio/spatial.js';
 import { mulberry32 } from '../src/prng.js';
 import { carTimes, T_TOTAL } from '../src/world.js';
 import { SHOTS } from '../src/shots.js';
 import { LEVEL, SEND, TIMBRE, TOL } from '../src/audio/layers/blockout/timbre.js';
-import { placedEvent, bedVoice, modifiersOf } from '../src/audio/layers/blockout/voices.js';
+import { bedNoise, bedSpan, bedVoice, modifiersOf, placedEvent } from '../src/audio/layers/blockout/voices.js';
 import { stripComments } from '../scripts/check-forbidden.js';
-import { averageSpectrum, balanceDb, centroidHz, groupStem, idx, matchOnsets, matchOneToOne, onsets, predictedBalanceDb, rms, db } from '../scripts/lib/audio-analysis.mjs';
+import { averageSpectrum, balanceDb, centroidHz, groupStem, matchOnsets, matchOneToOne, nonzeroSpan, onsets, preMaster, predictedBalanceDb, rms, db } from '../scripts/lib/audio-analysis.mjs';
 
 const BLOCKOUT = atStage(CONFIG, { stage: 'blockout' });
 const SR = BLOCKOUT.audio.sr;
@@ -36,7 +38,7 @@ const ONSET_TOL = 0.005;
 const PAN_TOL_DB = 0.5;
 // Sound 2.3: twice the largest change of any family's centroid when only the seed changes (0.052 octave, the door,
 // measured over the seeds 20261021, 1, 2 and 3), so noise alone cannot carry one family onto another. The smallest
-// separation measured, brake against breath, is 0.209 octave.
+// separation measured, the unload against the wind, is 0.188 octave.
 const CENTROID_BAR_OCTAVES = 0.11;
 // The level rule on a background, measured between its crossfades, a part of the span its level was set over: the
 // RMS of a stationary noise moves a little with the window. Measured worst 0.0029 dB (the street's city); the bar is
@@ -131,7 +133,10 @@ test('voices: one per sounding cue, none for the offered or the modifiers; each 
 // On each voice group's stem (one voice at a time, so A's and B's steps 3.8 ms apart at 56.34 are measured apart):
 // every enabled one-shot matched one to one within ONSET_TOL, and no detection outside the group's cue spans. The
 // detector's minimum gap is the group's own smallest onset spacing halved (the doors' unlatch leads the swing by 60 ms),
-// never under cues.js's flam merge (DESIGN.STEP.flam): one source's cues closer than that are one sound.
+// never under cues.js's flam merge (DESIGN.STEP.flam): one source's cues closer than that are one sound. This tests the
+// renderer and the detector (ROADMAP 2.6). The detector re-triggers on a sustained tail once its gap has passed, so a
+// detection inside a cue's span is not counted against it: the exact spans and the one-attack check below cover that,
+// and the continuous voices, which this test cannot time.
 const minGapOf = (own) => Math.max(DESIGN.STEP.flam, Math.min(0.08, ...own.slice(1).map((c, i) => (c.t0 - own[i].t0) / 2)));
 function onsetProblems(list, stemOf, match = matchOneToOne) {
   const p = [];
@@ -160,6 +165,87 @@ test('onsets: every enabled one-shot within 5 ms of its t0, on its voice group\'
   assert.ok(onsetProblems(both, stemOf).includes(`hard.tick.car.ghost: no onset within 5 ms of ${ghost.t0.toFixed(4)}`));
   const nearest = (e, d, tol) => ({ pairs: matchOnsets(e, d).filter((x) => Math.abs(x.diff) <= tol), extra: [] });
   assert.deepEqual(onsetProblems(both, stemOf, nearest), [], 'the nearest-match rule passes the ghost');
+});
+
+// ---------- every voice exactly where its cue is ----------
+// Each voiced cue rendered alone with its modifiers, before the master chain (preMaster), where a voice is exact zeros
+// outside the samples it plays: its first and last samples are read, not detected. So this times the continuous voices
+// the detector cannot (the engine, tyres, brake, cloth, the beds) and every one-shot again, each apart from its
+// group's neighbours, an early start into the previous cue's span included. A placed voice starts on its t0's sample
+// (an attack or a fade from 0 may make that first value zero: then one sample later) and stops on its t1's, to a sample
+// of rounding, or rings on in the spatializer's lowpass to the end of that block (events.js drops a voice in the block
+// it ends in: 255 samples at most; measured, the ring reaches 84 samples before it rounds to zero). A background plays
+// bedSpan's samples: its span widened by half the crossfade at each end.
+const N = Math.round(T_TOTAL * SR), at = (t) => Math.round(t * SR);
+const quiet = (list) => list.filter((c) => c.voices === 0);
+function expectedSpan(c) {
+  if (!c.place) { const [a, b] = bedSpan(c, SR), e = Math.min(N, b); return { first: [a, a + 1], last: [e - 2, e - 1] }; }
+  const a = at(c.t0), e = at(c.t1);
+  return { first: [a, a + 1], last: [e - 2, Math.min(N, Math.ceil((e + 1) / BLOCK) * BLOCK) - 1] };
+}
+function exactProblems(list, spanOf) {
+  const p = [];
+  for (const c of voiced(list)) {
+    const got = spanOf(c), want = expectedSpan(c);
+    if (!got) { p.push(`${c.id}: silent`); continue; }
+    if (got[0] < want.first[0] || got[0] > want.first[1]) p.push(`${c.id}: starts at sample ${got[0]}, ${((got[0] - want.first[0]) / SR * 1000).toFixed(2)} ms from its t0`);
+    if (got[1] < want.last[0] || got[1] > want.last[1]) p.push(`${c.id}: stops at sample ${got[1]}, want ${want.last[0]} to ${want.last[1]}`);
+  }
+  return p;
+}
+
+// One attack per one-shot (the envelope: the peak of each 1 ms hop through its span): after its first ATTACK_LOOK_SEC,
+// no ATTACK_LOOK_SEC of it more than ATTACK_RISE_DB louder than the ATTACK_LOOK_SEC before. A second attack inside a
+// span (a ghost the detector's gap hides, an event made twice) rises out of the first one's decay.
+// ATTACK_RISE_DB is the onset detector's own rise (onsets' ratioDb, 12 dB); ATTACK_LOOK_SEC is a starting value,
+// longer than the wobble of a noise burst's envelope. Measured worst over every one-shot: 4.9 dB (foley.feet.A.08, its
+// noise); the planted ghost below rises 18.2 dB. A re-attack early in the decay (30 ms into a step: 5.4 dB) stays unseen.
+const ATTACK_RISE_DB = 12, ATTACK_LOOK_SEC = 0.01;
+function riseDb(s, c) {
+  const hop = Math.round(SR / 1000), look = Math.round(ATTACK_LOOK_SEC * SR / hop), a = at(c.t0), b = at(c.t1), env = [];
+  for (let i = a; i < b; i += hop) { let p = 0; for (let k = i; k < Math.min(b, i + hop); k++) p = Math.max(p, Math.abs(s.left[k]), Math.abs(s.right[k])); env.push(p); }
+  let worst = -Infinity;
+  for (let j = look; j < env.length; j++) {
+    let before = 0, after = 0;
+    for (let q = j - look; q < j; q++) before = Math.max(before, env[q]);
+    for (let q = j; q < Math.min(env.length, j + look); q++) after = Math.max(after, env[q]);
+    if (after > 0) worst = Math.max(worst, before > 0 ? db(after / before) : Infinity);
+  }
+  return worst;
+}
+const attackProblems = (list, riseOf) => voiced(list).filter((c) => c.shape === 'oneshot').flatMap((c) => { const r = riseOf(c); return r > ATTACK_RISE_DB ? [`${c.id}: rises ${r.toFixed(1)} dB inside its span, a second attack`] : []; });
+
+// each voiced cue rendered alone once (with the modifiers of its list), kept as its span and its rise
+const ALONE = new Map();
+function alone(c, list = CUES) {
+  if (!ALONE.has(c)) { const s = preMaster([c, ...quiet(list)]); ALONE.set(c, { span: nonzeroSpan(s), rise: c.shape === 'oneshot' ? riseDb(s, c) : null }); }
+  return ALONE.get(c);
+}
+const byId = (id, list = CUES) => list.find((c) => c.id === id);
+const moveBy = (c, dt) => ({ ...c, t0: c.t0 + dt, t1: c.t1 + dt });
+
+test('every voice where its cue is: rendered alone, its first sample on its t0 and its last on its t1, continuous ones too', () => {
+  // the pre-master stems are the real stems: one group's, through the mixer's own master chain, is groupStem sample
+  // for sample (a layer on a bus the mixer does not know is summed at gain 1)
+  const g = 'car:door:driver', pm = preMaster(CUES.filter((c) => c.voices === 0 || c.source === g));
+  const pre = { name: 'pre', bus: 'pre-master', reverb: 0, process(L, R, i0, n) { L.set(pm.left.subarray(i0, i0 + n)); R.set(pm.right.subarray(i0, i0 + n)); } };
+  const through = renderAll({ layers: [pre], config: BLOCKOUT, sr: SR, total: T_TOTAL, reverb: false, normalize: false }), real = groupStem(g);
+  assert.ok(through.left.every((x, i) => x === real.left[i]) && through.right.every((x, i) => x === real.right[i]), 'preMaster is the stem before the master chain');
+  assert.deepEqual(exactProblems(CUES, (c) => alone(c).span), []);
+  // controls: a continuous voice rendered 10 ms late (the engine's drive), and one 10 ms early, into the span of the
+  // cue before it in its group (the idle into the drive: the onset test and a group stem would see one run)
+  for (const [id, dt] of [['hard.engine.car.intake', 0.01], ['hard.engine.car.intake-idle', -0.01]]) {
+    const c = byId(id), p = exactProblems([c], () => alone(moveBy(c, dt)).span);
+    assert.deepEqual(p.map((x) => x.split(' at ')[0]), [`${id}: starts`, `${id}: stops`]);
+    assert.ok(Math.abs(Number(p[0].match(/(-?[\d.]+) ms from its t0$/)[1]) - dt * 1000) < 0.05, p[0]); // a sample of envelope
+  }
+});
+
+test('one attack per one-shot: no 10 ms inside its span 12 dB louder than the 10 ms before', () => {
+  assert.deepEqual(attackProblems(CUES, (c) => alone(c).rise), []);
+  // control: a second step 120 ms into foley.feet.A.10's span, rendered with it (the onset test passes it)
+  const c = byId('foley.feet.A.10'), ghost = { ...moveBy(c, 0.12), id: 'foley.feet.A.ghost' }, s = preMaster([c, ghost, ...quiet(CUES)]);
+  assert.deepEqual(attackProblems([c], () => riseDb(s, c)).map((x) => x.split(':')[0]), [c.id]);
 });
 
 // ---------- pan ----------
@@ -208,10 +294,91 @@ test('bed-only windows: no hard or foley onset before the car\'s light, through 
   assert.deepEqual(bedOnlyProblems(planted).map((x) => x.split(' (')[0]), ['shot 12']);
 });
 
+// ---------- the place change ----------
+// At each place change (LOCATIONS), each background family's outgoing and incoming beds, rendered alone: the gain the
+// render applies to each bed's own noise (bedNoise, drawn as the render draws it), sample by sample over both channels,
+// so it is exact (to float32 rounding) and free of the noise's fluctuation, relative to the bed's steady gain beside
+// the crossfade. Where a family sounds on both sides (wind, city) the squares sum to 1 (equal power); on every side the
+// gain moves gradually and is 0 outside the crossfade. A switch is not gradual; a linear crossfade dips 3 dB midway.
+// XFADE_STEP_RATIO, the most a gain may move in a millisecond: a starting value. The 50 ms crossfade's steepest is
+// 0.031 (the cosine's), so any crossfade shorter than about 31 ms fails, and a switch, a step of 1, fails by far.
+// XFADE_TOL_RATIO: the squares sum to 1 within 2.9e-7 measured (float32 rounding); the bar is a starting value over it.
+// A gain per millisecond by least squares would not do: two noises weight the samples of a millisecond differently,
+// and the squares of the two averages then miss 1 by up to 0.009.
+const XFADE_PAD_SEC = 0.01, XFADE_STEP_RATIO = 0.05, XFADE_TOL_RATIO = 1e-5;
+const CHANGES = LOCATIONS.slice(1).map((l) => l.t0);
+const crossfadeWindow = (T) => [at(T - TIMBRE.crossfadeSec / 2 - XFADE_PAD_SEC), at(T + TIMBRE.crossfadeSec / 2 + XFADE_PAD_SEC)];
+// a background's own noise over [a, b), from bedSpan's first sample, as bedVoice draws it
+function bedRaw(c, a, b) {
+  const [s0] = bedSpan(c, SR), gen = bedNoise(c, makeContext(BLOCKOUT)), raw = [new Float64Array(b - a), new Float64Array(b - a)];
+  for (let i = s0; i < b; i++) { const l = gen[0](), r = gen[1](); if (i >= a) { raw[0][i - a] = l; raw[1][i - a] = r; } }
+  return raw;
+}
+// the gain from raw to stem (both [a, b), window-local) at each sample, over both channels, normalized by `steady`
+// (its first or last sample); 0 where the noise is not drawn yet
+function gainsOf(stem, raw, steady) {
+  const g = new Float64Array(raw[0].length);
+  for (let k = 0; k < g.length; k++) { const xx = raw[0][k] ** 2 + raw[1][k] ** 2; g[k] = xx > 0 ? (stem.left[k] * raw[0][k] + stem.right[k] * raw[1][k]) / xx : 0; }
+  const ref = steady === 'first' ? g[0] : g[g.length - 1];
+  return g.map((x) => x / ref);
+}
+// sides: { family: { out: gains or null, in: gains or null } } at one place change
+function placeChangeProblems(sides) {
+  const p = [];
+  for (const [f, { out, in: inn }] of Object.entries(sides)) {
+    for (const [name, g] of [['out', out], ['in', inn]]) {
+      if (!g) continue;
+      const hop = Math.round(SR / 1000);
+      let step = 0;
+      for (let k = hop; k < g.length; k++) step = Math.max(step, Math.abs(g[k] - g[k - hop]));
+      if (!(step <= XFADE_STEP_RATIO)) p.push(`${f} ${name}: a step of ${step.toFixed(3)} in a millisecond`);
+      if (g[name === 'out' ? g.length - 1 : 0] !== 0) p.push(`${f} ${name}: still sounding beyond the crossfade`);
+    }
+    if (out && inn) {
+      let worst = 0;
+      for (let k = 0; k < out.length; k++) worst = Math.max(worst, Math.abs(out[k] * out[k] + inn[k] * inn[k] - 1));
+      if (!(worst <= XFADE_TOL_RATIO)) p.push(`${f}: the squares sum to 1 within ${worst.toExponential(1)}, not equal power`);
+    }
+  }
+  return p;
+}
+// the sides at place change T, from `stemOf(cue, a, b)` (a window-local stem): the beds that end there and start there
+function sidesAt(T, stemOf) {
+  const [a, b] = crossfadeWindow(T), beds = voiced(CUES).filter((c) => !c.place), sides = {};
+  for (const f of new Set(beds.filter((c) => c.t1 === T || c.t0 === T).map((c) => c.family))) {
+    const side = (c, steady) => (c ? gainsOf(stemOf(c, a, b), bedRaw(c, a, b), steady) : null);
+    sides[f] = { out: side(beds.find((c) => c.family === f && c.t1 === T), 'first'), in: side(beds.find((c) => c.family === f && c.t0 === T), 'last') };
+  }
+  return sides;
+}
+
+test('the place change: each background crossfades with equal power, gradually, inside its crossfade', () => {
+  assert.deepEqual(CHANGES, [54]);
+  const rendered = (c, a, b) => { const s = preMaster([c, ...quiet(CUES)]); return { left: s.left.subarray(a, b), right: s.right.subarray(a, b) }; };
+  const sides = sidesAt(CHANGES[0], rendered);
+  assert.deepEqual(Object.fromEntries(Object.entries(sides).map(([f, x]) => [f, [!!x.out, !!x.in]])), { city: [true, true], wind: [true, true], water: [false, true] });
+  assert.deepEqual(placeChangeProblems(sides), []);
+  // controls, each made of the beds' own noise: a switch at the place change (every side steps by 1), and a linear
+  // crossfade over the same span (gradual, but the squares of wind and city dip to a half)
+  const T = CHANGES[0], h = TIMBRE.crossfadeSec / 2, [a] = crossfadeWindow(T);
+  const planted = (env) => (c, a0, b0) => {
+    const raw = bedRaw(c, a0, b0), side = c.t1 === T ? (u) => env(1 - u) : env, stem = { left: new Float32Array(b0 - a0), right: new Float32Array(b0 - a0) };
+    for (let k = 0; k < b0 - a0; k++) { const u = Math.min(1, Math.max(0, ((a0 + k) / SR - T + h) / (2 * h))), g = side(u); stem.left[k] = raw[0][k] * g; stem.right[k] = raw[1][k] * g; }
+    return stem;
+  };
+  assert.ok(a > 0);
+  const switched = placeChangeProblems(sidesAt(T, planted((u) => (u >= 0.5 ? 1 : 0))));
+  assert.deepEqual(switched.filter((x) => x.includes('a step of')).map((x) => x.split(':')[0]), ['city out', 'city in', 'wind out', 'wind in', 'water in']);
+  const linear = placeChangeProblems(sidesAt(T, planted((u) => u)));
+  assert.deepEqual(linear.map((x) => x.split(':')[0]), ['city', 'wind']);
+});
+
 // ---------- timbre ----------
 // Each family's spectral centroid (the mono sum of its stem over its cues' spans), from cues.js's families, rendered
-// from `list`; and the pairs closer than CENTROID_BAR_OCTAVES.
+// from `list`; and the pairs closer than CENTROID_BAR_OCTAVES. Families that share a voice group are one voice
+// changing, not two sounds to tell apart: the engine and its run-down (car:intake), which starts in the engine's band.
 const FAMILIES = Object.groupBy(voiced(CUES), (c) => c.family);
+const oneVoice = (a, b) => FAMILIES[a].some((x) => FAMILIES[b].some((y) => x.source === y.source));
 function centroidOf(f, list = CUES) {
   const own = list.filter((c) => FAMILIES[f].some((x) => x.id === c.id));
   return centroidHz(averageSpectrum(groupStem([...new Set(own.map((c) => c.source))], { cues: list }), own.map((c) => [c.t0, c.t1])));
@@ -219,14 +386,17 @@ function centroidOf(f, list = CUES) {
 function centroidProblems(hz) {
   const fams = Object.keys(hz), p = [];
   for (let i = 0; i < fams.length; i++) for (let j = i + 1; j < fams.length; j++) {
+    if (oneVoice(fams[i], fams[j])) continue;
     const d = Math.abs(Math.log2(hz[fams[i]] / hz[fams[j]]));
     if (!(d >= CENTROID_BAR_OCTAVES)) p.push(`${fams[i]} ${hz[fams[i]].toFixed(0)} Hz and ${fams[j]} ${hz[fams[j]].toFixed(0)} Hz: ${d.toFixed(3)} octave`);
   }
   return p;
 }
 
-test('timbre: every family\'s spectral centroid at least 0.11 octave from every other family\'s', () => {
-  const hz = Object.fromEntries(Object.keys(FAMILIES).map((f) => [f, centroidOf(f)]));
+test('timbre: every family\'s spectral centroid at least 0.11 octave from every other family\'s but its own voice\'s', () => {
+  const fams = Object.keys(FAMILIES);
+  assert.deepEqual(fams.flatMap((a, i) => fams.slice(i + 1).filter((b) => oneVoice(a, b)).map((b) => `${a} ${b}`)), ['engine stop']);
+  const hz = Object.fromEntries(fams.map((f) => [f, centroidOf(f)]));
   assert.deepEqual(centroidProblems(hz), []);
   // control: the cabin's clicks played with the ticks' placeholder are not told apart from the ticks
   const asTicks = CUES.map((c) => (c.family === 'cabin' ? { ...c, family: 'tick' } : c));
@@ -273,31 +443,43 @@ test('stems: every voice group rendered alone, summed, equals the mix before the
 });
 
 // ---------- a changed picture ----------
-// makeCues on a picture whose doors move 0.5 s later (SOUND-PLAN 4.2's carTimes perturbation): rendered, every door
-// onset moves by the same 0.5 s, within ONSET_TOL.
+// SOUND-PLAN 4.2's time perturbations of carTimes, LIGHTER, EMBER and EXHALE, here all at once, on a patched world
+// object for makeCues: every carTimes field (start, brake, the turns, stop, the lights, the doors) and the car's
+// motion, lights, settle and steering DT later; the lighter, the drags and the exhale DT later. makeCues then moves by
+// DT exactly the voiced cues whose derivedFrom names those inputs (42 today: engine, tyres, brake, settle, cabin, the
+// doors, the run-down, the ticks, lighter, drags, breath) and no other. Rendered from the moved catalogue, each alone,
+// every moved voice starts and stops on its new samples, DT after the old render's. The feet, cloth, scuffs, the
+// getting out, the beds and the hum read the people and the places, which do not move here.
 const DT = 0.5;
-const shiftDoors = (w) => ({ ...w, carTimes: { ...w.carTimes, doors: Object.fromEntries(Object.entries(w.carTimes.doors).map(([k, d]) => [k, Object.fromEntries(Object.entries(d).map(([q, v]) => [q, v + DT]))])) } });
-function shiftProblems(before, after, stemOf) {
-  const p = [];
-  for (const g of groupsOf(after).filter((x) => x.startsWith('car:door'))) {
-    const was = voiced(before).filter((c) => c.source === g), now = voiced(after).filter((c) => c.source === g).sort((a, b) => a.t0 - b.t0), s = stemOf(g);
-    const det = onsets(s.left, s.right, s.sr, { minGap: minGapOf(now) });
-    const m = matchOneToOne(now.map((c) => c.t0), det, ONSET_TOL);
-    for (const c of now) {
-      const old = was.find((x) => x.id === c.id), hit = m.pairs.find((x) => x.expected === c.t0);
-      if (!hit) p.push(`${c.id}: no onset at its new time ${c.t0.toFixed(4)}`);
-      else if (!(Math.abs(hit.detected - old.t0 - DT) <= ONSET_TOL)) p.push(`${c.id}: moved ${(hit.detected - old.t0).toFixed(4)} s, want ${DT}`);
-    }
+const later = (f) => (t) => f(t - DT);
+const plus = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === 'number' ? v + DT : plus(v)]));
+const shiftPicture = (w) => ({
+  ...w, carTimes: plus(w.carTimes), carAt: later(w.carAt), headlights: later(w.headlights), settlePitch: later(w.settlePitch), steerDeg: later(w.steerDeg),
+  LIGHTER: plus(w.LIGHTER), lighterOn: later(w.lighterOn), lighterFlicker: later(w.lighterFlicker),
+  EMBER: { ...w.EMBER, drags: w.EMBER.drags.map((d) => d + DT) }, emberLevel: later(w.emberLevel), EXHALE: { ...w.EXHALE, t: w.EXHALE.t + DT },
+});
+const SHIFTED = /carTimes|headlights|settlePitch|LIGHTER|EMBER|EXHALE/;
+function shiftProblems(before, after, spanOf) {
+  const p = [], old = new Map(before.map((c) => [c.id, c])), moved = voiced(after).filter((c) => SHIFTED.test(c.derivedFrom ?? ''));
+  p.push(...exactProblems(moved, spanOf));
+  for (const c of moved) {
+    const got = spanOf(c), was = alone(old.get(c.id)).span;
+    if (got && !(Math.abs(got[0] - was[0] - DT * SR) <= 1)) p.push(`${c.id}: moved ${((got[0] - was[0]) / SR).toFixed(4)} s, want ${DT}`);
   }
   return p;
 }
 
-test('a time shift of the picture moves the onsets: the doors 0.5 s later, rendered, sound 0.5 s later', () => {
-  const moved = makeCues(shiftDoors(WORLD));
-  assert.equal(voiced(moved).filter((c) => c.family === 'door').length, 10);
-  assert.deepEqual(shiftProblems(CUES, moved, (g) => groupStem(g, { cues: moved })), []);
-  // control: a layer that kept reading the old picture (cues.js's own list) is found on every door cue
-  assert.equal(shiftProblems(CUES, moved, (g) => groupStem(g)).length, 10);
+test('a time shift of the picture moves the sound: the car and the smoker 0.5 s later, rendered, sound 0.5 s later', () => {
+  const moved = makeCues(shiftPicture(WORLD)), old = new Map(CUES.map((c) => [c.id, c]));
+  // the patch is a pure time shift of what it names: each voiced cue moves by DT or not at all, as its derivedFrom says
+  const how = voiced(moved).map((c) => { const d = c.t0 - old.get(c.id).t0, d1 = c.t1 - old.get(c.id).t1; return [c.id, SHIFTED.test(c.derivedFrom ?? ''), Math.abs(d - DT) < 1e-6 && Math.abs(d1 - DT) < 1e-6 ? DT : Math.abs(d) < 1e-9 && Math.abs(d1) < 1e-9 ? 0 : d]; });
+  assert.deepEqual(how.filter(([, named, d]) => d !== (named ? DT : 0)), []);
+  assert.equal(voiced(moved).length, voiced(CUES).length);
+  assert.equal(how.filter(([, named]) => named).length, 42);
+  assert.deepEqual(shiftProblems(CUES, moved, (c) => alone(c, moved).span), []);
+  // control: a layer that kept reading the old picture (cues.js's own list) is found on every moved cue
+  const stale = shiftProblems(CUES, moved, (c) => alone(old.get(c.id)).span);
+  assert.equal(new Set(stale.map((x) => x.split(':')[0])).size, 42);
 });
 
 // ---------- the layers read only cues.js ----------

@@ -20,17 +20,19 @@ export const TOL = freeze({ progressRatio: 1e-6 });
 export const TIMBRE = freeze({
   attackSec: 0.001, // every one-shot's attack: its onset lands within a millisecond of its t0
   edgeSec: 0.005, // a continuous voice fades in and out over this, a one-shot out: no click where a voice stops
-  crossfadeSec: 0.05, // the backgrounds' equal-power crossfade, centred on the place change
+  // the backgrounds' equal-power crossfade, centred on the place change: a starting value, heard at Sound gate 2. The
+  // no-click check cannot set it (SOUND-PLAN 3.5 hoped it would): it passes a one-sample switch between two noise beds
+  crossfadeSec: 0.05,
   hum: { partialHz: [120, 240], partialRatio: [1, 0.5] }, // pure partials
   city: { highpassHz: 40, lowpassHz: 300 }, // brown noise
   wind: { bandHz: 750, bandQ: 0.7 }, // pink noise
   water: { bandHz: 7000, bandQ: 0.7 }, // grey: white noise in a wide band
   engine: { bandHz: 650, bandQ: 1.4, firesPerRpm: 1 / 30, noiseRatio: 0.2 }, // a four-stroke four fires twice a turn
-  stop: { bandHz: 240, bandQ: 1.4 }, // the engine's buzz, darker, falling to nothing with the run-down
+  stop: { glideOctaves: 1.5 }, // the engine's buzz, its band gliding down this far as it falls to nothing
   tyres: { bandHz: 900, bandQ: 2, steerOctaves: 0.5 }, // the band moves with the steering, up at full lock
   brake: { bandHz: 2700, bandQ: 3, creakHz: 1900, creakLowRatio: 0.7 }, // pads; the creak glides down as it stops
   settle: { knockHz: 300, decaySec: 0.05 },
-  unload: { knockHz: 520, decaySec: 0.05 },
+  unload: { knockHz: 720, decaySec: 0.05 }, // between the engine's band and the wind's, clear of the run-down's glide
   cabin: { bandHz: 5900, bandQ: 3, decaySec: 0.012 },
   door: { clickHz: 1800, clickQ: 3, clickSec: 0.006, sweepLowHz: 400, sweepHighHz: 800, sweepDecayRatio: 0.25, knockHz: 340, thumpHz: 200, knockSec: 0.04 },
   tick: { bandHz: 9500, bandQ: 4, decaySec: 0.008 },

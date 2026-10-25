@@ -8,7 +8,9 @@
 // bus, where REF is the street background's RMS over both channels (LEVEL.refDb). At refDist the law's gain is 1 and
 // the pan is equal power, so a mono voice's power there is its stereo power: a step at 14 dB has a loudest 100 ms 14 dB
 // over the street background, as the level plan states its rules. A steady voice's loudest window is its steady level;
-// a background's level is its RMS over its whole span, both channels. Each layer divides out its bus gain
+// a background's level is its RMS over its whole span, both channels. A click far shorter than the window has its peak
+// far over its level: the driver's unlatch (6 ms) peaks 21.3 dB over its loudest 100 ms, the ticks 23 to 25 dB, a step
+// 16.7 dB, and those peaks, not the levels, are what the master's limiter meets. Each layer divides out its bus gain
 // (config.audio.buses), so the planned relative levels hold whatever the buses are. The modifiers (voices 0: the rise,
 // the swell, the ambience changes) act after the scaling, in dB, and are not part of a voice's level.
 import { CUES, LAWS, WORLD } from '../../cues.js';
@@ -99,16 +101,23 @@ function bandNoise(sr, rng, centre, q, level = () => 1) {
   let i = 0;
   return (dt) => { if (++i % BLOCK === 0) retune(f, centre(dt)); return through(f, white(rng)) * level(dt); };
 }
-// the engine's buzz: a saw at the firing rate from the track's rpm, a little noise, through a band; `level` scales it
-function buzz(sr, rng, track, T, level = () => 1) {
-  const f = band(sr, T.bandHz, T.bandQ), n = TIMBRE.engine.noiseRatio;
-  let ph = 0;
-  return (dt) => { ph += track('rpm', dt) * TIMBRE.engine.firesPerRpm / sr; return through(f, saw(ph) * (1 - n) + white(rng) * n) * level(dt); };
+// the engine's buzz: a saw at the firing rate from the track's rpm, a little noise, through the engine's band; `glide`
+// (octaves, a function of dt) moves the band down from there, retuned every BLOCK samples, and `level` scales it
+function buzz(sr, rng, track, glide = null, level = () => 1) {
+  const T = TIMBRE.engine, f = band(sr, T.bandHz, T.bandQ), n = T.noiseRatio;
+  let ph = 0, i = 0;
+  return (dt) => {
+    if (glide && ++i % BLOCK === 0) retune(f, T.bandHz * 2 ** -glide(dt));
+    ph += track('rpm', dt) * T.firesPerRpm / sr;
+    return through(f, saw(ph) * (1 - n) + white(rng) * n) * level(dt);
+  };
 }
 
 export const FAMILY = {
-  engine: (c, { sr, rng, track }) => buzz(sr, rng, track, TIMBRE.engine),
-  stop: (c, { sr, rng, track }) => buzz(sr, rng, track, TIMBRE.stop, (dt) => track('dying', dt)),
+  engine: (c, { sr, rng, track }) => buzz(sr, rng, track),
+  // the run-down is the engine's own voice dying (the same voice group): it starts in the engine's band and falls,
+  // in rate (the track's rpm), in band and in level, with the track's `dying`; no key click (Gate 0, question 2 b)
+  stop: (c, { sr, rng, track }) => buzz(sr, rng, track, (dt) => TIMBRE.stop.glideOctaves * (1 - track('dying', dt)), (dt) => track('dying', dt)),
   tyres: (c, { sr, rng, track }) => {
     const T = TIMBRE.tyres, steer = track.max('steer') || 1, speed = track.max('speed') || 1;
     return bandNoise(sr, rng, (dt) => T.bandHz * 2 ** (T.steerOctaves * track('steer', dt) / steer), T.bandQ, (dt) => track('speed', dt) / speed);
@@ -196,13 +205,18 @@ const BED = {
   water: (sr, rng) => { const f = band(sr, TIMBRE.water.bandHz, TIMBRE.water.bandQ); return () => through(f, white(rng)); },
 };
 
+// A background's noise, the left and the right generator, each called once per sample from bedSpan's first sample on;
+// exported so tests/sound-blockout.test.mjs can measure the gain a render applies to it (the crossfade)
+export const bedNoise = (c, ctx) => { const rng = ctx.rngFor(`audio:blockout:${c.id}`); return [BED[c.family](ctx.sr, rng), BED[c.family](ctx.sr, rng)]; };
+// the samples a background plays, [s0, s1): its span widened by half the crossfade at each end
+export const bedSpan = (c, sr) => { const h = TIMBRE.crossfadeSec / 2; return [Math.max(0, Math.round((c.t0 - h) * sr)), Math.round((c.t1 + h) * sr)]; };
+
 // An unplaced stereo background for one cue: its level by the rule above (its RMS over its span), an equal-power
 // crossfade of TIMBRE.crossfadeSec centred on each end, so the place change is a short crossfade and nothing else.
 export function bedVoice(c, list, ctx, busDb) {
   if (c.place || !BED[c.family]) throw new Error(`blockout: ${c.id} is not an unplaced background`);
-  const { sr } = ctx, h = TIMBRE.crossfadeSec / 2;
-  const make = () => { const rng = ctx.rngFor(`audio:blockout:${c.id}`); return [BED[c.family](sr, rng), BED[c.family](sr, rng)]; };
-  const s0 = Math.max(0, Math.round((c.t0 - h) * sr)), s1 = Math.round((c.t1 + h) * sr), m0 = Math.round(c.t0 * sr), m1 = Math.round(c.t1 * sr);
+  const { sr } = ctx, h = TIMBRE.crossfadeSec / 2, make = () => bedNoise(c, ctx);
+  const [s0, s1] = bedSpan(c, sr), m0 = Math.round(c.t0 * sr), m1 = Math.round(c.t1 * sr);
   // the measuring pass, over the span itself, from the same start the render takes
   let sum = 0;
   const g = make();

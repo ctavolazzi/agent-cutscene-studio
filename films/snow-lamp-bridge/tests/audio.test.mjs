@@ -20,7 +20,7 @@ import { integratedLufs, normalize, samplePeak } from '../src/audio/loudness.js'
 import { listenerAt, placeAt } from '../src/audio/spatial.js';
 import { encodeWav } from '../src/audio/wav.js';
 import { rms, db } from '../scripts/lib/audio-analysis.mjs';
-import { renderToWav } from '../scripts/sound.js';
+import { limiterByShot, renderToWav } from '../scripts/sound.js';
 import { LEGACY_SOUND, madeBy } from '../scripts/verify.js';
 
 const SR = CONFIG.audio.sr;
@@ -205,6 +205,19 @@ test('sidecar: scripts/sound.js names the stage, the parked and the built layers
   const side = JSON.parse(json1);
   assert.deepEqual([side.stage, side.parked, side.layers], ['design', CONFIG.audio.parked, ['ambience']]);
   assert.equal(side.renderSeconds, undefined, 'render time is not written: it differs every run');
+  assert.equal(side.limiter, null, 'a raw render is not limited');
+});
+
+test('sidecar: the limiter report finds the shot the limiter acts in, by how much, and nothing elsewhere', () => {
+  const sr = 1000, n = 4 * sr, shots = [{ n: 1, start: 0, end: 2 }, { n: 2, start: 2, end: 4 }], g = 2;
+  const raw = { left: Float32Array.from({ length: n }, (_, i) => 0.1 * Math.sin(i)), right: Float32Array.from({ length: n }, (_, i) => 0.1 * Math.cos(i)) };
+  const out = { left: raw.left.map((x) => x * g), right: raw.right.map((x) => x * g) };
+  assert.deepEqual(limiterByShot(raw, out, sr, shots, 0.1).map((x) => x.maxDb), [0, 0]);
+  // control: a peak in shot 2 held 6 dB under its gained value
+  raw.left[3000] = 0.8; out.left[3000] = 0.8 * g / 2;
+  const r = limiterByShot(raw, out, sr, shots, 0.1);
+  assert.deepEqual([r[0].maxDb, r[1].shot, r[1].at], [0, 2, 3]);
+  assert.ok(Math.abs(r[1].maxDb - 20 * Math.log10(2)) < 0.01, `${r[1].maxDb} dB`);
 });
 
 test('verify check 5: a sidecar without stage or parked was made before the stage switch, score in', () => {

@@ -1,9 +1,12 @@
 // Measurements on rendered audio, shared by the audio tests and scripts: stems, levels, onsets, stereo balance.
 // Everything takes Float32Arrays at a sample rate, times in seconds.
 import { CONFIG } from '../../src/config.js';
-import { atStage, renderSoundtrack } from '../../src/audio/index.js';
+import { atStage, buildLayers, renderSoundtrack } from '../../src/audio/index.js';
 import { CUES } from '../../src/audio/cues.js';
+import { dbToGain } from '../../src/audio/dsp.js';
 import { integratedLufs } from '../../src/audio/loudness.js';
+import { BLOCK } from '../../src/audio/mix.js';
+import { T_TOTAL } from '../../src/world.js';
 
 const cache = new Map();
 const stageKey = (config) => [config.audio.stage, config.audio.parked, config.seed];
@@ -93,6 +96,33 @@ export function groupStem(sources, { cues = CUES, config = atStage(CONFIG, { sta
   if (cues !== CUES) return make();
   if (!cache.has(key)) cache.set(key, make());
   return cache.get(key);
+}
+
+// The blockout's layers summed into their buses and nothing else: renderBlocks's bus sum without its master chain (no
+// reverb, highpass or fades), from the cues in `cues` (cues.js's by default). What the voices themselves play, so a
+// voice is exact zeros outside the samples it sounds: the master highpass rings on after every voice, and its fade in
+// covers the start. tests/sound-blockout.test.mjs shows that this through the master chain is groupStem, sample for
+// sample. { sr, left, right }, not cached.
+export function preMaster(cues = CUES, config = atStage(CONFIG, { stage: 'blockout' })) {
+  const layers = buildLayers(config, null, { cues }), sr = config.audio.sr, n = Math.round(T_TOTAL * sr);
+  const left = new Float32Array(n), right = new Float32Array(n), tl = new Float32Array(BLOCK), tr = new Float32Array(BLOCK);
+  const gain = Object.fromEntries(Object.entries(config.audio.buses).map(([k, v]) => [k, dbToGain(v)]));
+  for (let i0 = 0; i0 < n; i0 += BLOCK) {
+    const m = Math.min(BLOCK, n - i0);
+    for (const layer of layers) {
+      tl.fill(0); tr.fill(0);
+      layer.process(tl, tr, i0, m);
+      const g = gain[layer.bus] ?? 1;
+      for (let k = 0; k < m; k++) { left[i0 + k] += tl[k] * g; right[i0 + k] += tr[k] * g; }
+    }
+  }
+  return { sr, left, right };
+}
+// The samples of [a, b) that are not zero in either channel: the first and the last, or null when all are zero
+export function nonzeroSpan(s, a = 0, b = s.left.length) {
+  let first = -1, last = -1;
+  for (let i = a; i < b; i++) if (s.left[i] !== 0 || s.right[i] !== 0) { if (first < 0) first = i; last = i; }
+  return first < 0 ? null : [first, last];
 }
 
 // Expected and detected onsets matched one to one, within `tol` seconds: the closest pairs first, so two expected
