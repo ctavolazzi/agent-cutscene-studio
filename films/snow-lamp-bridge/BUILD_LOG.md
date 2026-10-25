@@ -1039,3 +1039,119 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - `scripts/sound-preview.js` and `tests/sound-preview.test.mjs` (3 tests, each with a planted fault: 3 samples of lag
   either way; text in the bottom rows or none in the band; the review track pinned to the foot of the frame).
 - Gate: 252 tests, 249 pass, 0 fail, 3 skipped (the parked score); check pass.
+
+#### s2-stills: Sound 2.9, the plan (before)
+- Before: base 21871c8. `measure.json` holds every number the drawings need except the curves over time (the
+  spectrogram, the stems' levels, the mix's balance), which come from the session's renders: the mastered mix (8.9 s
+  here) and the 30 voice-group stems before the master (7 s). The design stage with the score unparked renders sha256
+  f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da (checked, out/round-05/design-check.wav).
+- Plan: `scripts/lib/sound-stills.js` (the spectrogram, the level and balance curves, one still per shot, the
+  arrangement on round 04's timeline lanes, stills.json, the contact sheet); `buildTimeline` gains a header option and
+  a shift (its default drawing byte identical); `--stills` and `--sheet` join `STEPS` in `scripts/sound-review.js` on
+  the same session (memoised, so `--measure --stills --sheet` renders nothing twice; alone they check the raw render
+  against measure.json's sha256 before drawing); `tests/sound-stills.test.mjs` with planted faults; then the images,
+  looked at full size and at 390 px, and `review/round-05/notes-stills.md`.
+
+#### s2-stills: the drawing library, the steps and their checks (after)
+- `scripts/lib/sound-stills.js`: the time axis, the spectrogram (4096-sample Hann centred on each device pixel column,
+  log rows 25 Hz to 20 kHz, magma in 3 dB steps from -88 to -22 dB: set from the mastered blockout's own row levels,
+  median -52, 99 percent under -32.5; -115 to -25 and -100 to -30 were tried first and drew the beds orange), a PNG
+  encoder, the level and balance curves (100 ms windows centred on each point), the lanes (per voice group, or per
+  body in shots 5 and 9), one still per shot, the arrangement on round 04's lanes, stills.json entries, the contact
+  sheet. Measured is white or filled; predicted the lane's colour, translucent or hollow; the markers by person in the
+  reel's colours (a test holds them to the captions' lanes).
+- `buildTimeline` gained a header option, a shift and `pan: false`; round 04's `timeline.svg` regenerates byte for byte
+  (sha256 defaa92f...). `makeSession` lists its renders (`rendered`) and takes `keep: false` to plant re-rendering.
+  `--stills` and `--sheet` joined `STEPS`; alone they refuse a measure.json whose raw sha256 is not the session's.
+- `tests/sound-stills.test.mjs`: 9 tests, each with its planted fault (37 s alone).
+- Gate: npm test exit 0 (258 tests, 255 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
+  renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-stills: the stills, the arrangement and the contact sheet (before)
+- Plan: `node scripts/sound-review.js --round 05 --stills --sheet` on the committed measure.json (made at 21871c8 on
+  this engine), twice, the second run's files compared byte for byte with the first's; then look at every image at full
+  size and at 390 px, fix what does not read, and add the checks that the committed files are the code's.
+
+#### s2-stills: the stills, the arrangement and the contact sheet (after)
+- `node scripts/sound-review.js --round 05 --stills --sheet`: 25 s of renders (33: the raw mix, its peaks, the master,
+  the 30 group stems), 30 s for the stills, 5 s for the sheet, which rendered nothing. Run twice: all 35 files byte for
+  byte the same. The stills 9.8 MB, the arrangement 1.0 MB, the contact sheet's PNG 6.3 MB.
+- Looked at every image at full size and at 390 px (the contact sheet also as a 390 px page). Fixed from what was seen:
+  the spectrogram's scale (-88 to -22 dB, from the rows' own levels), lane names off the lines, text sizes for the phone
+  (13 to 14 units), a marked label names its person, overlapping and overflowing labels, labels through the
+  arrangement's rings, two wordings on the sheet. Added the label check and the check that the committed files are the
+  code's (11 tests now).
+- What the stills show is in `review/round-05/notes-stills.md`: the tyres fall 4.5 to 44 dB under their prediction
+  through shot 4 (median -10.6 dB) and the engine 3.3 dB (median), where measure.json's loudest windows see -1.3 and
+  -2.8; the beds and the hum agree to 0.4 dB; the latches lose 15 to 16 dB on the phone; silence holds in the five
+  bed-only shots; the 12 sync misses are all foley.
+- Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15). The design stage with the score unparked
+  renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+
+#### s2-stills: the steps in one call
+- `node scripts/sound-review.js --round 05 --measure --stills --sheet`: the measure in 263 s, then the stills and the
+  sheet, each logging "rendered for them: nothing"; `git status` clean after it (measure.json, the stems, the stills,
+  the arrangement and the contact sheet all byte for byte as committed). The note is added to notes-stills.md.
+- Gate: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped); npm run check exit 0 (forbidden 0 hits, determinism
+  0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+
+#### s2-stills: the checker's findings F1 to F7, the plan (before)
+- Before: HEAD 160ccf7. The checker's gate there: npm test exit 0 (260 tests, 257 pass, 0 fail, 3 skipped), npm run
+  check exit 0; the design stage with the score unparked f80b1542.... Findings: check 11 compares only the PNGs' sizes
+  (F1); nothing checks the values on the vertical axes or keeps measured and predicted apart (F2); the measureOf guard
+  has no test (F3); the notes claim the hum's lines in every shot (F4); the beds' span means and long cues' pans are
+  drawn as moments (F5); coincident glyphs hide each other (F6); leaders through labels, clamped loudness unmarked, a
+  lost colon, the low rows' bin centres (F7).
+- Plan, in gated commits. (1) The library and its checks: stills.json and a new sheet.json carry each SVG's and PNG's
+  sha256 (and the Chromium version that rasterized them); read-back checks, each with a planted fault, for tones on the
+  frequency ticks, left and right on the pan meter, a stem's known level on the lane (stills and arrangement), every
+  dot, ring, bar and key row against measure.json, the predicted envelopes against cues.js through the predictor and
+  round 04's timeline, the loudness at each window's middle, the miss labels' person, glyph overlaps and the leaders;
+  measureOf on a stub session; the committed PNGs against their hashes, and a rebuild from a real session against
+  stills.json and sheet.json. The beds' level as a bar over its span, long cues' pan as a key under the meter, glyphs
+  stacked, leaders behind label chips, clamped loudness marked, the colon kept, the bins in the legend, the 250 and
+  500 Hz lines moved off the spectrogram to violet ticks at its edges. (2) The images rerun and looked at, the notes
+  (F4 measured per shot, F5's shot 8 sentence, the new checks), this log.
+
+#### s2-stills: F1 to F7, the library, the checks and the images (after)
+- `scripts/lib/sound-stills.js`: a bed's level (measure.json's mean between its crossfades) is a white bar over that
+  span, named in the lane's head with both numbers (the heads wrap); a cue over 1 s has its pan in a key under the
+  axis, the shorter ones stay dots; glyphs closer than a glyph's width (or a ring's reach) are stacked down, each ring
+  around its own; labels on opaque chips over the leaders; loudness under -45 LUFS marked with an arrow and its lowest
+  reading (stills and arrangement); the arrangement keeps "sync: ..."; the 250 and 500 Hz lines moved off the
+  spectrogram to violet ticks at its edges; the legend says where rows read between bins. Every drawn number carries
+  its role and what it draws. New read-back checks: `toneProblems`, `panSideProblems`, `levelLineProblems`,
+  `arrangementLevelProblems`, `valueProblems`, `predictedProblems`, `loudnessProblems`, `missLabelProblems`,
+  `glyphProblems`, `leaderProblems`; `groupLevels` (the arrangement's levels, used by --sheet); `decodePng`.
+- `scripts/sound-review.js`: stills.json records each still's SVG and PNG sha256, the new sheet.json the arrangement's
+  and the contact sheet's (and the images it was made from), both with the Chromium (`rasterize` returns its version).
+- Tests: `tests/sound-stills.test.mjs` 20 (was 11): check 11 now holds every committed PNG to its recorded sha256
+  (planted: one byte of one still), and 9 new checks with planted faults, among them measureOf's guard (F3).
+  `tests/sound-stills-rebuild.test.mjs` (new, 2, about 37 s): the 15 stills and the arrangement rebuilt from a real
+  session hash to the recorded SVG sha256, and rasterize to the recorded PNG sha256 on the recorded Chromium (planted:
+  SPEC.lo -90, levels not over the street).
+- Mutation run in scratch copies (the checker's M05 to M22, and four new: no stacking, no chips, no clamp marks, a
+  bed's bar at its prediction): every one fails at least one test. M05 first passed (one-sided signals take the
+  balance's infinite branches), so the pan check now also draws spans right at half and left at a quarter.
+- Images: `node scripts/sound-review.js --round 05 --stills --sheet` twice, all 36 outputs byte for byte the same;
+  looked at whole and in crops (shots 1, 3, 5, 8, 9, 13 and 15, the arrangement, the contact sheet). The design stage
+  with the score unparked renders sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da.
+- Gate before commit e88cc83: npm test exit 0 (271 tests, 268 pass, 0 fail, 3 skipped: the parked score; both
+  rebuild tests ran on the recorded Chromium); npm run check exit 0 (forbidden 0 hits, determinism 0 of 62 differ,
+  cameras 191 comparisons, worst 2.00e-15).
+
+#### s2-stills: the notes after the checker's findings (before)
+- Plan: rewrite `review/round-05/notes-stills.md` for the new drawings and checks: the hum's lines measured per shot
+  (F4), the bridge wind's span mean (F5), the five unplaced beds, the onsets at one moment now seen, the mutation run,
+  and a table of the findings and what was done.
+
+#### s2-stills: the notes after the checker's findings (after)
+- `review/round-05/notes-stills.md`: the hum's 120 and 240 Hz rows measured on each still's own rows (each row's median
+  over the shot against the rows 3 to 6 away): 3.7 to 5.1 and 5.4 to 15.8 dB over their neighbours in shots 1 and 4 to
+  15, under one 3 dB colour step in shots 2 (1.0 and 0.6 dB) and 3 (2.3 and -1.4 dB); the bridge wind's mean over
+  54.025 to 111.975 s 1.05 dB under its prediction; the checks table (22 tests over two files), the mutation table,
+  the second look at the images, and the findings F1 to F7 with what was done.
+- Gate: npm test exit 0 (271 tests, 268 pass, 0 fail, 3 skipped: the parked score); npm run check exit 0 (forbidden 0
+  hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).

@@ -71,8 +71,14 @@ export function laneRuns(samples) {
   return runs;
 }
 
-// pred and sight: the level rule and the screen test (makePredictor, makeSight), passed in only to plant faults
-export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ cues, w }), sight = makeSight(w) } = {}) {
+// The default header's height: the shots' strip starts here, and the lanes TL.top - HEADER_H under it.
+export const HEADER_H = 296;
+
+// pred and sight: the level rule and the screen test (makePredictor, makeSight), passed in only to plant faults.
+// header: another drawing's header in place of this one's ({ height, draw(d, L, ctx) }, ctx { cues, lanes, pred, X,
+// width }); everything under it moves down by its height less HEADER_H (round 05's arrangement sheet). pan: false
+// leaves the pan lines out. Without either the drawing is round 04's, byte for byte.
+export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ cues, w }), sight = makeSight(w), header = null, pan = true } = {}) {
   const lanes = lanesOf(cues), T = w.T_TOTAL;
   const X = (t) => TL.left + t * TL.pxPerS, width = TL.left + T * TL.pxPerS + TL.right;
   // every voiced cue's samples, at STEP, with its level and where it is in the picture; the lanes' bar runs from them
@@ -89,7 +95,8 @@ export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ c
     ln.runs = laneRuns(ln.onBar);
   }
   // lane positions; a lane with a hidden run gets a row under its bar for the blockers' names
-  let y = TL.top, cat = null;
+  const shift = header ? header.height - HEADER_H : 0, top = TL.top + shift;
+  let y = top, cat = null;
   for (const ln of lanes) {
     if (ln.category !== cat) { y += TL.catGap; cat = ln.category; ln.catHead = true; }
     ln.y = y; ln.envTop = y + TL.laneLabels; ln.envBot = ln.envTop + TL.env; ln.barY = ln.envBot + 2;
@@ -101,34 +108,11 @@ export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ c
   const dbY = (ln, db) => ln.envBot - ((Math.min(DB.hi, Math.max(DB.lo, db)) - DB.lo) / (DB.hi - DB.lo)) * TL.env;
   const panY = (ln, pan) => ln.envTop + ((pan + 1) / 2) * TL.env;
 
-  // ---- header: title, rule, legend
-  L.fixed(24, 40, 'Snow, Lamp, Bridge: the cue timeline', { size: 26, weight: 700, fill: '#fff' });
-  L.fixed(24, 66, `Every cue in src/audio/cues.js (${cues.length}, ${cues.filter((c) => c.enabled).length} enabled), one lane per voice group (${lanes.length}), as heard from the camera playing at each moment. Time runs left to right, ${TL.pxPerS} px a second.`, { size: 14, fill: '#8794b3' });
-  wrapText(ruleText(pred), 1500, 12).forEach((s, i) => L.fixed(24, 92 + i * 16, s, { size: 12, fill: '#8794b3' }));
-  const lx = 24, ly = 160;
-  const key = [
-    ['env', `Envelope: predicted level on the level plan's scale, ${DB.lo} dB at the lane's floor to ${fmtDb(DB.hi)} dB at its top. Dashed line: the background playing (its place's beds, modifiers included), ${pred.locations.map((l) => `${fmtDb(pred.bg[l.name])} dB on the ${l.name}`).join(', ')}.`],
-    ['pan', 'Thin white line: the pan, left at the top of the lane, right at its foot, centre half way.'],
-    ['bar', 'Bar under the lane: the source in frame and seen (projected through the shot\'s camera, frame by frame).'],
-    ['hid', 'Outlined bar: in frame but hidden (SOUND-PLAN 3.7); the blocker is named under it: a building, the parapet, the car.'],
-    ['tick', 'Tick and label: a cue\'s onset (steps by their ordinal, ticks by number; a bed or a change with its level). Dashed: offered, default out.'],
-    ['mod', 'Dashed box: a cue with no voice of its own (the rise, the swell, the ambience changes); its line is its track, 0 to 1.'],
-    ['bed', 'Hatched columns: bed-only windows (SOUND-PLAN 3.11), no hard or foley onset; two are held for music.'],
-  ];
-  key.forEach(([k, s], i) => {
-    const yy = ly + i * 18;
-    if (k === 'env') { d.poly([[lx, yy], [lx + 30, yy], [lx + 30, yy - 10], [lx + 15, yy - 6], [lx, yy - 8]], { fill: PERSON.A, fillOp: 0.45, stroke: PERSON.A, sw: 1 }); d.line([[lx, yy - 3], [lx + 30, yy - 3]], { stroke: '#8794b3', sw: 0.8, dash: [4, 4] }); }
-    if (k === 'pan') d.line([[lx, yy - 8], [lx + 30, yy - 2]], { stroke: '#fff', sw: 1 });
-    if (k === 'bar') d.rect(lx, yy - 6, 30, 5, { fill: PERSON.B });
-    if (k === 'hid') d.rect(lx, yy - 6, 30, 5, { stroke: PERSON.B, sw: 1 });
-    if (k === 'tick') d.line([[lx + 15, yy - 12], [lx + 15, yy + 2]], { stroke: FAMILY.door.color, sw: 1.5 });
-    if (k === 'mod') d.rect(lx, yy - 11, 30, 11, { stroke: FAMILY.engine.color, sw: 1, dash: [3, 2] });
-    if (k === 'bed') hatch(d, lx, yy - 12, 30, 13);
-    L.fixed(lx + 42, yy, s, { size: 12, fill: '#c9d4ee' });
-  });
+  // ---- header: title, rule, legend (round 04's), or the caller's
+  (header ? header.draw : drawHeader)(d, L, { cues, lanes, pred, X, width });
 
   // ---- shots as columns, the time ruler, the windows and the place change
-  const sy = 296, all = [sy - 4, height - 20];
+  const sy = HEADER_H + shift, all = [sy - 4, height - 20];
   for (const s of w.SHOTS) {
     const x0 = X(s.start), x1 = X(s.end), col = shotColor(s.n);
     d.rect(x0, sy, x1 - x0 - 1, 22, { fill: col, fillOp: 0.9 });
@@ -143,12 +127,12 @@ export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ c
   }
   for (const b of bedOnlyWindows(w)) {
     hatch(d, X(b.t0), sy + 48, X(b.t1) - X(b.t0), all[1] - sy - 48, { bed: b.note });
-    L.place(X(b.t0) + 3, TL.top + 14, b.music ? `bed only, held for music: ${b.note}` : `bed only: ${b.note}`, { size: 11, weight: 700, fill: '#c9d4ee' }, { cands: [[0, 0, 'e'], [0, 13, 'e']], leader: false });
+    L.place(X(b.t0) + 3, top + 14, b.music ? `bed only, held for music: ${b.note}` : `bed only: ${b.note}`, { size: 11, weight: 700, fill: '#c9d4ee' }, { cands: [[0, 0, 'e'], [0, 13, 'e']], leader: false });
   }
   const br = pred.locations.slice(1);
   for (const l of br) {
     d.line([[X(l.t0), sy + 24], [X(l.t0), all[1]]], { stroke: '#8fb0ff', sw: 2.5, dash: [6, 4], place: l.name });
-    L.place(X(l.t0) + 3, TL.top, `the place changes: ${pred.locations[0].name} to ${l.name}, ${fmtT(l.t0)} s (shot ${l.shots[0]}); backgrounds ${fmtDb(pred.bg[pred.locations[0].name])} to ${fmtDb(pred.bg[l.name])} dB`, { size: 11, weight: 700, fill: '#8fb0ff' }, { cands: [[0, 0, 'e']], leader: false });
+    L.place(X(l.t0) + 3, top, `the place changes: ${pred.locations[0].name} to ${l.name}, ${fmtT(l.t0)} s (shot ${l.shots[0]}); backgrounds ${fmtDb(pred.bg[pred.locations[0].name])} to ${fmtDb(pred.bg[l.name])} dB`, { size: 11, weight: 700, fill: '#8fb0ff' }, { cands: [[0, 0, 'e']], leader: false });
   }
   // the background playing, sampled every BG_STEP and at each place's ends, so the step at the place change is drawn
   const bgTs = [...new Set([...Array.from({ length: Math.floor(T / BG_STEP) + 1 }, (_, k) => k * BG_STEP), ...pred.locations.flatMap((l) => [l.t0, Math.max(l.t0, l.t1 - 1e-6)]), T])].filter((t) => t <= T).sort((a, b) => a - b);
@@ -180,7 +164,7 @@ export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ c
             const pts = seg.map((s) => [X(s.t), dbY(ln, s.db)]), ts = seg.map((s) => s.t), pans = seg.filter((s) => s.pan !== null);
             if (pts.length === 1 || pts[pts.length - 1][0] - pts[0][0] < 2) pts.push([pts[0][0] + 2, pts[pts.length - 1][1]]);
             d.poly([...pts, [pts[pts.length - 1][0], ln.envBot], [pts[0][0], ln.envBot]], off ? { stroke: ccol, sw: 1, dash: [3, 2], cue: c.id, role: 'envelope', ts } : { fill: ccol, fillOp: 0.38, stroke: ccol, sw: 1, cue: c.id, role: 'envelope', ts });
-            if (pans.length > 1) d.line(pans.map((s) => [X(s.t), panY(ln, s.pan)]), { stroke: '#ffffff', sw: 0.9, strokeOp: off ? 0.4 : 0.9, cue: c.id, role: 'pan', ts: pans.map((s) => s.t) });
+            if (pan && pans.length > 1) d.line(pans.map((s) => [X(s.t), panY(ln, s.pan)]), { stroke: '#ffffff', sw: 0.9, strokeOp: off ? 0.4 : 0.9, cue: c.id, role: 'pan', ts: pans.map((s) => s.t) });
           }
           seg = [];
         };
@@ -209,11 +193,45 @@ export function buildTimeline({ cues = CUES, w = WORLD, pred = makePredictor({ c
       L.place(X(hid[0].t0), ln.barY + TL.bar + 10, str, { size: 10, fill: col, hiddenBy: bys }, { cands: [[0, 0, 'e'], [-60, 0, 'e'], [-120, 0, 'e']], leader: false });
     }
   }
-  return { d, lanes, manifest, labeler: L, X, dbY, panY, pred };
+  return { d, lanes, manifest, labeler: L, X, dbY, panY, pred, top, sy, bottom: y };
+}
+
+// Round 04's header: the title, the rule and the key, above the shots' strip (HEADER_H)
+function drawHeader(d, L, { cues, lanes, pred }) {
+  L.fixed(24, 40, 'Snow, Lamp, Bridge: the cue timeline', { size: 26, weight: 700, fill: '#fff' });
+  L.fixed(24, 66, `Every cue in src/audio/cues.js (${cues.length}, ${cues.filter((c) => c.enabled).length} enabled), one lane per voice group (${lanes.length}), as heard from the camera playing at each moment. Time runs left to right, ${TL.pxPerS} px a second.`, { size: 14, fill: '#8794b3' });
+  wrapText(ruleText(pred), 1500, 12).forEach((s, i) => L.fixed(24, 92 + i * 16, s, { size: 12, fill: '#8794b3' }));
+  const lx = 24, ly = 160;
+  const key = [
+    ['env', `Envelope: predicted level on the level plan's scale, ${DB.lo} dB at the lane's floor to ${fmtDb(DB.hi)} dB at its top. Dashed line: the background playing (its place's beds, modifiers included), ${pred.locations.map((l) => `${fmtDb(pred.bg[l.name])} dB on the ${l.name}`).join(', ')}.`],
+    ['pan', 'Thin white line: the pan, left at the top of the lane, right at its foot, centre half way.'],
+    ['bar', 'Bar under the lane: the source in frame and seen (projected through the shot\'s camera, frame by frame).'],
+    ['hid', 'Outlined bar: in frame but hidden (SOUND-PLAN 3.7); the blocker is named under it: a building, the parapet, the car.'],
+    ['tick', 'Tick and label: a cue\'s onset (steps by their ordinal, ticks by number; a bed or a change with its level). Dashed: offered, default out.'],
+    ['mod', 'Dashed box: a cue with no voice of its own (the rise, the swell, the ambience changes); its line is its track, 0 to 1.'],
+    ['bed', 'Hatched columns: bed-only windows (SOUND-PLAN 3.11), no hard or foley onset; two are held for music.'],
+  ];
+  key.forEach(([k, s], i) => {
+    const yy = ly + i * 18;
+    keyGlyph(d, k, lx, yy);
+    L.fixed(lx + 42, yy, s, { size: 12, fill: '#c9d4ee' });
+  });
+}
+
+// One key row's sample, 30 px wide with its baseline at (lx, yy): 'env' an envelope over the dashed background line,
+// 'pan' the pan line, 'bar' and 'hid' the in-frame bars, 'tick' an onset, 'mod' a modifier's box, 'bed' the hatching
+export function keyGlyph(d, k, lx, yy) {
+  if (k === 'env') { d.poly([[lx, yy], [lx + 30, yy], [lx + 30, yy - 10], [lx + 15, yy - 6], [lx, yy - 8]], { fill: PERSON.A, fillOp: 0.45, stroke: PERSON.A, sw: 1 }); d.line([[lx, yy - 3], [lx + 30, yy - 3]], { stroke: '#8794b3', sw: 0.8, dash: [4, 4] }); }
+  if (k === 'pan') d.line([[lx, yy - 8], [lx + 30, yy - 2]], { stroke: '#fff', sw: 1 });
+  if (k === 'bar') d.rect(lx, yy - 6, 30, 5, { fill: PERSON.B });
+  if (k === 'hid') d.rect(lx, yy - 6, 30, 5, { stroke: PERSON.B, sw: 1 });
+  if (k === 'tick') d.line([[lx + 15, yy - 12], [lx + 15, yy + 2]], { stroke: FAMILY.door.color, sw: 1.5 });
+  if (k === 'mod') d.rect(lx, yy - 11, 30, 11, { stroke: FAMILY.engine.color, sw: 1, dash: [3, 2] });
+  if (k === 'bed') hatch(d, lx, yy - 12, 30, 13);
 }
 
 // diagonal hatching over a box (the bed-only windows)
-function hatch(d, x, y, w, h, tag = {}) {
+export function hatch(d, x, y, w, h, tag = {}) {
   d.rect(x, y, w, h, { fill: '#c9d4ee', fillOp: 0.05, stroke: '#c9d4ee', strokeOp: 0.35, sw: 1, dash: [4, 3], ...tag });
   const step = 14;
   for (let k = -h; k < w; k += step) {

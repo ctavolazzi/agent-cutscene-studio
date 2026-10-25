@@ -10,9 +10,12 @@ export function chromiumPath() {
   return undefined; // fall back to Playwright's own download
 }
 
+// Returns the browser's version, so a caller can record which Chromium drew its PNGs (the same SVG gives the same bytes
+// on one build; another build or its fonts may differ).
 export async function rasterize(jobs) {
   // jobs: [{ file, out, width, height?, fullPage?, scale? }]
   const browser = await chromium.launch({ executablePath: chromiumPath(), headless: true, args: ['--no-sandbox'] }); // no WebGL needed for SVG and HTML, and the software GL flags slow plain pages down
+  const version = browser.version();
   try {
     for (const j of jobs) {
       const page = await browser.newPage({ viewport: { width: j.width, height: j.height ?? 800 }, deviceScaleFactor: j.scale ?? 1 });
@@ -24,4 +27,5 @@ export async function rasterize(jobs) {
   } finally {
     await browser.close();
   }
+  return version;
 }
