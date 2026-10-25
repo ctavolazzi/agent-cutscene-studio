@@ -656,3 +656,24 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   10.3 dB off shot 4, 960753 samples limited (raw mix -22.2 LUFS, peak 9.2 dB over the ceiling after gain). Measured
   levels and onsets in the master would be the limiter's, so the measurements read the stems before the master, and
   the blockout's own target is chosen by measurement (SOUND-PLAN 3.18 keeps integrated loudness at or under -16).
+
+#### s2-options: Sound 2.12, the plan (before)
+- Before: no option switches; the hidden state, the narrower pan and the characters' listener exist only as Sound 1
+  predictions (storyboard/sound/report.json checks 2 and 6). Base commit 80a432e.
+- Plan: record the sha256 of the default render and of the design stage with the score unparked; add the switches to
+  `config.audio.options` (all off), read by the blockout voices and the spatializer, with the hidden state handed in
+  through `makeContext` by the options script only; `scripts/sound-options.js` renders each A/B through one master gain,
+  measures it per cue, checks it moves only the cues it names, and captures clips; `tests/sound-options.test.mjs`
+  with planted leaks; `review/round-05/decisions/` and `notes-options.md`.
+
+#### s2-options: the switches, the measuring library and their test (after)
+- Before: sha256 of `node scripts/sound.js` (the default blockout) 6f9c4925b58beaf80d2e385932b921532d3d7a558952ea589922718a18f51cb7; of the design
+  stage with the score unparked f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da (the S8.3 bytes).
+- Actions: `config.audio.options` (muffle mode 'off', syncPan off, listener 'camera'); `makeContext` takes `occlusion`
+  (only the options script builds one) and builds `levelAt` when the listener is 'characters'
+  (`src/audio/listeners.js`, Sound 1's model); `placeAt` takes `levelAt` and `width` from a law; the blockout voices
+  add them to a cue's law and apply the muffle after the level rule. `scripts/lib/sound-options-lib.js` and
+  `tests/sound-options.test.mjs` (9 tests, each with a planted fault).
+- After, every switch off: the same two sha256, byte for byte. Measured: the hidden state matches Sound 1's check 2
+  (19 voiced cues, the same frames); each switch moves exactly the cues it names (0 stray, 0 stray samples in the
+  mix); the A master replays `normalize` sample for sample.

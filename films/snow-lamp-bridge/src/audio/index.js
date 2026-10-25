@@ -5,6 +5,7 @@ import { mulberry32, hashString } from '../prng.js';
 import { T_TOTAL } from '../world.js';
 import { renderAll, renderBlocks } from './mix.js';
 import { makeSpatializer } from './spatial.js';
+import { charactersListener } from './listeners.js';
 import * as ambience from './layers/ambience.js';
 import * as car from './layers/car.js';
 import * as foley from './layers/foley.js';
@@ -36,21 +37,27 @@ export const layerNames = (config, only = null) => layersOf(config, only).map(([
 export const atStage = (config, { stage = config.audio.stage, parked = config.audio.parked } = {}) => ({ ...config, audio: { ...config.audio, stage, parked } });
 
 // `cues` hands the cue-reading layers another catalogue than src/audio/cues.js's CUES (one made by makeCues from a
-// changed picture, or a subset for a stem); the design layers do not read it.
-export function makeContext(config, { cues = null } = {}) {
+// changed picture, or a subset for a stem); the design layers do not read it. `occlusion`, for Sound 2.12's muffle
+// A/B only, maps a cue to null (never hidden) or to t -> whether the picture hides its source at t: the hidden state
+// is the picture's screen state (scripts/lib/sound-checks.js), so only scripts/sound-options.js builds one, src/ never
+// does, and the default render has none. `levelAt` is the characters' listener when config.audio.options.listener
+// asks for it (Sound 2.12's option 3), else null. The blockout's voices read both (layers/blockout/voices.js).
+export function makeContext(config, { cues = null, occlusion = null } = {}) {
   const sr = config.audio.sr;
   return {
     sr,
     total: T_TOTAL,
     config,
     cues,
+    occlusion,
+    levelAt: config.audio.options?.listener === 'characters' ? charactersListener() : null,
     rngFor: (name) => mulberry32((config.seed ^ hashString(name)) >>> 0),
     spatializer: (place, law) => makeSpatializer(sr, place, law),
   };
 }
 
-export function buildLayers(config, only = null, { cues = null } = {}) {
-  const ctx = makeContext(config, { cues });
+export function buildLayers(config, only = null, { cues = null, occlusion = null } = {}) {
+  const ctx = makeContext(config, { cues, occlusion });
   return layersOf(config, only).map(([name, m]) => {
     const layer = m.build(ctx);
     if (layer.name !== name) throw new Error(`layer '${name}' builds as '${layer.name}'`);
@@ -59,8 +66,8 @@ export function buildLayers(config, only = null, { cues = null } = {}) {
 }
 
 // The finished soundtrack: { sr, left, right, stats }. `only` renders a subset of layers (stems for tests).
-export function renderSoundtrack(config, { only = null, cues = null, reverb = true, normalize = true, onProgress = null } = {}) {
-  return renderAll({ layers: buildLayers(config, only, { cues }), config, sr: config.audio.sr, total: T_TOTAL, reverb, normalize, onProgress });
+export function renderSoundtrack(config, { only = null, cues = null, occlusion = null, reverb = true, normalize = true, onProgress = null } = {}) {
+  return renderAll({ layers: buildLayers(config, only, { cues, occlusion }), config, sr: config.audio.sr, total: T_TOTAL, reverb, normalize, onProgress });
 }
 
 export { renderBlocks };

@@ -67,6 +67,23 @@ export const CONFIG = {
     reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
     ambience: { windGain: 0.5, bridgeWindBoost: 0.35, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
 
+    // Sound 2.12's options, each an A/B against today's mix that the blockout's voices and the spatializer read
+    // (ROADMAP Sound 2.12, SOUND-PLAN 3.4, 3.6, 3.7, 3.13). Every switch is off here, and off renders today's bytes;
+    // scripts/sound-options.js turns one on at a time, renders it and measures it. The values beside each switch are
+    // starting values, with the reason for each in review/round-05/notes-options.md.
+    options: {
+      // A muffle on a hidden source, the PS1 way (the SPU has no per-voice filter): mode 'volume' drops the voice's
+      // volume by dropDb while the picture hides it; 'swap' crossfades it to a copy of itself through a fixed
+      // lowpass at lowpassHz (two 2-pole sections), the pre-filtered sample a PS1 bank would hold; either moves over
+      // rampSec. 'off' does neither. The hidden state is the picture's, handed in by the options script only.
+      muffle: { mode: 'off', dropDb: 6, lowpassHz: 900, rampSec: 0.05 },
+      // A narrower pan for sync foley: the pan times widthRatio for the cues of the kinds named (a family, or a
+      // family and its meta.kind): the steps, the scuffs and the hands' contacts.
+      syncPan: { on: false, widthRatio: 0.5, kinds: ['feet', 'scuff', 'moves.rest', 'moves.cup'] },
+      // Who hears the level: 'camera' (today) or 'characters' (src/audio/listeners.js); the pan is the camera's either way.
+      listener: 'camera',
+    },
+
     // the car layer (src/audio/layers/car.js): each part's gain
     car: { level: 1.6, exhaustGain: 1, intakeGain: 1.6, tyreGain: 1, brakeGain: 2.2, settleGain: 0.16, doorGain: 0.16, keyGain: 0.16, tickGain: 0.04 },
 

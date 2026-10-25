@@ -14,7 +14,7 @@
 // (config.audio.buses), so the planned relative levels hold whatever the buses are. The modifiers (voices 0: the rise,
 // the swell, the ambience changes) act after the scaling, in dB, and are not part of a voice's level.
 import { CUES, LAWS, WORLD } from '../../cues.js';
-import { Biquad, TAU, attackDecay, brown, dbToGain, pink } from '../../dsp.js';
+import { Biquad, TAU, attackDecay, brown, clamp, dbToGain, pink } from '../../dsp.js';
 import { BLOCK } from '../../mix.js';
 import { LEVEL, TIMBRE, TOL } from './timbre.js';
 
@@ -180,20 +180,64 @@ const edges = (c, n, sr) => {
   return c.shape === 'oneshot' ? (i) => Math.min(1, (n - i) / e) : (i) => Math.min(1, i / e, (n - i) / e);
 };
 
+// ---------- Sound 2.12's options (config.audio.options), each off by default; off, a voice is today's ----------
+// The law a placed voice is heard by: its cue's (cues.js LAWS), plus the options that are on: the pan narrowed for the
+// sync foley that options.syncPan names (a cue's family, or its family and meta.kind), and the level from the
+// characters (ctx.levelAt, which makeContext builds only when options.listener asks for it). With both off it is
+// LAWS[c.law] itself, the object the spatializer has always been handed.
+function lawOf(c, ctx) {
+  const P = ctx.config.audio.options?.syncPan, extra = {};
+  if (P?.on && c.category === 'foley' && (P.kinds.includes(c.family) || P.kinds.includes(`${c.family}.${c.meta.kind}`))) extra.width = P.widthRatio;
+  if (ctx.levelAt) extra.levelAt = ctx.levelAt;
+  return Object.keys(extra).length ? { ...LAWS[c.law], ...extra } : LAWS[c.law];
+}
+
+// A muffle on a hidden source, the PS1 way (options.muffle; SOUND-PLAN 3.7, 3.13): while the picture hides the cue's
+// source (ctx.occlusion, which only scripts/sound-options.js hands in), 'volume' drops the voice by dropDb, and 'swap'
+// crossfades it to a copy of itself through a fixed lowpass, a pre-filtered sample playing in step with the voice from
+// its onset. The hidden state is read every BLOCK samples, as the spatializer moves a voice, and the muffle follows it
+// at 1 / rampSec a second from where it stands at the onset. Like the modifiers it acts after the level rule. Returns
+// null when the option is off or the cue is never hidden (those voices stay today's), else a maker of (x, i) -> the
+// muffled sample, called once per sample in order.
+const MUFFLES = ['off', 'volume', 'swap'];
+function muffleOf(c, ctx, n) {
+  const M = ctx.config.audio.options?.muffle;
+  if (M && !MUFFLES.includes(M.mode)) throw new Error(`muffle mode '${M.mode}': want ${MUFFLES.map((m) => `'${m}'`).join(', ')}`);
+  const hidden = M && M.mode !== 'off' ? ctx.occlusion?.(c) : null;
+  if (!hidden) return null;
+  const { sr } = ctx, k = Math.ceil(n / BLOCK), goal = new Float64Array(k + 1);
+  for (let j = 0; j <= k; j++) goal[j] = hidden(c.t0 + j * BLOCK / sr) ? 1 : 0;
+  if (!goal.some((g) => g > 0)) return null;
+  const step = 1 / (M.rampSec * sr), drop = dbToGain(-M.dropDb);
+  return () => {
+    const lp = [new Biquad(sr, 'lowpass', M.lowpassHz), new Biquad(sr, 'lowpass', M.lowpassHz)];
+    let m = goal[0];
+    return (x, i) => {
+      m += clamp(goal[Math.floor(i / BLOCK)] - m, -step, step);
+      if (M.mode === 'volume') return x * (1 + (drop - 1) * m);
+      const y = through(lp, x); // every sample, so the pre-filtered copy stays in step while it is not heard
+      return x + (y - x) * m;
+    };
+  };
+}
+
 // A placed voice for one cue, as an event for src/audio/events.js: its own seeded placeholder, scaled to its level by
 // the level rule (one pass at build to measure it, then the same seed again to play it), faded at its ends, changed by
-// its modifiers, heard from the camera through LAWS[c.law]. An 'onset' placement is fixed where the cue starts.
+// its modifiers, heard from the camera through LAWS[c.law] (with the options above, when they are on). An 'onset'
+// placement is fixed where the cue starts.
 export function placedEvent(c, list, ctx, busDb) {
   if (!c.place || !FAMILY[c.family]) throw new Error(`blockout: ${c.id} has no ${c.place ? 'placeholder' : 'place'}`);
   const { sr } = ctx, n = Math.round((c.t1 - c.t0) * sr), track = sampleTrack(c, sr), edge = edges(c, n, sr);
   const voice = () => { const v = FAMILY[c.family](c, { sr, rng: ctx.rngFor(`audio:blockout:${c.id}`), track }); return (i) => v(i / sr) * edge(i); };
   const scale = amp(c.level - busDb) / (loudest(voice(), n, Math.round(LEVEL.windowSec * sr)) || 1);
   const change = modifiersOf(c, list, sr), gain = gainCurve(change, c.t0, n, sr);
-  const p0 = c.placement === 'onset' ? c.place(c.t0) : null;
+  const p0 = c.placement === 'onset' ? c.place(c.t0) : null, muffle = muffleOf(c, ctx, n);
   return {
-    t: c.t0, dur: c.t1 - c.t0, law: LAWS[c.law], cue: c.id,
+    t: c.t0, dur: c.t1 - c.t0, law: lawOf(c, ctx), cue: c.id,
     place: c.placement === 'tracked' ? c.place : () => p0,
-    make: () => { const v = voice(); return (dt) => { const i = Math.round(dt * sr); return v(i) * scale * gain(i); }; },
+    make: muffle
+      ? () => { const v = voice(), m = muffle(); return (dt) => { const i = Math.round(dt * sr); return m(v(i), i) * scale * gain(i); }; }
+      : () => { const v = voice(); return (dt) => { const i = Math.round(dt * sr); return v(i) * scale * gain(i); }; },
   };
 }
 

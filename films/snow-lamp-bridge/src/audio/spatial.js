@@ -31,8 +31,12 @@ export function axisSine(p, L) {
 
 // How a source at world point p sounds from the listener: pan -1..1, gain, and a lowpass cutoff in Hz. `refDist` and
 // `rolloff` set the distance law, gain = (refDist / dist) ^ rolloff past refDist: 1 is the physical law (6 dB a
-// doubling); a loud source heard across the set (the car) uses a gentler one, as a film mix does.
-export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, rolloff = 1 } = {}) {
+// doubling); a loud source heard across the set (the car) uses a gentler one, as a film mix does. Two more fields are
+// Sound 2.12's options, absent from every law in cues.js, so today's sound never meets them: `levelAt(t)` gives
+// another listener's point for the level alone (the characters', listeners.js), the same law from there and nothing
+// else (no behind loss: that is the camera's), or null to keep the camera's; `width` scales the pan (a narrower pan).
+// The air lowpass, the dark behind the camera and `dist` stay the camera's.
+export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, rolloff = 1, levelAt = null, width = 1 } = {}) {
   const d = sub(p, L.pos), dist = Math.hypot(d[0], d[1], d[2]);
   const x = dot(d, L.r), z = dot(d, L.f);
   const flat = Math.hypot(x, z) || 1;
@@ -48,6 +52,9 @@ export function placeAt(p, t, L = listenerAt(t), { refDist = SPATIAL.refDist, ro
     const w = s / edge, b = 0.5 - 0.5 * clamp((dist > 0 ? z / dist : 0) / (edge * (1 - w * w)), -1, 1);
     pan *= w; gain *= 1 + (SPATIAL.behindGain - 1) * b; hz *= 1 + (SPATIAL.behindAir - 1) * b;
   } else if (z < 0) { gain *= SPATIAL.behindGain; hz *= SPATIAL.behindAir; }
+  const q = levelAt?.(t);
+  if (q) gain = (refDist / Math.max(refDist, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]))) ** rolloff;
+  if (width !== 1) pan *= width;
   return { pan, gain, hz, dist };
 }
 
