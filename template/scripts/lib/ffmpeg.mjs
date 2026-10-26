@@ -1,6 +1,6 @@
 // ffmpeg and ffprobe helpers for the capture scripts: encode profiles, PNG stills, and probing the result.
 // Frames from the page are RGB, bottom row first, so every path here starts with vflip.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, openSync, readSync, closeSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { CONFIG } from '../../src/config.js';
@@ -37,16 +37,26 @@ export function videoFilter(profile, { w, h }, { res, out } = {}) {
 }
 
 // Full ffmpeg argument list: raw rgb24 frames of w x h on stdin, one H.264 MP4 out
-export function encodeArgs(profile, { w, h }, { fps = CONFIG.fps, output, res, out } = {}) {
+// The soundtrack in an MP4: AAC-LC, 48 kHz stereo, 320 kb/s (YouTube's recommendation is AAC-LC at 48 kHz).
+export const AUDIO = { codec: 'aac', sampleRate: 48000, channels: 2, bitrate: '320k' };
+
+// `audio`: { file, from, to } adds the soundtrack (a WAV of the whole film) trimmed to the frames being captured;
+// without it the file has no audio stream.
+export function encodeArgs(profile, { w, h }, { fps = CONFIG.fps, output, res, out, audio = null } = {}) {
   const codec = profile === 'preview'
     ? ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '20']
     : ['-c:v', 'libx264', '-crf', '16', '-preset', 'slow', '-tune', 'animation'];
+  const sound = audio
+    ? { input: ['-ss', String(audio.from), '-to', String(audio.to), '-i', audio.file],
+      output: ['-map', '0:v:0', '-map', '1:a:0', '-c:a', AUDIO.codec, '-b:a', AUDIO.bitrate, '-ar', String(AUDIO.sampleRate), '-ac', String(AUDIO.channels)] }
+    : { input: [], output: ['-an'] };
   const args = [
     '-hide_banner', '-loglevel', 'error', '-y',
     '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', `${w}x${h}`, '-framerate', String(fps), '-i', 'pipe:0',
+    ...sound.input,
     '-vf', videoFilter(profile, { w, h }, { res, out }),
     ...codec,
-    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', '-an',
+    '-pix_fmt', 'yuv420p', '-movflags', '+faststart', ...sound.output,
     ...BT709_TAGS,
   ];
   if (output) args.push(output);
@@ -118,6 +128,7 @@ export function ffprobe(path) {
       const j = JSON.parse(out);
       const streams = j.streams ?? [];
       const v = streams.find((s) => s.codec_type === 'video') ?? {};
+      const a = streams.find((s) => s.codec_type === 'audio') ?? {};
       const num = (x) => (x === undefined || x === 'N/A' ? null : Number(x));
       resolveP({
         file: path,
@@ -137,10 +148,49 @@ export function ffprobe(path) {
         color_range: v.color_range ?? null,
         videoStreams: streams.filter((s) => s.codec_type === 'video').length,
         audioStreams: streams.filter((s) => s.codec_type === 'audio').length,
+        audioCodec: a.codec_name ?? null,
+        audioRate: num(a.sample_rate),
+        audioChannels: a.channels ?? null,
+        audioDuration: num(a.duration),
         bitRate: num(j.format?.bit_rate),
         size: num(j.format?.size),
         moovFirst: /mp4|mov/.test(j.format?.format_name ?? '') ? moovFirst(path) : null,
       });
     });
   });
+}
+
+// The audio of a media file decoded to 48 kHz stereo float: { sr, left, right }
+export function decodeAudio(file, sr = AUDIO.sampleRate) {
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-vn', '-ac', '2', '-ar', String(sr), '-f', 'f32le', '-'], { maxBuffer: 1 << 30 });
+  if (r.status !== 0) throw new Error(`decode audio of ${file}: ${r.stderr}`);
+  const all = new Float32Array(r.stdout.buffer, r.stdout.byteOffset, r.stdout.byteLength / 4);
+  const n = all.length / 2, left = new Float32Array(n), right = new Float32Array(n);
+  for (let i = 0; i < n; i++) { left[i] = all[2 * i]; right[i] = all[2 * i + 1]; }
+  return { sr, left, right };
+}
+
+// Where b's content sits against a's: the lag in samples (b later is positive) within +-maxLag that best correlates
+// the two over [i0, i1) of a, and the normalized correlation there. Coarse on a smoothed copy (an 8-sample moving
+// average widens the correlation peak, so a 2-sample lag step cannot step over it), then sample exact on the signals.
+export function alignment(a, b, { i0 = 0, i1 = a.length, maxLag = 2400 } = {}) {
+  const mono = (s, i) => (s.left[i] ?? 0) + (s.right[i] ?? 0);
+  const smooth = (s) => {
+    const lo = Math.max(0, i0 - maxLag - 8), hi = Math.min(s.left.length, i1 + maxLag + 8), out = new Float64Array(hi - lo);
+    let acc = 0;
+    for (let i = lo; i < hi; i++) { acc += mono(s, i) - (i - 8 >= lo ? mono(s, i - 8) : 0); out[i - lo] = acc / 8; }
+    return { at: (i) => out[i - lo] ?? 0 };
+  };
+  const corr = (fa, fb, lag, step) => {
+    let xy = 0, xx = 0, yy = 0;
+    for (let i = i0; i < i1; i += step) { const x = fa(i), y = fb(i + lag); xy += x * y; xx += x * x; yy += y * y; }
+    return xy / Math.sqrt(xx * yy || 1);
+  };
+  const sa = smooth(a), sb = smooth(b);
+  let best = 0, bc = -Infinity;
+  for (let lag = -maxLag; lag <= maxLag; lag += 2) { const c = corr(sa.at, sb.at, lag, 4); if (c > bc) { bc = c; best = lag; } }
+  let fine = best;
+  bc = -Infinity;
+  for (let lag = best - 4; lag <= best + 4; lag++) { const c = corr((i) => mono(a, i), (i) => mono(b, i), lag, 1); if (c > bc) { bc = c; fine = lag; } }
+  return { lag: fine, correlation: bc };
 }

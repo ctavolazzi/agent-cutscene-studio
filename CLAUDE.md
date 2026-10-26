@@ -33,10 +33,21 @@ playback block of `src/main.js`; seeded randomness via `rngFor(name)`; no state 
 never added or removed. Data comes from `src/set.js`, `src/world.js` and `src/shots.js`; every tunable value is in
 `src/config.js`.
 
+## Sound
+
+Each film's `src/audio/` synthesizes its soundtrack from the same timing data as the picture (seeded, one pass,
+heard from each shot's camera); `config.audio` holds every level. `npm run export` renders `out/sound.wav` before the
+capture and muxes it; `npm run verify` checks sync and loudness. Process: sound goes through gated stages like the
+picture (plan, storyboard, blockout, revisions, design, mix, final); `films/snow-lamp-bridge/SOUND-PLAN.md` and its
+`ROADMAP.md` Sound stages are the worked example (playbook Stage 5.5 is superseded until rewritten).
+
 ## Gotchas
 
 - Rendering is software WebGL in headless Chromium: about 100 ms a frame at 1080p, 200 ms at 4K. Plan exports.
+- The soundtrack renders in about 11 s in Node for a 112 s film; the player renders it in a worker as the page opens.
 - A pipe hides exit codes: capture to a log file, then read it.
+- `pkill -f <pattern>` also matches the shell running it (and any background chain whose command line holds the
+  pattern): find the PID with `ps` and kill that.
 - Scratch scripts must import project files and `playwright-core` by absolute path.
 - Dark shots: judge staging on a lifted copy (`curves=all='0/0 0.25/0.6 1/1'`), the look on the real frame.
 - Measure before offering a decision; set a test bar from a measurement, never from a guess.

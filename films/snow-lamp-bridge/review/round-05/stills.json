@@ -1,0 +1,1934 @@
+{
+ "round": "05",
+ "made": "node scripts/sound-review.js --round 05 --stills",
+ "stage": "blockout",
+ "targetLufs": -23,
+ "raw": "88be8ebb13569ba89a8cc427d7e860dda293d32136d357ffe5d1321f297150b5",
+ "chromium": "141.0.7390.37",
+ "note": "x of time t in a still's PNG is x0 + (t - t0) * pxPerSec device pixels; every strip shares it. markers: each cue whose measured onset (measure.json table.onset) is in the shot, its x the drawn glyph's centre; misses: the bars it is off (onset, sync, pan) and its check 14 flag (phone). carried: the cues sounding in the shot that started before it. svgSha256 and pngSha256: the drawing and its raster by chromium",
+ "stills": [
+  {
+   "shot": 1,
+   "title": "The lamp",
+   "lens": 50,
+   "file": "stills/shot-01.png",
+   "svg": "out/round-05/stills/shot-01.svg",
+   "t0": 0,
+   "t1": 7,
+   "width": 1200,
+   "height": 2908,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 150.285714,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    }
+   ],
+   "bedOnly": "the hush before the car",
+   "carried": [],
+   "markers": [
+    {
+     "cue": "bg.city.street.bed",
+     "onset": 0,
+     "x": 124,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "bg.wind.street.bed",
+     "onset": 0,
+     "x": 124,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "bg.hum.lamp.bed",
+     "onset": 0.000021,
+     "x": 124.003,
+     "y": 640,
+     "misses": []
+    }
+   ],
+   "svgSha256": "e13ec6a35852821ef0d0d564fd0e0d36e3798d5de13c732f9fc647f8a95751e3",
+   "pngSha256": "0b80b6147660d7ec40a1634d9c0477e67db41adf8424b87ab9b5495ab09ae115"
+  },
+  {
+   "shot": 2,
+   "title": "The empty street",
+   "lens": 24,
+   "file": "stills/shot-02.png",
+   "svg": "out/round-05/stills/shot-02.svg",
+   "t0": 7,
+   "t1": 14,
+   "width": 1200,
+   "height": 2784,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 150.285714,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    }
+   ],
+   "bedOnly": "the hush before the car",
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed"
+   ],
+   "markers": [],
+   "svgSha256": "27d53c56e16755fd34e90f5c2140d32c341b0e8fe9ac7546f8695e4efb4fa16d",
+   "pngSha256": "b1e9b5d2f92548333679fbad0736fba5a5edf9b944a6883a2de13fb1ecb39077"
+  },
+  {
+   "shot": 3,
+   "title": "Light before the car",
+   "lens": 35,
+   "file": "stills/shot-03.png",
+   "svg": "out/round-05/stills/shot-03.svg",
+   "t0": 14,
+   "t1": 22,
+   "width": 1200,
+   "height": 3626,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 131.5,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp"
+     ]
+    },
+    {
+     "key": "car:exhaust",
+     "groups": [
+      "car:exhaust"
+     ]
+    },
+    {
+     "key": "car:intake",
+     "groups": [
+      "car:intake"
+     ]
+    },
+    {
+     "key": "car:tyres:front",
+     "groups": [
+      "car:tyres:front"
+     ]
+    },
+    {
+     "key": "car:tyres:rear",
+     "groups": [
+      "car:tyres:rear"
+     ]
+    },
+    {
+     "key": "car:brakes",
+     "groups": [
+      "car:brakes"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed"
+   ],
+   "markers": [
+    {
+     "cue": "hard.engine.car.exhaust",
+     "onset": 14.000021,
+     "x": 124.003,
+     "y": 558,
+     "misses": []
+    },
+    {
+     "cue": "hard.engine.car.intake",
+     "onset": 14.000021,
+     "x": 124.003,
+     "y": 594,
+     "misses": []
+    },
+    {
+     "cue": "hard.tyres.car.front",
+     "onset": 14.000021,
+     "x": 124.003,
+     "y": 630,
+     "misses": []
+    },
+    {
+     "cue": "hard.tyres.car.rear",
+     "onset": 14.000021,
+     "x": 124.003,
+     "y": 666,
+     "misses": []
+    },
+    {
+     "cue": "hard.brake.car.pads1",
+     "onset": 19.03775,
+     "x": 786.464,
+     "y": 558,
+     "misses": []
+    },
+    {
+     "cue": "hard.brake.car.pads2",
+     "onset": 21.986979,
+     "x": 1174.288,
+     "y": 558,
+     "misses": []
+    }
+   ],
+   "svgSha256": "d04b8e31c99c18555e08f25987c465419de4b7e4429461d3699b9b71a991ce50",
+   "pngSha256": "217d249de95f5bacf9e3835f404ae8a0950f07e301986a7101fed2c116be7540"
+  },
+  {
+   "shot": 4,
+   "title": "The car arrives",
+   "lens": 24,
+   "file": "stills/shot-04.png",
+   "svg": "out/round-05/stills/shot-04.svg",
+   "t0": 22,
+   "t1": 29,
+   "width": 1200,
+   "height": 3578,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 150.285714,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp"
+     ]
+    },
+    {
+     "key": "car:exhaust",
+     "groups": [
+      "car:exhaust"
+     ]
+    },
+    {
+     "key": "car:intake",
+     "groups": [
+      "car:intake"
+     ]
+    },
+    {
+     "key": "car:tyres:front",
+     "groups": [
+      "car:tyres:front"
+     ]
+    },
+    {
+     "key": "car:tyres:rear",
+     "groups": [
+      "car:tyres:rear"
+     ]
+    },
+    {
+     "key": "car:brakes",
+     "groups": [
+      "car:brakes"
+     ]
+    },
+    {
+     "key": "car:brakes:creak",
+     "groups": [
+      "car:brakes:creak"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed",
+    "hard.engine.car.exhaust",
+    "hard.engine.car.intake",
+    "hard.tyres.car.front",
+    "hard.tyres.car.rear",
+    "hard.brake.car.pads2"
+   ],
+   "markers": [
+    {
+     "cue": "hard.brake.car.creak",
+     "onset": 28.381396,
+     "x": 1083.033,
+     "y": 480,
+     "misses": []
+    }
+   ],
+   "svgSha256": "2ae9f81339fb8ee03e5cd39ac54ce6dfd3d708d4bc1faf76fd1fa47665bf1a44",
+   "pngSha256": "4ab3a9bc924630e518df115aac1e8f038ed12552310757d49bd21d486289c995"
+  },
+  {
+   "shot": 5,
+   "title": "Feet in the snow",
+   "lens": 35,
+   "file": "stills/shot-05.png",
+   "svg": "out/round-05/stills/shot-05.svg",
+   "t0": 29,
+   "t1": 40,
+   "width": 1200,
+   "height": 3624,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 95.636364,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp"
+     ]
+    },
+    {
+     "key": "car",
+     "groups": [
+      "car:exhaust",
+      "car:intake",
+      "car:body",
+      "car:handbrake",
+      "car:belt:driver",
+      "car:door:driver",
+      "car:seat:driver",
+      "car:belt:passenger",
+      "car:door:passenger",
+      "car:seat:passenger",
+      "car:engine-bay"
+     ]
+    },
+    {
+     "key": "A",
+     "groups": [
+      "A:feet",
+      "A:cloth",
+      "A:feet:slide"
+     ]
+    },
+    {
+     "key": "B",
+     "groups": [
+      "B:feet",
+      "B:cloth",
+      "B:feet:slide"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed"
+   ],
+   "markers": [
+    {
+     "cue": "hard.engine.car.exhaust-idle",
+     "onset": 29.000021,
+     "x": 124.002,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.engine.car.intake-idle",
+     "onset": 29.000021,
+     "x": 124.002,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.settle.car.dip",
+     "onset": 29.000021,
+     "x": 124.002,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "hard.settle.car.rebound",
+     "onset": 29.350021,
+     "x": 157.475,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.cabin.car.handbrake",
+     "onset": 29.700021,
+     "x": 190.947,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.cabin.A.belt",
+     "onset": 30.000021,
+     "x": 219.638,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.driver.unlatch",
+     "onset": 30.440021,
+     "x": 261.718,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.driver.swing-open",
+     "onset": 30.500021,
+     "x": 267.457,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.unload.A.slide",
+     "onset": 30.900021,
+     "x": 305.711,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.driver.stop",
+     "onset": 31.100021,
+     "x": 324.838,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.cabin.B.belt",
+     "onset": 31.500021,
+     "x": 363.093,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.01",
+     "onset": 31.755896,
+     "x": 387.564,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.unload.A.rise",
+     "onset": 31.800021,
+     "x": 391.784,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.passenger.unlatch",
+     "onset": 31.940021,
+     "x": 405.173,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.passenger.swing-open",
+     "onset": 32.000021,
+     "x": 410.911,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.02",
+     "onset": 32.034417,
+     "x": 414.201,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.unload.B.slide",
+     "onset": 32.200021,
+     "x": 430.038,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.walk1",
+     "onset": 32.400021,
+     "x": 449.166,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.passenger.stop",
+     "onset": 32.600021,
+     "x": 468.293,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.03",
+     "onset": 33.019062,
+     "x": 508.368,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.turn1",
+     "onset": 33.200021,
+     "x": 525.675,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.unload.B.rise",
+     "onset": 33.200021,
+     "x": 525.675,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.A.1",
+     "onset": 33.223563,
+     "x": 527.926,
+     "y": 796,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.feet.B.01",
+     "onset": 33.312354,
+     "x": 536.418,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.B.walk1",
+     "onset": 33.800021,
+     "x": 583.057,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.driver.swing-shut",
+     "onset": 33.900021,
+     "x": 592.62,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.02",
+     "onset": 34.499438,
+     "x": 649.946,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.driver.latch",
+     "onset": 34.500021,
+     "x": 650.002,
+     "y": 724,
+     "misses": [
+      "phone"
+     ]
+    },
+    {
+     "cue": "foley.feet.B.03",
+     "onset": 34.600021,
+     "x": 659.566,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.walk2",
+     "onset": 34.600021,
+     "x": 659.566,
+     "y": 796,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.B.turn1",
+     "onset": 34.600021,
+     "x": 659.566,
+     "y": 832,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.B.1",
+     "onset": 34.610125,
+     "x": 660.532,
+     "y": 868,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.moves.B.turn2",
+     "onset": 35.000021,
+     "x": 697.82,
+     "y": 688,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "hard.door.passenger.swing-shut",
+     "onset": 35.000021,
+     "x": 697.82,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.B.2",
+     "onset": 35.129542,
+     "x": 710.207,
+     "y": 760,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.feet.A.04",
+     "onset": 35.178833,
+     "x": 714.921,
+     "y": 796,
+     "misses": []
+    },
+    {
+     "cue": "hard.door.passenger.latch",
+     "onset": 35.600021,
+     "x": 755.202,
+     "y": 688,
+     "misses": [
+      "phone"
+     ]
+    },
+    {
+     "cue": "foley.feet.A.05",
+     "onset": 35.675208,
+     "x": 762.393,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.B.walk2",
+     "onset": 35.700021,
+     "x": 764.766,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.06",
+     "onset": 36.171563,
+     "x": 809.862,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.stop.car.rundown",
+     "onset": 36.200021,
+     "x": 812.584,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.04",
+     "onset": 36.228271,
+     "x": 815.286,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.07",
+     "onset": 36.667917,
+     "x": 857.332,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.05",
+     "onset": 36.784542,
+     "x": 868.485,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.08",
+     "onset": 37.164271,
+     "x": 904.801,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.06",
+     "onset": 37.285813,
+     "x": 916.425,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.07",
+     "onset": 37.664917,
+     "x": 952.681,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.09",
+     "onset": 37.677771,
+     "x": 953.91,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.01",
+     "onset": 37.700021,
+     "x": 956.038,
+     "y": 760,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.10",
+     "onset": 38.170583,
+     "x": 1001.041,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.11",
+     "onset": 38.655042,
+     "x": 1047.373,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.02",
+     "onset": 38.930438,
+     "x": 1073.711,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.12",
+     "onset": 39.139521,
+     "x": 1093.707,
+     "y": 688,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.13",
+     "onset": 39.290938,
+     "x": 1108.188,
+     "y": 724,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.14",
+     "onset": 39.732792,
+     "x": 1150.445,
+     "y": 688,
+     "misses": []
+    }
+   ],
+   "svgSha256": "588fddc026a4c058a5ece11a794504be2d33f38e12892f6a089afa64ec40e864",
+   "pngSha256": "740e751680e26eb371c71b0cf4f7db774bb61716f5d14f34bb00f706947823cf"
+  },
+  {
+   "shot": 6,
+   "title": "The reveal",
+   "lens": 35,
+   "file": "stills/shot-06.png",
+   "svg": "out/round-05/stills/shot-06.svg",
+   "t0": 40,
+   "t1": 46,
+   "width": 1200,
+   "height": 3562,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 175.333333,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp"
+     ]
+    },
+    {
+     "key": "car:engine-bay",
+     "groups": [
+      "car:engine-bay"
+     ]
+    },
+    {
+     "key": "A:feet",
+     "groups": [
+      "A:feet"
+     ]
+    },
+    {
+     "key": "A:cloth",
+     "groups": [
+      "A:cloth"
+     ]
+    },
+    {
+     "key": "A:feet:slide",
+     "groups": [
+      "A:feet:slide"
+     ]
+    },
+    {
+     "key": "B:feet",
+     "groups": [
+      "B:feet"
+     ]
+    },
+    {
+     "key": "B:cloth",
+     "groups": [
+      "B:cloth"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed",
+    "foley.moves.A.walk2",
+    "foley.feet.A.14"
+   ],
+   "markers": [
+    {
+     "cue": "foley.feet.A.15",
+     "onset": 40.096563,
+     "x": 140.931,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.16",
+     "onset": 40.478708,
+     "x": 207.933,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.turn2",
+     "onset": 40.600021,
+     "x": 229.204,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.A.2",
+     "onset": 40.660458,
+     "x": 239.8,
+     "y": 568,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "hard.tick.car.03",
+     "onset": 40.700333,
+     "x": 246.792,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.04",
+     "onset": 42.967833,
+     "x": 644.36,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.walk3",
+     "onset": 44.500021,
+     "x": 913.004,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.B.walk3",
+     "onset": 44.500021,
+     "x": 913.004,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.08",
+     "onset": 45.530125,
+     "x": 1093.615,
+     "y": 532,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.17",
+     "onset": 45.614,
+     "x": 1108.321,
+     "y": 568,
+     "misses": []
+    }
+   ],
+   "svgSha256": "84a636be8ac977e808590e4d5497bd3aabba7a33e4b090fca1a3998c52be9ab6",
+   "pngSha256": "d0c8e59ad6328e042e0ebf650a19d152748c363602c6111ab3c9426efd17ab08"
+  },
+  {
+   "shot": 7,
+   "title": "The walk",
+   "lens": 35,
+   "file": "stills/shot-07.png",
+   "svg": "out/round-05/stills/shot-07.svg",
+   "t0": 46,
+   "t1": 54,
+   "width": 1200,
+   "height": 3490,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 131.5,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp"
+     ]
+    },
+    {
+     "key": "car:engine-bay",
+     "groups": [
+      "car:engine-bay"
+     ]
+    },
+    {
+     "key": "A:feet",
+     "groups": [
+      "A:feet"
+     ]
+    },
+    {
+     "key": "A:cloth",
+     "groups": [
+      "A:cloth"
+     ]
+    },
+    {
+     "key": "B:feet",
+     "groups": [
+      "B:feet"
+     ]
+    },
+    {
+     "key": "B:cloth",
+     "groups": [
+      "B:cloth"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed",
+    "foley.moves.A.walk3",
+    "foley.moves.B.walk3"
+   ],
+   "markers": [
+    {
+     "cue": "foley.feet.B.09",
+     "onset": 46.415438,
+     "x": 178.63,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.18",
+     "onset": 46.569292,
+     "x": 198.862,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.05",
+     "onset": 46.67175,
+     "x": 212.335,
+     "y": 646,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.10",
+     "onset": 47.30075,
+     "x": 295.049,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.19",
+     "onset": 47.524583,
+     "x": 324.483,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.11",
+     "onset": 48.186063,
+     "x": 411.467,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.20",
+     "onset": 48.479854,
+     "x": 450.101,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.12",
+     "onset": 49.071375,
+     "x": 527.886,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.21",
+     "onset": 49.435146,
+     "x": 575.722,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.06",
+     "onset": 49.665167,
+     "x": 605.969,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.13",
+     "onset": 49.956688,
+     "x": 644.304,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.22",
+     "onset": 50.390417,
+     "x": 701.34,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.14",
+     "onset": 50.842,
+     "x": 760.723,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.23",
+     "onset": 51.345708,
+     "x": 826.961,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.15",
+     "onset": 51.727313,
+     "x": 877.142,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.24",
+     "onset": 52.300979,
+     "x": 952.579,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.16",
+     "onset": 52.612646,
+     "x": 993.563,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.07",
+     "onset": 52.924063,
+     "x": 1034.514,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.25",
+     "onset": 53.256271,
+     "x": 1078.2,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.17",
+     "onset": 53.497958,
+     "x": 1109.981,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "bg.city.bridge.bed",
+     "onset": 53.975,
+     "x": 1172.713,
+     "y": 610,
+     "misses": []
+    },
+    {
+     "cue": "bg.water.bridge.bed",
+     "onset": 53.975,
+     "x": 1172.713,
+     "y": 646,
+     "misses": []
+    },
+    {
+     "cue": "bg.wind.bridge.bed",
+     "onset": 53.975,
+     "x": 1172.713,
+     "y": 682,
+     "misses": []
+    }
+   ],
+   "svgSha256": "5f92a96735e7c3e8edfff75411890626e67545784a6ed1e7a8e2bc9f97f43bdb",
+   "pngSha256": "5a19f3fd3da075e4764a0b70f5b3e8bef12c725d16f1366ec60299921a816dae"
+  },
+  {
+   "shot": 8,
+   "title": "Onto the bridge",
+   "lens": 50,
+   "file": "stills/shot-08.png",
+   "svg": "out/round-05/stills/shot-08.svg",
+   "t0": 54,
+   "t1": 60,
+   "width": 1200,
+   "height": 3448,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 175.333333,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp",
+      "bg:water"
+     ]
+    },
+    {
+     "key": "car:engine-bay",
+     "groups": [
+      "car:engine-bay"
+     ]
+    },
+    {
+     "key": "A:feet",
+     "groups": [
+      "A:feet"
+     ]
+    },
+    {
+     "key": "A:cloth",
+     "groups": [
+      "A:cloth"
+     ]
+    },
+    {
+     "key": "B:feet",
+     "groups": [
+      "B:feet"
+     ]
+    },
+    {
+     "key": "B:cloth",
+     "groups": [
+      "B:cloth"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.city.street.bed",
+    "bg.hum.lamp.bed",
+    "bg.wind.street.bed",
+    "foley.moves.A.walk3",
+    "foley.moves.B.walk3",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [
+    {
+     "cue": "foley.feet.A.26",
+     "onset": 54.19975,
+     "x": 159.023,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.18",
+     "onset": 54.295083,
+     "x": 175.738,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.19",
+     "onset": 54.976667,
+     "x": 295.242,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.27",
+     "onset": 55.101792,
+     "x": 317.181,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.20",
+     "onset": 55.65825,
+     "x": 414.747,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.28",
+     "onset": 55.871479,
+     "x": 452.133,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.08",
+     "onset": 56.30675,
+     "x": 528.45,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.21",
+     "onset": 56.339833,
+     "x": 534.251,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.29",
+     "onset": 56.343646,
+     "x": 534.919,
+     "y": 640,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.30",
+     "onset": 56.905833,
+     "x": 633.489,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.22",
+     "onset": 56.927521,
+     "x": 637.292,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.23",
+     "onset": 57.429729,
+     "x": 725.346,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.31",
+     "onset": 57.807854,
+     "x": 791.644,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.24",
+     "onset": 57.833854,
+     "x": 796.202,
+     "y": 604,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.32",
+     "onset": 58.711458,
+     "x": 950.076,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.25",
+     "onset": 59.381458,
+     "x": 1067.549,
+     "y": 568,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.33",
+     "onset": 59.626542,
+     "x": 1110.52,
+     "y": 568,
+     "misses": []
+    }
+   ],
+   "svgSha256": "61881c4c8aff1dd6546449c22504bcd5045d1c73833864654e9a438f0b03fdd8",
+   "pngSha256": "1bbe4402d654614fa54b23c9e1ca53bd9a3ea1ac13c28835c92165926d38ddf1"
+  },
+  {
+   "shot": 9,
+   "title": "The railing",
+   "lens": 35,
+   "file": "stills/shot-09.png",
+   "svg": "out/round-05/stills/shot-09.svg",
+   "t0": 60,
+   "t1": 68,
+   "width": 1200,
+   "height": 3138,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 131.5,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp",
+      "bg:water"
+     ]
+    },
+    {
+     "key": "car",
+     "groups": [
+      "car:engine-bay"
+     ]
+    },
+    {
+     "key": "A",
+     "groups": [
+      "A:feet",
+      "A:cloth",
+      "A:arms"
+     ]
+    },
+    {
+     "key": "B",
+     "groups": [
+      "B:feet",
+      "B:cloth",
+      "B:arms"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.hum.lamp.bed",
+    "foley.moves.A.walk3",
+    "foley.moves.B.walk3",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [
+    {
+     "cue": "foley.feet.B.26",
+     "onset": 60.403833,
+     "x": 177.104,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.34",
+     "onset": 60.725063,
+     "x": 219.346,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.27",
+     "onset": 61.0765,
+     "x": 265.56,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.09",
+     "onset": 61.101479,
+     "x": 268.844,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.A.35",
+     "onset": 61.691146,
+     "x": 346.386,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.feet.B.28",
+     "onset": 61.724417,
+     "x": 350.761,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.lean",
+     "onset": 62.000021,
+     "x": 387.003,
+     "y": 506,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.moves.B.lean",
+     "onset": 62.000021,
+     "x": 387.003,
+     "y": 542,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.moves.A.rest",
+     "onset": 63.448458,
+     "x": 577.472,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.B.rest",
+     "onset": 63.450958,
+     "x": 577.801,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "hard.tick.car.10",
+     "onset": 65.654667,
+     "x": 867.589,
+     "y": 506,
+     "misses": []
+    }
+   ],
+   "svgSha256": "b9b6517f7c0e7ed8ea592e4de8acb7b3530e929abb8b9a387329d998bada5701",
+   "pngSha256": "65a47d2f9d6165712157689f0ac255b495157d16f5b5a4eb75087867e81bbe32"
+  },
+  {
+   "shot": 10,
+   "title": "Moonrise",
+   "lens": 85,
+   "file": "stills/shot-10.png",
+   "svg": "out/round-05/stills/shot-10.svg",
+   "t0": 68,
+   "t1": 76,
+   "width": 1200,
+   "height": 2928,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 131.5,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    },
+    {
+     "key": "bg:water",
+     "groups": [
+      "bg:water"
+     ]
+    }
+   ],
+   "bedOnly": "moonrise",
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [],
+   "svgSha256": "3f16db791a05201e8bf57ee7b56c3326d391812dc818c576670db0c83e446bfe",
+   "pngSha256": "94599cc8d43d0fd8dfe82fabb0ab99e54c8510a44bb8774b01ea449c6b37353e"
+  },
+  {
+   "shot": 11,
+   "title": "The lighter",
+   "lens": 50,
+   "file": "stills/shot-11.png",
+   "svg": "out/round-05/stills/shot-11.svg",
+   "t0": 76,
+   "t1": 84,
+   "width": 1200,
+   "height": 3350,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 131.5,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp",
+      "bg:water"
+     ]
+    },
+    {
+     "key": "A:cloth",
+     "groups": [
+      "A:cloth"
+     ]
+    },
+    {
+     "key": "A:feet:slide",
+     "groups": [
+      "A:feet:slide"
+     ]
+    },
+    {
+     "key": "A:arms",
+     "groups": [
+      "A:arms"
+     ]
+    },
+    {
+     "key": "A:lighter",
+     "groups": [
+      "A:lighter"
+     ]
+    },
+    {
+     "key": "A:cigarette",
+     "groups": [
+      "A:cigarette"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [
+    {
+     "cue": "foley.moves.A.turn3",
+     "onset": 77.500021,
+     "x": 321.253,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.A.3",
+     "onset": 77.610625,
+     "x": 335.797,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.cup",
+     "onset": 78.069292,
+     "x": 396.112,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.lighter.A.strike",
+     "onset": 78.530021,
+     "x": 456.698,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.lighter.A.flame",
+     "onset": 78.600021,
+     "x": 465.903,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "foley.lighter.A.release",
+     "onset": 80.100021,
+     "x": 663.153,
+     "y": 506,
+     "misses": []
+    },
+    {
+     "cue": "foley.drag.A.1",
+     "onset": 80.200021,
+     "x": 676.303,
+     "y": 542,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.turn4",
+     "onset": 82.000021,
+     "x": 913.003,
+     "y": 506,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.scuff.A.4",
+     "onset": 82.538396,
+     "x": 983.799,
+     "y": 506,
+     "misses": [
+      "sync"
+     ]
+    }
+   ],
+   "svgSha256": "973fa5fa277647cc8d27cd1617952643f536b5b34a1f79b08014e58749bf8597",
+   "pngSha256": "75c2ec6675fe3761e1f12336ea9ef9bcdfed9474678a356ed5204931d2e0d9cc"
+  },
+  {
+   "shot": 12,
+   "title": "B looks",
+   "lens": 70,
+   "file": "stills/shot-12.png",
+   "svg": "out/round-05/stills/shot-12.svg",
+   "t0": 84,
+   "t1": 89,
+   "width": 1200,
+   "height": 2928,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 210.4,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    },
+    {
+     "key": "bg:water",
+     "groups": [
+      "bg:water"
+     ]
+    }
+   ],
+   "bedOnly": "B looks",
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [],
+   "svgSha256": "fe4c0f10ce24592fd035a342cbe83848fb3ed9c2cfc6d17c781232229a0be0d9",
+   "pngSha256": "3f83aa62906dfdc7203448fe37ff346c6e6e520e3aa16b91292901fd185c45b4"
+  },
+  {
+   "shot": 13,
+   "title": "Smoke and glance",
+   "lens": 35,
+   "file": "stills/shot-13.png",
+   "svg": "out/round-05/stills/shot-13.svg",
+   "t0": 89,
+   "t1": 96,
+   "width": 1200,
+   "height": 3692,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 150.285714,
+   "lanes": [
+    {
+     "key": "night",
+     "groups": [
+      "bg:city",
+      "bg:wind",
+      "lamp",
+      "bg:water"
+     ]
+    },
+    {
+     "key": "A:cloth",
+     "groups": [
+      "A:cloth"
+     ]
+    },
+    {
+     "key": "A:feet:slide",
+     "groups": [
+      "A:feet:slide"
+     ]
+    },
+    {
+     "key": "B:cloth",
+     "groups": [
+      "B:cloth"
+     ]
+    },
+    {
+     "key": "B:feet:slide",
+     "groups": [
+      "B:feet:slide"
+     ]
+    },
+    {
+     "key": "A:cigarette",
+     "groups": [
+      "A:cigarette"
+     ]
+    },
+    {
+     "key": "A:breath",
+     "groups": [
+      "A:breath"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [
+    {
+     "cue": "foley.drag.A.2",
+     "onset": 89.200021,
+     "x": 154.06,
+     "y": 558,
+     "misses": []
+    },
+    {
+     "cue": "foley.breath.A.exhale2",
+     "onset": 90.000021,
+     "x": 274.289,
+     "y": 558,
+     "misses": []
+    },
+    {
+     "cue": "foley.moves.A.shift1",
+     "onset": 94.200021,
+     "x": 905.489,
+     "y": 558,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.moves.B.shift1",
+     "onset": 94.200021,
+     "x": 905.489,
+     "y": 594,
+     "misses": [
+      "sync"
+     ]
+    },
+    {
+     "cue": "foley.scuff.A.5",
+     "onset": 94.453521,
+     "x": 943.586,
+     "y": 558,
+     "misses": []
+    },
+    {
+     "cue": "foley.scuff.B.3",
+     "onset": 94.453521,
+     "x": 943.586,
+     "y": 594,
+     "misses": [
+      "sync"
+     ]
+    }
+   ],
+   "svgSha256": "44d31662fea1ed0bf33a87131297d9a4bb493be704475fbeb9723babe9bc0e15",
+   "pngSha256": "5adffaee6832dca45522f7f254858db5ee3509f46a4f1b42cb86d387010539f1"
+  },
+  {
+   "shot": 14,
+   "title": "Ember and smoke",
+   "lens": 85,
+   "file": "stills/shot-14.png",
+   "svg": "out/round-05/stills/shot-14.svg",
+   "t0": 96,
+   "t1": 100,
+   "width": 1200,
+   "height": 3036,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 263,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    },
+    {
+     "key": "bg:water",
+     "groups": [
+      "bg:water"
+     ]
+    },
+    {
+     "key": "A:cigarette",
+     "groups": [
+      "A:cigarette"
+     ]
+    }
+   ],
+   "bedOnly": null,
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [
+    {
+     "cue": "foley.drag.A.3",
+     "onset": 97.000021,
+     "x": 387.006,
+     "y": 480,
+     "misses": []
+    }
+   ],
+   "svgSha256": "37634ab535b037f94453ff1f0899598f9b8cd15149b90e3713474c99822e4ba0",
+   "pngSha256": "e1b79e93234dc83bd66dac4a8ae627f0de0d81494e2a2f5a87f027b5e7c016b4"
+  },
+  {
+   "shot": 15,
+   "title": "Under the lamp",
+   "lens": 24,
+   "file": "stills/shot-15.png",
+   "svg": "out/round-05/stills/shot-15.svg",
+   "t0": 100,
+   "t1": 112,
+   "width": 1200,
+   "height": 2928,
+   "scale": 2,
+   "x0": 124,
+   "pxPerSec": 87.666667,
+   "lanes": [
+    {
+     "key": "bg:city",
+     "groups": [
+      "bg:city"
+     ]
+    },
+    {
+     "key": "bg:wind",
+     "groups": [
+      "bg:wind"
+     ]
+    },
+    {
+     "key": "lamp",
+     "groups": [
+      "lamp"
+     ]
+    },
+    {
+     "key": "bg:water",
+     "groups": [
+      "bg:water"
+     ]
+    }
+   ],
+   "bedOnly": "the final wide",
+   "carried": [
+    "bg.hum.lamp.bed",
+    "bg.city.bridge.bed",
+    "bg.water.bridge.bed",
+    "bg.wind.bridge.bed"
+   ],
+   "markers": [],
+   "svgSha256": "e7fb2cd6035a31e7cb3c624e33c71fb76efa4d6d3215a6f1911e4b2329db8726",
+   "pngSha256": "351b76d438cd3166b6db61ccb5da1912c8d18226291fb7fda2fe0983200710ed"
+  }
+ ]
+}

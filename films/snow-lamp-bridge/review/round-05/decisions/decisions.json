@@ -1,0 +1,6044 @@
+{
+ "stage": "Sound 2.12",
+ "made": "node scripts/sound-options.js --round 05",
+ "bar": {
+  "levelDb": 1,
+  "pan": 0.1,
+  "starting": true,
+  "from": "ROADMAP Sound 2.12: 1 dB in level or 0.1 in pan at the cue"
+ },
+ "clipSeconds": 7,
+ "master": {
+  "lufsBefore": -22.831,
+  "gainDb": -0.169,
+  "limitedSamples": 3270,
+  "passes": 1,
+  "lufs": -23.015,
+  "ceilingDb": -2,
+  "targetLufs": -23,
+  "what": "the A mix (every switch off, the default blockout) normalized as scripts/sound.js does it, its own master giving a.wav; each option's set of mixes then goes through A's gain and one limiter curve from the loudest of the set at each sample (joint), or through one static gain low enough that none is limited (still, the characters' listener), so B over A is the option alone and nothing passes the ceiling",
+  "sets": {
+   "muffle": {
+    "how": "joint",
+    "samples": 2647,
+    "maxDb": 0.13,
+    "at": 34.501
+   },
+   "sync-pan": {
+    "how": "joint",
+    "samples": 0,
+    "maxDb": 0,
+    "at": null
+   },
+   "listener": {
+    "how": "still",
+    "gainDb": -3.315,
+    "belowDb": 3.15,
+    "at": 30.442,
+    "jointWould": {
+     "samples": 15408,
+     "maxDb": 2.45,
+     "at": 31.943
+    }
+   }
+  }
+ },
+ "wavs": {
+  "a": {
+   "file": "out/round-05/options/a.wav",
+   "sha256": "449d70b8ba92b34a94a8fac024a743fb2a542a1e75c05ae4ae5e970b55806af6",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.015
+   }
+  },
+  "a-muffle": {
+   "file": "out/round-05/options/a-muffle.wav",
+   "sha256": "91c66cc8f10964c0bd9828f423dab764157ca4c59943832fa3b535fbfd9ccafc",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.02
+   }
+  },
+  "muffle-volume": {
+   "file": "out/round-05/options/muffle-volume.wav",
+   "sha256": "d7d3d0a8ebea8f2654cf5b8e69bdc1dd0540d7804593c38006d40cae2b406203",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.02
+   }
+  },
+  "muffle-swap": {
+   "file": "out/round-05/options/muffle-swap.wav",
+   "sha256": "d4c19789d256654459781941766179d79eddbb2577b14b5e38bd965fcd6a87e1",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.005
+   }
+  },
+  "muffle-volume-all": {
+   "file": "out/round-05/options/muffle-volume-all.wav",
+   "sha256": "22d6b6227398bb58715364e4d6f2a11b7d852977af4149a32753283f0048878d",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.02
+   }
+  },
+  "muffle-swap-all": {
+   "file": "out/round-05/options/muffle-swap-all.wav",
+   "sha256": "dc00efbf17a8457351735748544780495e5175d8d72dca29b23f5ebba167fba0",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.005
+   }
+  },
+  "a-sync-pan": {
+   "file": "out/round-05/options/a-sync-pan.wav",
+   "sha256": "449d70b8ba92b34a94a8fac024a743fb2a542a1e75c05ae4ae5e970b55806af6",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.015
+   }
+  },
+  "sync-pan": {
+   "file": "out/round-05/options/sync-pan.wav",
+   "sha256": "4a4b2a63bdcfd98cf81211026f6bd313af7f22b642b2951c7cc426baec669fd5",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.013
+   }
+  },
+  "a-listener": {
+   "file": "out/round-05/options/a-listener.wav",
+   "sha256": "e49d75976946a893bdbeaea9a0f589781624b4ec327520b8a8d6df100af68015",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.037
+   }
+  },
+  "listener": {
+   "file": "out/round-05/options/listener.wav",
+   "sha256": "ca8a45827ddacca03a30c43c62af3f69d7592da2494dd3695192207d09782456",
+   "over": {
+    "samples": 0,
+    "peakDb": -2.037
+   }
+  }
+ },
+ "options": [
+  {
+   "id": "muffle",
+   "question": "ROADMAP gate 2, question 3: the muffle on the hidden engine, done the PS1 way",
+   "definition": "While the picture hides a placed cue's source (its rendered point through the frame's camera, a blocker between them, as Sound 1's onScreen check judges it), the voice is muffled, the PS1 way: volume, its volume drops by dropDb; swap, it crossfades to a copy of itself through a fixed lowpass, the pre-filtered sample a PS1 bank would hold (two voices in step while it is hidden). The hidden state is read per block and the muffle follows it over rampSec. It names every cue hidden on any frame it covers; the engine is the plan's case. Two hidden states: set (B, the plan's) and all (Sound 1's rule, for comparison)",
+   "starting": {
+    "dropDb": {
+     "v": 6,
+     "why": "one tier of the level plan (SOUND-PLAN 1.3: a foreground sound sits at least 6 dB over the background, the midground 0 to 6 dB), so a hidden sound steps down by the gap between the two"
+    },
+    "lowpassHz": {
+     "v": 900,
+     "why": "an octave under the darkest the air law reaches with distance (spatial.js SPATIAL.minAirHz, 1800 Hz), so the muffle reads as something in the way rather than far away; two 2-pole sections, as the placeholders build their bands (voices.js band)"
+    },
+    "rampSec": {
+     "v": 0.05,
+     "why": "the backgrounds' crossfade at the place change (timbre.js TIMBRE.crossfadeSec): no click. A change of state is read at the next block (BLOCK samples, at most 5.3 ms after its frame), so the muffle has moved fully 50 to 55 ms after the frame that changes it"
+    }
+   },
+   "variants": {
+    "set": {
+     "what": "hidden by the set or by another body: a car's own body does not hide its own sounds (the plan's muffle, the engine behind building SE; the cabin and getting out stay hidden by the car, as sounds inside it)",
+     "named": 14,
+     "summary": {
+      "volume": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -6
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -6
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 12,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 12
+       }
+      },
+      "swap": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -1.91,
+        "largestCentroidOct": -0.139,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -1.91
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -1.91
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 12,
+        "largestHiddenDb": -58.78,
+        "largestCentroidOct": -1.605,
+        "atOrOverBar": 12
+       }
+      }
+     },
+     "swapVoices": {
+      "peak": 15,
+      "at": 28.381,
+      "film": 12,
+      "filmAt": 33.312,
+      "limit": 24
+     },
+     "moves": {
+      "volume": {
+       "named": 14,
+       "moved": 14,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      },
+      "swap": {
+       "named": 14,
+       "moved": 14,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      }
+     },
+     "rows": {
+      "volume": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.625,
+        "from": 14,
+        "to": 18.625,
+        "by": "building SE",
+        "levelHiddenA": -2.3,
+        "dHiddenDb": -6,
+        "dCueDb": -0.37,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -6,
+        "dCueDb": -0.19,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6,
+        "dCueDb": -0.56,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 961,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6,
+        "dCueDb": -0.87,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 964,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5974,
+        "centroidB": 5974,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5972,
+        "centroidB": 5972,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 6003,
+        "centroidB": 6003,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1449,
+        "centroidB": 1449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1469,
+        "centroidB": 1469,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -6,
+        "dCueDb": -5.37,
+        "dLoudestDb": -4.36,
+        "centroidA": 1443,
+        "centroidB": 1443,
+        "dCentroidOct": 0
+       }
+      ],
+      "swap": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -1.91
+         }
+        ],
+        "hiddenSec": 4.625,
+        "from": 14,
+        "to": 18.625,
+        "by": "building SE",
+        "levelHiddenA": -2.3,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.18,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 571,
+        "dCentroidOct": -0.137
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -1.91
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.09,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 570,
+        "dCentroidOct": -0.139
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6.05
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6.05,
+        "dCueDb": -0.57,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 838,
+        "dCentroidOct": -0.198
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6.13
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6.13,
+        "dCueDb": -0.89,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 842,
+        "dCentroidOct": -0.195
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -57.98
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -57.98,
+        "dCueDb": -57.98,
+        "dLoudestDb": -57.98,
+        "centroidA": 5974,
+        "centroidB": 2204,
+        "dCentroidOct": -1.438
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -56.72
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -56.72,
+        "dCueDb": -56.72,
+        "dLoudestDb": -56.72,
+        "centroidA": 5972,
+        "centroidB": 1963,
+        "dCentroidOct": -1.605
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -58.78
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -58.78,
+        "dCueDb": -58.78,
+        "dLoudestDb": -58.78,
+        "centroidA": 6003,
+        "centroidB": 2123,
+        "dCentroidOct": -1.5
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -2.97
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -2.97,
+        "dCueDb": -2.97,
+        "dLoudestDb": -2.97,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -12.77
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -12.77,
+        "dCueDb": -12.77,
+        "dLoudestDb": -12.65,
+        "centroidA": 1449,
+        "centroidB": 1045,
+        "dCentroidOct": -0.471
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -12.64
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -12.64,
+        "dCueDb": -12.64,
+        "dLoudestDb": -12.59,
+        "centroidA": 1469,
+        "centroidB": 1042,
+        "dCentroidOct": -0.495
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -12.7
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -12.7,
+        "dCueDb": -10.35,
+        "dLoudestDb": -6.46,
+        "centroidA": 1443,
+        "centroidB": 1051,
+        "dCentroidOct": -0.457
+       }
+      ]
+     }
+    },
+    "all": {
+     "what": "Sound 1's onScreen rule (storyboard check 2): hidden by any blocker, a car's own body counted for its own sounds (the exhaust behind the rear bumper, the passenger door behind the car), for comparison",
+     "named": 19,
+     "summary": {
+      "volume": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -6
+           },
+           {
+            "by": "car body",
+            "own": true,
+            "frames": 229,
+            "from": 18.625,
+            "to": 29,
+            "dHiddenDb": -5.99
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -6
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 17,
+        "largestHiddenDb": -6,
+        "largestCentroidOct": 0,
+        "atOrOverBar": 17
+       }
+      },
+      "swap": {
+       "engine": {
+        "cues": 2,
+        "largestHiddenDb": -1.93,
+        "largestCentroidOct": -0.141,
+        "atOrOverBar": 2,
+        "byBlocker": [
+         {
+          "cue": "hard.engine.car.exhaust",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 111,
+            "from": 14,
+            "to": 18.625,
+            "dHiddenDb": -1.91
+           },
+           {
+            "by": "car body",
+            "own": true,
+            "frames": 229,
+            "from": 18.625,
+            "to": 29,
+            "dHiddenDb": -1.93
+           }
+          ]
+         },
+         {
+          "cue": "hard.engine.car.intake",
+          "parts": [
+           {
+            "by": "building SE",
+            "own": false,
+            "frames": 93,
+            "from": 14,
+            "to": 17.875,
+            "dHiddenDb": -1.91
+           }
+          ]
+         }
+        ]
+       },
+       "others": {
+        "cues": 17,
+        "largestHiddenDb": -58.78,
+        "largestCentroidOct": -1.605,
+        "atOrOverBar": 14
+       }
+      }
+     },
+     "swapVoices": {
+      "peak": 15,
+      "at": 28.381,
+      "film": 12,
+      "filmAt": 33.312,
+      "limit": 24
+     },
+     "moves": {
+      "volume": {
+       "named": 19,
+       "moved": 19,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      },
+      "swap": {
+       "named": 19,
+       "moved": 19,
+       "stray": [],
+       "still": [],
+       "mix": {
+        "samples": 0,
+        "first": null
+       }
+      }
+     },
+     "rows": {
+      "volume": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "car body": 229,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -6
+         },
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 229,
+          "hiddenSec": 9.542,
+          "from": 18.625,
+          "to": 29,
+          "levelHiddenA": 3.45,
+          "dHiddenDb": -5.99
+         }
+        ],
+        "hiddenSec": 14.167,
+        "from": 14,
+        "to": 29,
+        "by": "building SE, car body",
+        "levelHiddenA": 2.26,
+        "dHiddenDb": -5.99,
+        "dCueDb": -5.29,
+        "dLoudestDb": -3.16,
+        "centroidA": 630,
+        "centroidB": 630,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -6,
+        "dCueDb": -0.19,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 628,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6,
+        "dCueDb": -0.56,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 961,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6,
+        "dCueDb": -0.87,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 964,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5974,
+        "centroidB": 5974,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 5972,
+        "centroidB": 5972,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 6003,
+        "centroidB": 6003,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.unlatch",
+        "family": "door",
+        "shot": 5,
+        "t0": 31.94,
+        "t1": 32,
+        "framesBy": {
+         "car body": 1,
+         "frames": 1
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 1,
+          "hiddenSec": 0.06,
+          "from": 31.94,
+          "to": 32,
+          "levelHiddenA": 11.41,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.06,
+        "from": 31.94,
+        "to": 32,
+        "by": "car body",
+        "levelHiddenA": 11.41,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1886,
+        "centroidB": 1886,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.swing-open",
+        "family": "door",
+        "shot": 5,
+        "t0": 32,
+        "t1": 32.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 32,
+          "to": 32.6,
+          "levelHiddenA": -4.51,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 32,
+        "to": 32.6,
+        "by": "car body",
+        "levelHiddenA": -4.51,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 449,
+        "centroidB": 449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.stop",
+        "family": "door",
+        "shot": 5,
+        "t0": 32.6,
+        "t1": 32.8,
+        "framesBy": {
+         "car body": 5,
+         "frames": 5
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 5,
+          "hiddenSec": 0.2,
+          "from": 32.6,
+          "to": 32.8,
+          "levelHiddenA": -1.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.2,
+        "from": 32.6,
+        "to": 32.8,
+        "by": "car body",
+        "levelHiddenA": -1.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 340,
+        "centroidB": 340,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1449,
+        "centroidB": 1449,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 1469,
+        "centroidB": 1469,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -6,
+        "dCueDb": -5.37,
+        "dLoudestDb": -4.36,
+        "centroidA": 1443,
+        "centroidB": 1443,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.swing-shut",
+        "family": "door",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 35,
+          "to": 35.6,
+          "levelHiddenA": -6.86,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 35,
+        "to": 35.6,
+        "by": "car body",
+        "levelHiddenA": -6.86,
+        "dHiddenDb": -6,
+        "dCueDb": -6,
+        "dLoudestDb": -6,
+        "centroidA": 719,
+        "centroidB": 719,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.latch",
+        "family": "door",
+        "shot": 5,
+        "t0": 35.6,
+        "t1": 35.85,
+        "framesBy": {
+         "car body": 2,
+         "frames": 6
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 2,
+          "hiddenSec": 0.108,
+          "from": 35.6,
+          "to": 35.708,
+          "levelHiddenA": 6.64,
+          "dHiddenDb": -6
+         }
+        ],
+        "hiddenSec": 0.108,
+        "from": 35.6,
+        "to": 35.708,
+        "by": "car body",
+        "levelHiddenA": 6.64,
+        "dHiddenDb": -6,
+        "dCueDb": -5.98,
+        "dLoudestDb": -6,
+        "centroidA": 200,
+        "centroidB": 200,
+        "dCentroidOct": 0
+       }
+      ],
+      "swap": [
+       {
+        "cue": "hard.engine.car.exhaust",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 111,
+         "car body": 229,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 111,
+          "hiddenSec": 4.625,
+          "from": 14,
+          "to": 18.625,
+          "levelHiddenA": -2.3,
+          "dHiddenDb": -1.91
+         },
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 229,
+          "hiddenSec": 9.542,
+          "from": 18.625,
+          "to": 29,
+          "levelHiddenA": 3.45,
+          "dHiddenDb": -1.93
+         }
+        ],
+        "hiddenSec": 14.167,
+        "from": 14,
+        "to": 29,
+        "by": "building SE, car body",
+        "levelHiddenA": 2.26,
+        "dHiddenDb": -1.93,
+        "dCueDb": -1.8,
+        "dLoudestDb": -1.94,
+        "centroidA": 630,
+        "centroidB": 571,
+        "dCentroidOct": -0.141
+       },
+       {
+        "cue": "hard.engine.car.intake",
+        "family": "engine",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 93,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 93,
+          "hiddenSec": 3.875,
+          "from": 14,
+          "to": 17.875,
+          "levelHiddenA": -0.35,
+          "dHiddenDb": -1.91
+         }
+        ],
+        "hiddenSec": 3.875,
+        "from": 14,
+        "to": 17.875,
+        "by": "building SE",
+        "levelHiddenA": -0.35,
+        "dHiddenDb": -1.91,
+        "dCueDb": -0.09,
+        "dLoudestDb": 0,
+        "centroidA": 628,
+        "centroidB": 570,
+        "dCentroidOct": -0.139
+       },
+       {
+        "cue": "hard.tyres.car.front",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 94,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 94,
+          "hiddenSec": 3.917,
+          "from": 14,
+          "to": 17.917,
+          "levelHiddenA": -8.14,
+          "dHiddenDb": -6.05
+         }
+        ],
+        "hiddenSec": 3.917,
+        "from": 14,
+        "to": 17.917,
+        "by": "building SE",
+        "levelHiddenA": -8.14,
+        "dHiddenDb": -6.05,
+        "dCueDb": -0.57,
+        "dLoudestDb": 0,
+        "centroidA": 961,
+        "centroidB": 838,
+        "dCentroidOct": -0.198
+       },
+       {
+        "cue": "hard.tyres.car.rear",
+        "family": "tyres",
+        "shot": 3,
+        "t0": 14,
+        "t1": 29,
+        "framesBy": {
+         "building SE": 107,
+         "frames": 360
+        },
+        "byBlocker": [
+         {
+          "by": "building SE",
+          "own": false,
+          "frames": 107,
+          "hiddenSec": 4.458,
+          "from": 14,
+          "to": 18.458,
+          "levelHiddenA": -7.71,
+          "dHiddenDb": -6.13
+         }
+        ],
+        "hiddenSec": 4.458,
+        "from": 14,
+        "to": 18.458,
+        "by": "building SE",
+        "levelHiddenA": -7.71,
+        "dHiddenDb": -6.13,
+        "dCueDb": -0.89,
+        "dLoudestDb": -0.07,
+        "centroidA": 964,
+        "centroidB": 842,
+        "dCentroidOct": -0.195
+       },
+       {
+        "cue": "hard.cabin.car.handbrake",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 29.7,
+        "t1": 30.1,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 29.7,
+          "to": 30.1,
+          "levelHiddenA": -3.31,
+          "dHiddenDb": -57.98
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 29.7,
+        "to": 30.1,
+        "by": "car body",
+        "levelHiddenA": -3.31,
+        "dHiddenDb": -57.98,
+        "dCueDb": -57.98,
+        "dLoudestDb": -57.98,
+        "centroidA": 5974,
+        "centroidB": 2204,
+        "dCentroidOct": -1.438
+       },
+       {
+        "cue": "hard.cabin.A.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 30,
+        "t1": 30.4,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 30,
+          "to": 30.4,
+          "levelHiddenA": -3.26,
+          "dHiddenDb": -56.72
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 30,
+        "to": 30.4,
+        "by": "car body",
+        "levelHiddenA": -3.26,
+        "dHiddenDb": -56.72,
+        "dCueDb": -56.72,
+        "dLoudestDb": -56.72,
+        "centroidA": 5972,
+        "centroidB": 1963,
+        "dCentroidOct": -1.605
+       },
+       {
+        "cue": "hard.unload.A.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 30.9,
+        "t1": 31.8,
+        "framesBy": {
+         "car body": 10,
+         "frames": 22
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.433,
+          "from": 30.9,
+          "to": 31.333,
+          "levelHiddenA": -3.28,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.433,
+        "from": 30.9,
+        "to": 31.333,
+        "by": "car body",
+        "levelHiddenA": -3.28,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.cabin.B.belt",
+        "family": "cabin",
+        "shot": 5,
+        "t0": 31.5,
+        "t1": 31.9,
+        "framesBy": {
+         "car body": 10,
+         "frames": 10
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 10,
+          "hiddenSec": 0.4,
+          "from": 31.5,
+          "to": 31.9,
+          "levelHiddenA": -4.37,
+          "dHiddenDb": -58.78
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 31.5,
+        "to": 31.9,
+        "by": "car body",
+        "levelHiddenA": -4.37,
+        "dHiddenDb": -58.78,
+        "dCueDb": -58.78,
+        "dLoudestDb": -58.78,
+        "centroidA": 6003,
+        "centroidB": 2123,
+        "dCentroidOct": -1.5
+       },
+       {
+        "cue": "hard.unload.A.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 31.8,
+        "t1": 32.4,
+        "framesBy": {
+         "car body": 14,
+         "frames": 14
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.6,
+          "from": 31.8,
+          "to": 32.4,
+          "levelHiddenA": -4.7,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 31.8,
+        "to": 32.4,
+        "by": "car body",
+        "levelHiddenA": -4.7,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.unlatch",
+        "family": "door",
+        "shot": 5,
+        "t0": 31.94,
+        "t1": 32,
+        "framesBy": {
+         "car body": 1,
+         "frames": 1
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 1,
+          "hiddenSec": 0.06,
+          "from": 31.94,
+          "to": 32,
+          "levelHiddenA": 11.41,
+          "dHiddenDb": -21.62
+         }
+        ],
+        "hiddenSec": 0.06,
+        "from": 31.94,
+        "to": 32,
+        "by": "car body",
+        "levelHiddenA": 11.41,
+        "dHiddenDb": -21.62,
+        "dCueDb": -21.62,
+        "dLoudestDb": -21.62,
+        "centroidA": 1886,
+        "centroidB": 1464,
+        "dCentroidOct": -0.365
+       },
+       {
+        "cue": "hard.door.passenger.swing-open",
+        "family": "door",
+        "shot": 5,
+        "t0": 32,
+        "t1": 32.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 32,
+          "to": 32.6,
+          "levelHiddenA": -4.51,
+          "dHiddenDb": -0.49
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 32,
+        "to": 32.6,
+        "by": "car body",
+        "levelHiddenA": -4.51,
+        "dHiddenDb": -0.49,
+        "dCueDb": -0.49,
+        "dLoudestDb": -0.4,
+        "centroidA": 449,
+        "centroidB": 446,
+        "dCentroidOct": -0.008
+       },
+       {
+        "cue": "hard.unload.B.slide",
+        "family": "unload",
+        "shot": 5,
+        "t0": 32.2,
+        "t1": 33.2,
+        "framesBy": {
+         "car body": 24,
+         "frames": 24
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 24,
+          "hiddenSec": 1,
+          "from": 32.2,
+          "to": 33.2,
+          "levelHiddenA": -8.06,
+          "dHiddenDb": -2.97
+         }
+        ],
+        "hiddenSec": 1,
+        "from": 32.2,
+        "to": 33.2,
+        "by": "car body",
+        "levelHiddenA": -8.06,
+        "dHiddenDb": -2.97,
+        "dCueDb": -2.97,
+        "dLoudestDb": -2.97,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.door.passenger.stop",
+        "family": "door",
+        "shot": 5,
+        "t0": 32.6,
+        "t1": 32.8,
+        "framesBy": {
+         "car body": 5,
+         "frames": 5
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 5,
+          "hiddenSec": 0.2,
+          "from": 32.6,
+          "to": 32.8,
+          "levelHiddenA": -1.04,
+          "dHiddenDb": -0.18
+         }
+        ],
+        "hiddenSec": 0.2,
+        "from": 32.6,
+        "to": 32.8,
+        "by": "car body",
+        "levelHiddenA": -1.04,
+        "dHiddenDb": -0.18,
+        "dCueDb": -0.18,
+        "dLoudestDb": -0.18,
+        "centroidA": 340,
+        "centroidB": 340,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "hard.unload.B.rise",
+        "family": "unload",
+        "shot": 5,
+        "t0": 33.2,
+        "t1": 33.8,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 33.2,
+          "to": 33.8,
+          "levelHiddenA": -5.79,
+          "dHiddenDb": -2.98
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 33.2,
+        "to": 33.8,
+        "by": "car body",
+        "levelHiddenA": -5.79,
+        "dHiddenDb": -2.98,
+        "dCueDb": -2.98,
+        "dLoudestDb": -2.98,
+        "centroidA": 720,
+        "centroidB": 720,
+        "dCentroidOct": 0
+       },
+       {
+        "cue": "foley.moves.B.walk1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 33.8,
+        "t1": 34.6,
+        "framesBy": {
+         "car body": 19,
+         "frames": 19
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 19,
+          "hiddenSec": 0.8,
+          "from": 33.8,
+          "to": 34.6,
+          "levelHiddenA": 1.69,
+          "dHiddenDb": -12.77
+         }
+        ],
+        "hiddenSec": 0.8,
+        "from": 33.8,
+        "to": 34.6,
+        "by": "car body",
+        "levelHiddenA": 1.69,
+        "dHiddenDb": -12.77,
+        "dCueDb": -12.77,
+        "dLoudestDb": -12.65,
+        "centroidA": 1449,
+        "centroidB": 1045,
+        "dCentroidOct": -0.471
+       },
+       {
+        "cue": "foley.moves.B.turn1",
+        "family": "moves",
+        "shot": 5,
+        "t0": 34.6,
+        "t1": 35,
+        "framesBy": {
+         "car body": 9,
+         "frames": 9
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 9,
+          "hiddenSec": 0.4,
+          "from": 34.6,
+          "to": 35,
+          "levelHiddenA": -0.04,
+          "dHiddenDb": -12.64
+         }
+        ],
+        "hiddenSec": 0.4,
+        "from": 34.6,
+        "to": 35,
+        "by": "car body",
+        "levelHiddenA": -0.04,
+        "dHiddenDb": -12.64,
+        "dCueDb": -12.64,
+        "dLoudestDb": -12.59,
+        "centroidA": 1469,
+        "centroidB": 1042,
+        "dCentroidOct": -0.495
+       },
+       {
+        "cue": "foley.moves.B.turn2",
+        "family": "moves",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.7,
+        "framesBy": {
+         "car body": 14,
+         "frames": 17
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": false,
+          "frames": 14,
+          "hiddenSec": 0.583,
+          "from": 35,
+          "to": 35.583,
+          "levelHiddenA": 0.71,
+          "dHiddenDb": -12.7
+         }
+        ],
+        "hiddenSec": 0.583,
+        "from": 35,
+        "to": 35.583,
+        "by": "car body",
+        "levelHiddenA": 0.71,
+        "dHiddenDb": -12.7,
+        "dCueDb": -10.35,
+        "dLoudestDb": -6.46,
+        "centroidA": 1443,
+        "centroidB": 1051,
+        "dCentroidOct": -0.457
+       },
+       {
+        "cue": "hard.door.passenger.swing-shut",
+        "family": "door",
+        "shot": 5,
+        "t0": 35,
+        "t1": 35.6,
+        "framesBy": {
+         "car body": 15,
+         "frames": 15
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 15,
+          "hiddenSec": 0.6,
+          "from": 35,
+          "to": 35.6,
+          "levelHiddenA": -6.86,
+          "dHiddenDb": -3.2
+         }
+        ],
+        "hiddenSec": 0.6,
+        "from": 35,
+        "to": 35.6,
+        "by": "car body",
+        "levelHiddenA": -6.86,
+        "dHiddenDb": -3.2,
+        "dCueDb": -3.2,
+        "dLoudestDb": -3.63,
+        "centroidA": 719,
+        "centroidB": 709,
+        "dCentroidOct": -0.019
+       },
+       {
+        "cue": "hard.door.passenger.latch",
+        "family": "door",
+        "shot": 5,
+        "t0": 35.6,
+        "t1": 35.85,
+        "framesBy": {
+         "car body": 2,
+         "frames": 6
+        },
+        "byBlocker": [
+         {
+          "by": "car body",
+          "own": true,
+          "frames": 2,
+          "hiddenSec": 0.108,
+          "from": 35.6,
+          "to": 35.708,
+          "levelHiddenA": 6.64,
+          "dHiddenDb": -0.03
+         }
+        ],
+        "hiddenSec": 0.108,
+        "from": 35.6,
+        "to": 35.708,
+        "by": "car body",
+        "levelHiddenA": 6.64,
+        "dHiddenDb": -0.03,
+        "dCueDb": -0.03,
+        "dLoudestDb": -0.03,
+        "centroidA": 200,
+        "centroidB": 200,
+        "dCentroidOct": -0.001
+       }
+      ]
+     }
+    }
+   },
+   "beyondSet": [
+    {
+     "cue": "hard.engine.car.exhaust",
+     "frames": 229,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.unlatch",
+     "frames": 1,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.swing-open",
+     "frames": 15,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.stop",
+     "frames": 5,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.swing-shut",
+     "frames": 15,
+     "by": "car body"
+    },
+    {
+     "cue": "hard.door.passenger.latch",
+     "frames": 2,
+     "by": "car body"
+    }
+   ],
+   "coherence": {
+    "t0": 14,
+    "t1": 21,
+    "buzzes": [
+     "hard.engine.car.exhaust",
+     "hard.engine.car.intake"
+    ],
+    "all": {
+     "volume": {
+      "buzzes": 1,
+      "all": 1.005
+     },
+     "swap": {
+      "buzzes": 0.996,
+      "all": 1.003
+     }
+    },
+    "A": {
+     "buzzes": 1,
+     "all": 1.004
+    },
+    "set": {
+     "volume": {
+      "buzzes": 1.001,
+      "all": 1.005
+     },
+     "swap": {
+      "buzzes": 1,
+      "all": 1.003
+     }
+    }
+   },
+   "moments": {
+    "engine": {
+     "t0": 14,
+     "t1": 21,
+     "what": "the engine from its first hidden frame (building SE, shot 3) through the car coming into view",
+     "mix": {
+      "muffle-volume": {
+       "dLevelDb": -0.89,
+       "dBalanceDb": 0.18
+      },
+      "muffle-swap": {
+       "dLevelDb": -0.49,
+       "dBalanceDb": 0.11
+      },
+      "muffle-volume-all": {
+       "dLevelDb": -1.41,
+       "dBalanceDb": -0.04
+      },
+      "muffle-swap-all": {
+       "dLevelDb": -0.73,
+       "dBalanceDb": 0.01
+      }
+     },
+     "aAgainstDefault": {
+      "dLevelDb": 0,
+      "dBalanceDb": 0,
+      "mostDb": 0,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": 0
+      }
+     },
+     "parts": [
+      {
+       "t0": 14,
+       "t1": 16.5,
+       "what": "the rise out of the quiet (hard.arrival.car.rise)",
+       "mix": {
+        "muffle-volume": -1.16,
+        "muffle-swap": -0.56,
+        "muffle-volume-all": -1.16,
+        "muffle-swap-all": -0.56
+       }
+      },
+      {
+       "t0": 16.5,
+       "t1": 17.875,
+       "what": "the intake behind building SE at full level",
+       "mix": {
+        "muffle-volume": -3.93,
+        "muffle-swap": -1.67,
+        "muffle-volume-all": -3.93,
+        "muffle-swap-all": -1.67
+       }
+      },
+      {
+       "t0": 17.875,
+       "t1": 21,
+       "what": "the intake in view; the set still hides the exhaust and the tyres for a few frames, Sound 1's rule the exhaust behind its own car",
+       "mix": {
+        "muffle-volume": -0.23,
+        "muffle-swap": -0.17,
+        "muffle-volume-all": -0.9,
+        "muffle-swap-all": -0.5
+       }
+      }
+     ]
+    },
+    "car": {
+     "t0": 28.25,
+     "t1": 35.25,
+     "what": "the 7 s where the muffle takes the most off the other hidden cues (10 onsets, all hidden by the car body)",
+     "mix": {
+      "muffle-volume": {
+       "dLevelDb": -0.1,
+       "dBalanceDb": -0.03
+      },
+      "muffle-swap": {
+       "dLevelDb": -0.12,
+       "dBalanceDb": -0.05
+      },
+      "muffle-volume-all": {
+       "dLevelDb": -0.24,
+       "dBalanceDb": -0.07
+      },
+      "muffle-swap-all": {
+       "dLevelDb": -0.2,
+       "dBalanceDb": -0.07
+      }
+     },
+     "aAgainstDefault": {
+      "dLevelDb": 0,
+      "dBalanceDb": 0,
+      "mostDb": 0.13,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": -0.04
+      }
+     }
+    }
+   },
+   "clips": [
+    {
+     "file": "review/round-05/decisions/muffle-engine-a.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-a.mp4.json",
+     "wav": "out/round-05/options/a-muffle.wav",
+     "bytes": 905246,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-volume.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-volume.mp4.json",
+     "wav": "out/round-05/options/muffle-volume.wav",
+     "bytes": 901849,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-swap.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-swap.mp4.json",
+     "wav": "out/round-05/options/muffle-swap.wav",
+     "bytes": 903183,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-volume-all.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-volume-all.mp4.json",
+     "wav": "out/round-05/options/muffle-volume-all.wav",
+     "bytes": 901246,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-engine-b-swap-all.mp4",
+     "sidecar": "review/round-05/decisions/muffle-engine-b-swap-all.mp4.json",
+     "wav": "out/round-05/options/muffle-swap-all.wav",
+     "bytes": 903992,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-car-a.mp4",
+     "sidecar": "review/round-05/decisions/muffle-car-a.mp4.json",
+     "wav": "out/round-05/options/a-muffle.wav",
+     "bytes": 531067,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-car-b-volume.mp4",
+     "sidecar": "review/round-05/decisions/muffle-car-b-volume.mp4.json",
+     "wav": "out/round-05/options/muffle-volume.wav",
+     "bytes": 531773,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/muffle-car-b-swap.mp4",
+     "sidecar": "review/round-05/decisions/muffle-car-b-swap.mp4.json",
+     "wav": "out/round-05/options/muffle-swap.wav",
+     "bytes": 531967,
+     "seconds": 7,
+     "audioSeconds": 7
+    }
+   ],
+   "call": "ask the director",
+   "placeholder": {
+    "can": "when the muffle acts (the frames the picture hides each source) and how much level it takes off each voice",
+    "cannot": "what a real muffle sounds like. The placeholders are narrow bands: the engine's buzz sits at 650 Hz, under the swap's 900 Hz cutoff, so the swap barely touches it, while a recorded engine has the high end a swap removes. The cabin's clicks (5.9 kHz) lose nearly everything. The swap's real effect on the engine is heard only at Sound 4"
+   }
+  },
+  {
+   "id": "syncPan",
+   "question": "ROADMAP gate 2, question 3: a narrower pan for sync foley",
+   "definition": "The pan of every foley cue of the kinds named (a family, or a family and its meta.kind) times widthRatio, from the camera as today; every other cue keeps its pan",
+   "starting": {
+    "widthRatio": {
+     "v": 0.5,
+     "why": "halfway between the physical pan (1) and the centre (0): a midpoint to find out whether a narrower pan is audible at all, not a designed width. It puts the frame edge at 0.12 to 0.33 by lens instead of 0.24 to 0.66 (SOUND-PLAN 3.4)"
+    },
+    "kinds": {
+     "v": [
+      "feet",
+      "scuff",
+      "moves.rest",
+      "moves.cup"
+     ],
+     "why": "the sync foley the task and the plan name: the steps, the scuffs and the hands' contacts (the forearms coming to rest on the parapet, the hands cupping the lighter). Cloth on the walks, turns and shifts is not a contact and keeps its pan"
+    }
+   },
+   "named": 74,
+   "summary": {
+    "cues": 74,
+    "atOrOverBar": 28,
+    "largestDPan": -0.399,
+    "largestDBalanceDb": -10.24,
+    "call": "ask the director"
+   },
+   "moves": {
+    "named": 74,
+    "moved": 74,
+    "stray": [],
+    "still": [],
+    "mix": {
+     "samples": 0,
+     "first": null
+    }
+   },
+   "rows": [
+    {
+     "cue": "foley.feet.A.01",
+     "family": "feet",
+     "shot": 5,
+     "t0": 31.756,
+     "panA": -0.201,
+     "panB": -0.1,
+     "dPan": 0.1,
+     "balanceA": -2.78,
+     "balanceB": -1.37,
+     "dBalanceDb": 1.41
+    },
+    {
+     "cue": "foley.feet.A.02",
+     "family": "feet",
+     "shot": 5,
+     "t0": 32.034,
+     "panA": -0.337,
+     "panB": -0.168,
+     "dPan": 0.168,
+     "balanceA": -4.82,
+     "balanceB": -2.32,
+     "dBalanceDb": 2.5
+    },
+    {
+     "cue": "foley.feet.A.03",
+     "family": "feet",
+     "shot": 5,
+     "t0": 33.019,
+     "panA": 0.166,
+     "panB": 0.083,
+     "dPan": -0.083,
+     "balanceA": 2.29,
+     "balanceB": 1.14,
+     "dBalanceDb": -1.16
+    },
+    {
+     "cue": "foley.scuff.A.1",
+     "family": "scuff",
+     "shot": 5,
+     "t0": 33.224,
+     "panA": 0.384,
+     "panB": 0.192,
+     "dPan": -0.192,
+     "balanceA": 5.43,
+     "balanceB": 2.59,
+     "dBalanceDb": -2.84
+    },
+    {
+     "cue": "foley.feet.B.01",
+     "family": "feet",
+     "shot": 5,
+     "t0": 33.312,
+     "panA": -0.119,
+     "panB": -0.06,
+     "dPan": 0.06,
+     "balanceA": -1.64,
+     "balanceB": -0.82,
+     "dBalanceDb": 0.82
+    },
+    {
+     "cue": "foley.feet.B.02",
+     "family": "feet",
+     "shot": 5,
+     "t0": 34.499,
+     "panA": 0.194,
+     "panB": 0.097,
+     "dPan": -0.097,
+     "balanceA": 2.74,
+     "balanceB": 1.35,
+     "dBalanceDb": -1.39
+    },
+    {
+     "cue": "foley.feet.B.03",
+     "family": "feet",
+     "shot": 5,
+     "t0": 34.6,
+     "panA": 0.25,
+     "panB": 0.125,
+     "dPan": -0.125,
+     "balanceA": 3.57,
+     "balanceB": 1.75,
+     "dBalanceDb": -1.82
+    },
+    {
+     "cue": "foley.scuff.B.1",
+     "family": "scuff",
+     "shot": 5,
+     "t0": 34.61,
+     "panA": 0.234,
+     "panB": 0.117,
+     "dPan": -0.117,
+     "balanceA": 3.88,
+     "balanceB": 1.89,
+     "dBalanceDb": -1.98
+    },
+    {
+     "cue": "foley.scuff.B.2",
+     "family": "scuff",
+     "shot": 5,
+     "t0": 35.13,
+     "panA": 0.353,
+     "panB": 0.177,
+     "dPan": -0.177,
+     "balanceA": 6.3,
+     "balanceB": 2.97,
+     "dBalanceDb": -3.33
+    },
+    {
+     "cue": "foley.feet.A.04",
+     "family": "feet",
+     "shot": 5,
+     "t0": 35.179,
+     "panA": -0.019,
+     "panB": -0.009,
+     "dPan": 0.009,
+     "balanceA": -0.17,
+     "balanceB": -0.08,
+     "dBalanceDb": 0.08
+    },
+    {
+     "cue": "foley.feet.A.05",
+     "family": "feet",
+     "shot": 5,
+     "t0": 35.675,
+     "panA": 0.036,
+     "panB": 0.018,
+     "dPan": -0.018,
+     "balanceA": 0.79,
+     "balanceB": 0.39,
+     "dBalanceDb": -0.4
+    },
+    {
+     "cue": "foley.feet.A.06",
+     "family": "feet",
+     "shot": 5,
+     "t0": 36.172,
+     "panA": 0.321,
+     "panB": 0.16,
+     "dPan": -0.16,
+     "balanceA": 4.77,
+     "balanceB": 2.3,
+     "dBalanceDb": -2.47
+    },
+    {
+     "cue": "foley.feet.B.04",
+     "family": "feet",
+     "shot": 5,
+     "t0": 36.228,
+     "panA": 0.797,
+     "panB": 0.399,
+     "dPan": -0.399,
+     "balanceA": 16.12,
+     "balanceB": 5.88,
+     "dBalanceDb": -10.24
+    },
+    {
+     "cue": "foley.feet.A.07",
+     "family": "feet",
+     "shot": 5,
+     "t0": 36.668,
+     "panA": 0.25,
+     "panB": 0.125,
+     "dPan": -0.125,
+     "balanceA": 3.55,
+     "balanceB": 1.74,
+     "dBalanceDb": -1.81
+    },
+    {
+     "cue": "foley.feet.B.05",
+     "family": "feet",
+     "shot": 5,
+     "t0": 36.785,
+     "panA": 0.765,
+     "panB": 0.382,
+     "dPan": -0.382,
+     "balanceA": 14.59,
+     "balanceB": 5.57,
+     "dBalanceDb": -9.03
+    },
+    {
+     "cue": "foley.feet.A.08",
+     "family": "feet",
+     "shot": 5,
+     "t0": 37.164,
+     "panA": 0.193,
+     "panB": 0.097,
+     "dPan": -0.097,
+     "balanceA": 2.71,
+     "balanceB": 1.34,
+     "dBalanceDb": -1.37
+    },
+    {
+     "cue": "foley.feet.B.06",
+     "family": "feet",
+     "shot": 5,
+     "t0": 37.286,
+     "panA": 0.722,
+     "panB": 0.361,
+     "dPan": -0.361,
+     "balanceA": 13.07,
+     "balanceB": 5.21,
+     "dBalanceDb": -7.86
+    },
+    {
+     "cue": "foley.feet.B.07",
+     "family": "feet",
+     "shot": 5,
+     "t0": 37.665,
+     "panA": 0.684,
+     "panB": 0.342,
+     "dPan": -0.342,
+     "balanceA": 11.93,
+     "balanceB": 4.91,
+     "dBalanceDb": -7.02
+    },
+    {
+     "cue": "foley.feet.A.09",
+     "family": "feet",
+     "shot": 5,
+     "t0": 37.678,
+     "panA": 0.122,
+     "panB": 0.061,
+     "dPan": -0.061,
+     "balanceA": 1.68,
+     "balanceB": 0.84,
+     "dBalanceDb": -0.85
+    },
+    {
+     "cue": "foley.feet.A.10",
+     "family": "feet",
+     "shot": 5,
+     "t0": 38.171,
+     "panA": 0.258,
+     "panB": 0.129,
+     "dPan": -0.129,
+     "balanceA": 3.63,
+     "balanceB": 1.78,
+     "dBalanceDb": -1.85
+    },
+    {
+     "cue": "foley.feet.A.11",
+     "family": "feet",
+     "shot": 5,
+     "t0": 38.655,
+     "panA": 0.268,
+     "panB": 0.134,
+     "dPan": -0.134,
+     "balanceA": 3.77,
+     "balanceB": 1.84,
+     "dBalanceDb": -1.93
+    },
+    {
+     "cue": "foley.feet.A.12",
+     "family": "feet",
+     "shot": 5,
+     "t0": 39.14,
+     "panA": 0.345,
+     "panB": 0.173,
+     "dPan": -0.173,
+     "balanceA": 4.96,
+     "balanceB": 2.38,
+     "dBalanceDb": -2.58
+    },
+    {
+     "cue": "foley.feet.A.13",
+     "family": "feet",
+     "shot": 5,
+     "t0": 39.291,
+     "panA": 0.361,
+     "panB": 0.181,
+     "dPan": -0.181,
+     "balanceA": 5.21,
+     "balanceB": 2.5,
+     "dBalanceDb": -2.72
+    },
+    {
+     "cue": "foley.feet.A.14",
+     "family": "feet",
+     "shot": 5,
+     "t0": 39.733,
+     "panA": 0.336,
+     "panB": 0.168,
+     "dPan": -0.168,
+     "balanceA": 4.81,
+     "balanceB": 2.32,
+     "dBalanceDb": -2.49
+    },
+    {
+     "cue": "foley.feet.A.15",
+     "family": "feet",
+     "shot": 6,
+     "t0": 40.097,
+     "panA": 0.136,
+     "panB": 0.068,
+     "dPan": -0.068,
+     "balanceA": 1.87,
+     "balanceB": 0.93,
+     "dBalanceDb": -0.94
+    },
+    {
+     "cue": "foley.feet.A.16",
+     "family": "feet",
+     "shot": 6,
+     "t0": 40.479,
+     "panA": 0.1,
+     "panB": 0.05,
+     "dPan": -0.05,
+     "balanceA": 1.37,
+     "balanceB": 0.68,
+     "dBalanceDb": -0.69
+    },
+    {
+     "cue": "foley.scuff.A.2",
+     "family": "scuff",
+     "shot": 6,
+     "t0": 40.66,
+     "panA": 0.117,
+     "panB": 0.059,
+     "dPan": -0.059,
+     "balanceA": 1.61,
+     "balanceB": 0.8,
+     "dBalanceDb": -0.81
+    },
+    {
+     "cue": "foley.feet.B.08",
+     "family": "feet",
+     "shot": 6,
+     "t0": 45.53,
+     "panA": 0.163,
+     "panB": 0.081,
+     "dPan": -0.081,
+     "balanceA": 2.25,
+     "balanceB": 1.11,
+     "dBalanceDb": -1.13
+    },
+    {
+     "cue": "foley.feet.A.17",
+     "family": "feet",
+     "shot": 6,
+     "t0": 45.614,
+     "panA": 0.019,
+     "panB": 0.009,
+     "dPan": -0.009,
+     "balanceA": 0.26,
+     "balanceB": 0.13,
+     "dBalanceDb": -0.13
+    },
+    {
+     "cue": "foley.feet.B.09",
+     "family": "feet",
+     "shot": 7,
+     "t0": 46.415,
+     "panA": 0.279,
+     "panB": 0.14,
+     "dPan": -0.14,
+     "balanceA": 3.98,
+     "balanceB": 1.94,
+     "dBalanceDb": -2.04
+    },
+    {
+     "cue": "foley.feet.A.18",
+     "family": "feet",
+     "shot": 7,
+     "t0": 46.569,
+     "panA": -0.014,
+     "panB": -0.007,
+     "dPan": 0.007,
+     "balanceA": -0.14,
+     "balanceB": -0.07,
+     "dBalanceDb": 0.07
+    },
+    {
+     "cue": "foley.feet.B.10",
+     "family": "feet",
+     "shot": 7,
+     "t0": 47.301,
+     "panA": 0.27,
+     "panB": 0.135,
+     "dPan": -0.135,
+     "balanceA": 3.85,
+     "balanceB": 1.88,
+     "dBalanceDb": -1.97
+    },
+    {
+     "cue": "foley.feet.A.19",
+     "family": "feet",
+     "shot": 7,
+     "t0": 47.525,
+     "panA": -0.012,
+     "panB": -0.006,
+     "dPan": 0.006,
+     "balanceA": -0.12,
+     "balanceB": -0.06,
+     "dBalanceDb": 0.06
+    },
+    {
+     "cue": "foley.feet.B.11",
+     "family": "feet",
+     "shot": 7,
+     "t0": 48.186,
+     "panA": 0.284,
+     "panB": 0.142,
+     "dPan": -0.142,
+     "balanceA": 4.05,
+     "balanceB": 1.97,
+     "dBalanceDb": -2.08
+    },
+    {
+     "cue": "foley.feet.A.20",
+     "family": "feet",
+     "shot": 7,
+     "t0": 48.48,
+     "panA": -0.017,
+     "panB": -0.009,
+     "dPan": 0.009,
+     "balanceA": -0.19,
+     "balanceB": -0.1,
+     "dBalanceDb": 0.1
+    },
+    {
+     "cue": "foley.feet.B.12",
+     "family": "feet",
+     "shot": 7,
+     "t0": 49.071,
+     "panA": 0.275,
+     "panB": 0.137,
+     "dPan": -0.137,
+     "balanceA": 3.91,
+     "balanceB": 1.91,
+     "dBalanceDb": -2
+    },
+    {
+     "cue": "foley.feet.A.21",
+     "family": "feet",
+     "shot": 7,
+     "t0": 49.435,
+     "panA": -0.007,
+     "panB": -0.004,
+     "dPan": 0.004,
+     "balanceA": -0.06,
+     "balanceB": -0.03,
+     "dBalanceDb": 0.03
+    },
+    {
+     "cue": "foley.feet.B.13",
+     "family": "feet",
+     "shot": 7,
+     "t0": 49.957,
+     "panA": 0.289,
+     "panB": 0.144,
+     "dPan": -0.144,
+     "balanceA": 4.13,
+     "balanceB": 2.01,
+     "dBalanceDb": -2.12
+    },
+    {
+     "cue": "foley.feet.A.22",
+     "family": "feet",
+     "shot": 7,
+     "t0": 50.39,
+     "panA": -0.013,
+     "panB": -0.006,
+     "dPan": 0.006,
+     "balanceA": -0.12,
+     "balanceB": -0.06,
+     "dBalanceDb": 0.06
+    },
+    {
+     "cue": "foley.feet.B.14",
+     "family": "feet",
+     "shot": 7,
+     "t0": 50.842,
+     "panA": 0.279,
+     "panB": 0.14,
+     "dPan": -0.14,
+     "balanceA": 3.98,
+     "balanceB": 1.94,
+     "dBalanceDb": -2.04
+    },
+    {
+     "cue": "foley.feet.A.23",
+     "family": "feet",
+     "shot": 7,
+     "t0": 51.346,
+     "panA": -0.011,
+     "panB": -0.005,
+     "dPan": 0.005,
+     "balanceA": -0.1,
+     "balanceB": -0.05,
+     "dBalanceDb": 0.05
+    },
+    {
+     "cue": "foley.feet.B.15",
+     "family": "feet",
+     "shot": 7,
+     "t0": 51.727,
+     "panA": 0.294,
+     "panB": 0.147,
+     "dPan": -0.147,
+     "balanceA": 4.22,
+     "balanceB": 2.05,
+     "dBalanceDb": -2.17
+    },
+    {
+     "cue": "foley.feet.A.24",
+     "family": "feet",
+     "shot": 7,
+     "t0": 52.301,
+     "panA": -0.016,
+     "panB": -0.008,
+     "dPan": 0.008,
+     "balanceA": -0.19,
+     "balanceB": -0.09,
+     "dBalanceDb": 0.09
+    },
+    {
+     "cue": "foley.feet.B.16",
+     "family": "feet",
+     "shot": 7,
+     "t0": 52.613,
+     "panA": 0.284,
+     "panB": 0.142,
+     "dPan": -0.142,
+     "balanceA": 4.07,
+     "balanceB": 1.98,
+     "dBalanceDb": -2.09
+    },
+    {
+     "cue": "foley.feet.A.25",
+     "family": "feet",
+     "shot": 7,
+     "t0": 53.256,
+     "panA": -0.014,
+     "panB": -0.007,
+     "dPan": 0.007,
+     "balanceA": -0.16,
+     "balanceB": -0.08,
+     "dBalanceDb": 0.08
+    },
+    {
+     "cue": "foley.feet.B.17",
+     "family": "feet",
+     "shot": 7,
+     "t0": 53.498,
+     "panA": 0.3,
+     "panB": 0.15,
+     "dPan": -0.15,
+     "balanceA": 4.3,
+     "balanceB": 2.09,
+     "dBalanceDb": -2.21
+    },
+    {
+     "cue": "foley.feet.A.26",
+     "family": "feet",
+     "shot": 8,
+     "t0": 54.2,
+     "panA": -0.019,
+     "panB": -0.01,
+     "dPan": 0.01,
+     "balanceA": -0.27,
+     "balanceB": -0.13,
+     "dBalanceDb": 0.13
+    },
+    {
+     "cue": "foley.feet.B.18",
+     "family": "feet",
+     "shot": 8,
+     "t0": 54.295,
+     "panA": 0.007,
+     "panB": 0.004,
+     "dPan": -0.004,
+     "balanceA": 0.1,
+     "balanceB": 0.05,
+     "dBalanceDb": -0.05
+    },
+    {
+     "cue": "foley.feet.B.19",
+     "family": "feet",
+     "shot": 8,
+     "t0": 54.977,
+     "panA": 0.02,
+     "panB": 0.01,
+     "dPan": -0.01,
+     "balanceA": 0.28,
+     "balanceB": 0.14,
+     "dBalanceDb": -0.14
+    },
+    {
+     "cue": "foley.feet.A.27",
+     "family": "feet",
+     "shot": 8,
+     "t0": 55.102,
+     "panA": -0.032,
+     "panB": -0.016,
+     "dPan": 0.016,
+     "balanceA": -0.43,
+     "balanceB": -0.22,
+     "dBalanceDb": 0.22
+    },
+    {
+     "cue": "foley.feet.B.20",
+     "family": "feet",
+     "shot": 8,
+     "t0": 55.658,
+     "panA": 0.011,
+     "panB": 0.006,
+     "dPan": -0.006,
+     "balanceA": 0.15,
+     "balanceB": 0.08,
+     "dBalanceDb": -0.08
+    },
+    {
+     "cue": "foley.feet.A.28",
+     "family": "feet",
+     "shot": 8,
+     "t0": 55.871,
+     "panA": -0.031,
+     "panB": -0.016,
+     "dPan": 0.016,
+     "balanceA": -0.42,
+     "balanceB": -0.21,
+     "dBalanceDb": 0.21
+    },
+    {
+     "cue": "foley.feet.B.21",
+     "family": "feet",
+     "shot": 8,
+     "t0": 56.34,
+     "panA": 0.026,
+     "panB": 0.013,
+     "dPan": -0.013,
+     "balanceA": 0.35,
+     "balanceB": 0.17,
+     "dBalanceDb": -0.17
+    },
+    {
+     "cue": "foley.feet.A.29",
+     "family": "feet",
+     "shot": 8,
+     "t0": 56.344,
+     "panA": -0.016,
+     "panB": -0.008,
+     "dPan": 0.008,
+     "balanceA": -0.22,
+     "balanceB": -0.11,
+     "dBalanceDb": 0.11
+    },
+    {
+     "cue": "foley.feet.A.30",
+     "family": "feet",
+     "shot": 8,
+     "t0": 56.906,
+     "panA": -0.03,
+     "panB": -0.015,
+     "dPan": 0.015,
+     "balanceA": -0.41,
+     "balanceB": -0.21,
+     "dBalanceDb": 0.21
+    },
+    {
+     "cue": "foley.feet.B.22",
+     "family": "feet",
+     "shot": 8,
+     "t0": 56.928,
+     "panA": 0.015,
+     "panB": 0.007,
+     "dPan": -0.007,
+     "balanceA": 0.2,
+     "balanceB": 0.1,
+     "dBalanceDb": -0.1
+    },
+    {
+     "cue": "foley.feet.B.23",
+     "family": "feet",
+     "shot": 8,
+     "t0": 57.43,
+     "panA": 0.018,
+     "panB": 0.009,
+     "dPan": -0.009,
+     "balanceA": 0.25,
+     "balanceB": 0.12,
+     "dBalanceDb": -0.12
+    },
+    {
+     "cue": "foley.feet.A.31",
+     "family": "feet",
+     "shot": 8,
+     "t0": 57.808,
+     "panA": -0.015,
+     "panB": -0.007,
+     "dPan": 0.007,
+     "balanceA": -0.2,
+     "balanceB": -0.1,
+     "dBalanceDb": 0.1
+    },
+    {
+     "cue": "foley.feet.B.24",
+     "family": "feet",
+     "shot": 8,
+     "t0": 57.834,
+     "panA": 0.032,
+     "panB": 0.016,
+     "dPan": -0.016,
+     "balanceA": 0.43,
+     "balanceB": 0.22,
+     "dBalanceDb": -0.22
+    },
+    {
+     "cue": "foley.feet.A.32",
+     "family": "feet",
+     "shot": 8,
+     "t0": 58.711,
+     "panA": -0.029,
+     "panB": -0.014,
+     "dPan": 0.014,
+     "balanceA": -0.39,
+     "balanceB": -0.2,
+     "dBalanceDb": 0.2
+    },
+    {
+     "cue": "foley.feet.B.25",
+     "family": "feet",
+     "shot": 8,
+     "t0": 59.381,
+     "panA": 0.024,
+     "panB": 0.012,
+     "dPan": -0.012,
+     "balanceA": 0.32,
+     "balanceB": 0.16,
+     "dBalanceDb": -0.16
+    },
+    {
+     "cue": "foley.feet.A.33",
+     "family": "feet",
+     "shot": 8,
+     "t0": 59.627,
+     "panA": -0.012,
+     "panB": -0.006,
+     "dPan": 0.006,
+     "balanceA": -0.16,
+     "balanceB": -0.08,
+     "dBalanceDb": 0.08
+    },
+    {
+     "cue": "foley.feet.B.26",
+     "family": "feet",
+     "shot": 9,
+     "t0": 60.404,
+     "panA": -0.083,
+     "panB": -0.041,
+     "dPan": 0.041,
+     "balanceA": -1.13,
+     "balanceB": -0.57,
+     "dBalanceDb": 0.57
+    },
+    {
+     "cue": "foley.feet.A.34",
+     "family": "feet",
+     "shot": 9,
+     "t0": 60.725,
+     "panA": -0.28,
+     "panB": -0.14,
+     "dPan": 0.14,
+     "balanceA": -3.95,
+     "balanceB": -1.93,
+     "dBalanceDb": 2.03
+    },
+    {
+     "cue": "foley.feet.B.27",
+     "family": "feet",
+     "shot": 9,
+     "t0": 61.076,
+     "panA": -0.012,
+     "panB": -0.006,
+     "dPan": 0.006,
+     "balanceA": -0.16,
+     "balanceB": -0.08,
+     "dBalanceDb": 0.08
+    },
+    {
+     "cue": "foley.feet.A.35",
+     "family": "feet",
+     "shot": 9,
+     "t0": 61.691,
+     "panA": -0.305,
+     "panB": -0.153,
+     "dPan": 0.153,
+     "balanceA": -4.33,
+     "balanceB": -2.1,
+     "dBalanceDb": 2.23
+    },
+    {
+     "cue": "foley.feet.B.28",
+     "family": "feet",
+     "shot": 9,
+     "t0": 61.724,
+     "panA": -0.054,
+     "panB": -0.027,
+     "dPan": 0.027,
+     "balanceA": -0.74,
+     "balanceB": -0.37,
+     "dBalanceDb": 0.37
+    },
+    {
+     "cue": "foley.moves.A.rest",
+     "family": "moves",
+     "shot": 9,
+     "t0": 63.448,
+     "panA": -0.185,
+     "panB": -0.092,
+     "dPan": 0.092,
+     "balanceA": -2.55,
+     "balanceB": -1.26,
+     "dBalanceDb": 1.29
+    },
+    {
+     "cue": "foley.moves.B.rest",
+     "family": "moves",
+     "shot": 9,
+     "t0": 63.451,
+     "panA": 0.054,
+     "panB": 0.027,
+     "dPan": -0.027,
+     "balanceA": 0.73,
+     "balanceB": 0.37,
+     "dBalanceDb": -0.37
+    },
+    {
+     "cue": "foley.scuff.A.3",
+     "family": "scuff",
+     "shot": 11,
+     "t0": 77.611,
+     "panA": 0.046,
+     "panB": 0.023,
+     "dPan": -0.023,
+     "balanceA": 0.62,
+     "balanceB": 0.31,
+     "dBalanceDb": -0.31
+    },
+    {
+     "cue": "foley.moves.A.cup",
+     "family": "moves",
+     "shot": 11,
+     "t0": 78.069,
+     "panA": 0.124,
+     "panB": 0.062,
+     "dPan": -0.062,
+     "balanceA": 1.7,
+     "balanceB": 0.85,
+     "dBalanceDb": -0.86
+    },
+    {
+     "cue": "foley.scuff.A.4",
+     "family": "scuff",
+     "shot": 11,
+     "t0": 82.538,
+     "panA": 0.048,
+     "panB": 0.024,
+     "dPan": -0.024,
+     "balanceA": 0.65,
+     "balanceB": 0.33,
+     "dBalanceDb": -0.33
+    },
+    {
+     "cue": "foley.scuff.A.5",
+     "family": "scuff",
+     "shot": 13,
+     "t0": 94.454,
+     "panA": -0.09,
+     "panB": -0.045,
+     "dPan": 0.045,
+     "balanceA": -1.24,
+     "balanceB": -0.62,
+     "dBalanceDb": 0.62
+    },
+    {
+     "cue": "foley.scuff.B.3",
+     "family": "scuff",
+     "shot": 13,
+     "t0": 94.454,
+     "panA": 0.095,
+     "panB": 0.047,
+     "dPan": -0.047,
+     "balanceA": 1.3,
+     "balanceB": 0.65,
+     "dBalanceDb": -0.65
+    }
+   ],
+   "moments": {
+    "pan": {
+     "t0": 32.8333,
+     "t1": 39.8333,
+     "what": "the 7 s where the sync foley's pan moves the most (15 onsets moving by 0.1 or more)",
+     "mix": {
+      "sync-pan": {
+       "dLevelDb": 0,
+       "dBalanceDb": -0.57
+      }
+     },
+     "aAgainstDefault": {
+      "dLevelDb": 0,
+      "dBalanceDb": 0,
+      "mostDb": 0,
+      "windows": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": 0
+      }
+     }
+    }
+   },
+   "clips": [
+    {
+     "file": "review/round-05/decisions/sync-pan-a.mp4",
+     "sidecar": "review/round-05/decisions/sync-pan-a.mp4.json",
+     "wav": "out/round-05/options/a-sync-pan.wav",
+     "bytes": 728088,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/sync-pan-b.mp4",
+     "sidecar": "review/round-05/decisions/sync-pan-b.mp4.json",
+     "wav": "out/round-05/options/sync-pan.wav",
+     "bytes": 721248,
+     "seconds": 7,
+     "audioSeconds": 7
+    }
+   ],
+   "call": "ask the director",
+   "placeholder": {
+    "can": "the pan itself: the spatializer pans by level alone, so a band-limited step moves exactly as a real one would",
+    "cannot": "how wide the stereo image feels against real backgrounds and real steps, whose high end localizes better than a 1.25 kHz band; and whether the wide image distracts on a phone (mono there either way)"
+   }
+  },
+  {
+   "id": "listener",
+   "question": "ROADMAP gate 2, question 3: the second listener model, level from the characters and pan from the camera",
+   "definition": "The level of every placed voice by its own distance law from the characters' point: the mean of the cloth points (each poser's root plus 1.2 m, DESIGN.CLOTH.up) of the people out of the car, whether or not the camera sees them (the poser's presence), one person while only one is out, the camera's level before anyone is (until 30.9 s, just before A's first frame out of the car). The pan, the air lowpass and the dark behind the camera stay the camera's. A cue's level is its loudest 100 ms (the level plan's measure)",
+   "starting": {
+    "listener": {
+     "v": "characters",
+     "why": "the storyboard's own characters model (scripts/sound-report.js hear), so the render can be checked against what Sound 1 predicted at every cut"
+    }
+   },
+   "from": 30.9,
+   "named": 125,
+   "summary": {
+    "cues": 125,
+    "atOrOverBar": 98,
+    "worstWindowAtOrOverBar": 103,
+    "largest": [
+     {
+      "cue": "foley.feet.B.18",
+      "shot": 8,
+      "dLoudestDb": 11.39,
+      "predictedDb": 11.39
+     },
+     {
+      "cue": "foley.feet.B.19",
+      "shot": 8,
+      "dLoudestDb": 11.2,
+      "predictedDb": 11.2
+     },
+     {
+      "cue": "foley.feet.B.20",
+      "shot": 8,
+      "dLoudestDb": 10.98,
+      "predictedDb": 10.98
+     },
+     {
+      "cue": "foley.feet.A.26",
+      "shot": 8,
+      "dLoudestDb": 10.93,
+      "predictedDb": 10.93
+     },
+     {
+      "cue": "foley.feet.B.21",
+      "shot": 8,
+      "dLoudestDb": 10.75,
+      "predictedDb": 10.75
+     },
+     {
+      "cue": "foley.feet.A.27",
+      "shot": 8,
+      "dLoudestDb": 10.69,
+      "predictedDb": 10.69
+     },
+     {
+      "cue": "foley.feet.B.22",
+      "shot": 8,
+      "dLoudestDb": 10.61,
+      "predictedDb": 10.61
+     },
+     {
+      "cue": "foley.feet.A.28",
+      "shot": 8,
+      "dLoudestDb": 10.48,
+      "predictedDb": 10.48
+     },
+     {
+      "cue": "foley.feet.B.23",
+      "shot": 8,
+      "dLoudestDb": 10.3,
+      "predictedDb": 10.3
+     },
+     {
+      "cue": "foley.feet.B.24",
+      "shot": 8,
+      "dLoudestDb": 10.3,
+      "predictedDb": 10.3
+     }
+    ],
+    "worstPredictionGapDb": {
+     "oneshots": 0.12,
+     "continuous": 6.92
+    },
+    "call": "ask the director"
+   },
+   "moves": {
+    "named": 125,
+    "moved": 115,
+    "stray": [],
+    "still": [
+     "hard.door.driver.swing-open",
+     "hard.unload.A.slide",
+     "hard.door.driver.stop",
+     "foley.feet.A.01",
+     "hard.unload.A.rise",
+     "foley.feet.A.02",
+     "foley.moves.A.walk1",
+     "foley.feet.A.03",
+     "foley.moves.A.turn1",
+     "foley.scuff.A.1"
+    ],
+    "mix": {
+     "samples": 0,
+     "first": null
+    },
+    "stillWhy": [
+     {
+      "cue": "hard.door.driver.swing-open",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "hard.unload.A.slide",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "hard.door.driver.stop",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.feet.A.01",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "hard.unload.A.rise",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.feet.A.02",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.moves.A.walk1",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.feet.A.03",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.moves.A.turn1",
+      "largestGainChangeDb": 0
+     },
+     {
+      "cue": "foley.scuff.A.1",
+      "largestGainChangeDb": 0
+     }
+    ]
+   },
+   "rows": [
+    {
+     "cue": "bg.hum.lamp.bed",
+     "family": "hum",
+     "shape": "continuous",
+     "shot": 1,
+     "t0": 0,
+     "t1": 112,
+     "loudestA": 3.08,
+     "dCueDb": 2.02,
+     "dLoudestDb": 3.43,
+     "dWorstDb": 13.87,
+     "worstAt": 54,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.engine.car.exhaust-idle",
+     "family": "engine",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 29,
+     "t1": 36.2,
+     "loudestA": 4.79,
+     "dCueDb": 0.7,
+     "dLoudestDb": 0.71,
+     "dWorstDb": 1.92,
+     "worstAt": 35.9,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.engine.car.intake-idle",
+     "family": "engine",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 29,
+     "t1": 36.2,
+     "loudestA": 7.95,
+     "dCueDb": 0.49,
+     "dLoudestDb": 0.05,
+     "dWorstDb": 2.22,
+     "worstAt": 35.2,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.door.driver.swing-open",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 30.5,
+     "t1": 31.1,
+     "loudestA": 6,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.unload.A.slide",
+     "family": "unload",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 30.9,
+     "t1": 31.8,
+     "loudestA": 3,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.door.driver.stop",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 31.1,
+     "t1": 31.3,
+     "loudestA": 6,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.cabin.B.belt",
+     "family": "cabin",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 31.5,
+     "t1": 31.9,
+     "loudestA": 1.65,
+     "dCueDb": 1.09,
+     "dLoudestDb": 1.09,
+     "dWorstDb": 1.09,
+     "worstAt": 31.5,
+     "predictedDb": 1.09
+    },
+    {
+     "cue": "foley.feet.A.01",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 31.756,
+     "t1": 32.034,
+     "loudestA": 13.99,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.unload.A.rise",
+     "family": "unload",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 31.8,
+     "t1": 32.4,
+     "loudestA": 3,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.door.passenger.unlatch",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 31.94,
+     "t1": 32,
+     "loudestA": 9.19,
+     "dCueDb": 3.03,
+     "dLoudestDb": 3.03,
+     "dWorstDb": 3.03,
+     "worstAt": 31.94,
+     "predictedDb": 3.03
+    },
+    {
+     "cue": "hard.door.passenger.swing-open",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 32,
+     "t1": 32.6,
+     "loudestA": 1.94,
+     "dCueDb": 3.23,
+     "dLoudestDb": 3.16,
+     "dWorstDb": 4.06,
+     "worstAt": 32.3,
+     "predictedDb": 3.16
+    },
+    {
+     "cue": "foley.feet.A.02",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 32.034,
+     "t1": 32.334,
+     "loudestA": 13.99,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.unload.B.slide",
+     "family": "unload",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 32.2,
+     "t1": 33.2,
+     "loudestA": 1.85,
+     "dCueDb": 1.14,
+     "dLoudestDb": 1.14,
+     "dWorstDb": 1.31,
+     "worstAt": 32.3,
+     "predictedDb": 1.09
+    },
+    {
+     "cue": "foley.moves.A.walk1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 32.4,
+     "t1": 33.2,
+     "loudestA": 5.99,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.door.passenger.stop",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 32.6,
+     "t1": 32.8,
+     "loudestA": 1.94,
+     "dCueDb": 4.06,
+     "dLoudestDb": 4.06,
+     "dWorstDb": 4.06,
+     "worstAt": 32.6,
+     "predictedDb": 4.06
+    },
+    {
+     "cue": "foley.feet.A.03",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 33.019,
+     "t1": 33.319,
+     "loudestA": 13.99,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "foley.moves.A.turn1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 33.2,
+     "t1": 33.8,
+     "loudestA": 5.99,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "hard.unload.B.rise",
+     "family": "unload",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 33.2,
+     "t1": 33.8,
+     "loudestA": 1.9,
+     "dCueDb": 1.09,
+     "dLoudestDb": 1.09,
+     "dWorstDb": 1.09,
+     "worstAt": 33.2,
+     "predictedDb": 1.09
+    },
+    {
+     "cue": "foley.scuff.A.1",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 33.224,
+     "t1": 33.776,
+     "loudestA": 5.97,
+     "dCueDb": 0,
+     "dLoudestDb": 0,
+     "dWorstDb": 0,
+     "worstAt": null,
+     "predictedDb": 0
+    },
+    {
+     "cue": "foley.feet.B.01",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 33.312,
+     "t1": 33.612,
+     "loudestA": 14.54,
+     "dCueDb": 2.44,
+     "dLoudestDb": 2.44,
+     "dWorstDb": 2.44,
+     "worstAt": 33.41,
+     "predictedDb": 2.44
+    },
+    {
+     "cue": "foley.moves.B.walk1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 33.8,
+     "t1": 34.6,
+     "loudestA": 3.13,
+     "dCueDb": 3.1,
+     "dLoudestDb": 2.85,
+     "dWorstDb": 3.59,
+     "worstAt": 34.5,
+     "predictedDb": 2.61
+    },
+    {
+     "cue": "hard.door.driver.swing-shut",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 33.9,
+     "t1": 34.5,
+     "loudestA": 5.5,
+     "dCueDb": 0.6,
+     "dLoudestDb": 0.49,
+     "dWorstDb": 1.5,
+     "worstAt": 34.2,
+     "predictedDb": 0.37
+    },
+    {
+     "cue": "foley.feet.B.02",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 34.499,
+     "t1": 34.6,
+     "loudestA": 10.38,
+     "dCueDb": 3.59,
+     "dLoudestDb": 3.59,
+     "dWorstDb": 3.59,
+     "worstAt": 34.5,
+     "predictedDb": 3.56
+    },
+    {
+     "cue": "hard.door.driver.latch",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 34.5,
+     "t1": 34.75,
+     "loudestA": 11.65,
+     "dCueDb": 1.35,
+     "dLoudestDb": 1.35,
+     "dWorstDb": 1.35,
+     "worstAt": 34.5,
+     "predictedDb": 1.28
+    },
+    {
+     "cue": "foley.feet.B.03",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 34.6,
+     "t1": 34.9,
+     "loudestA": 10.45,
+     "dCueDb": 3.52,
+     "dLoudestDb": 3.52,
+     "dWorstDb": 3.52,
+     "worstAt": 34.6,
+     "predictedDb": 3.49
+    },
+    {
+     "cue": "foley.moves.A.walk2",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 34.6,
+     "t1": 40.6,
+     "loudestA": 5.41,
+     "dCueDb": 1.54,
+     "dLoudestDb": 0.58,
+     "dWorstDb": 6.9,
+     "worstAt": 40.5,
+     "predictedDb": 0
+    },
+    {
+     "cue": "foley.moves.B.turn1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 34.6,
+     "t1": 35,
+     "loudestA": 2.02,
+     "dCueDb": 3.93,
+     "dLoudestDb": 3.97,
+     "dWorstDb": 4.07,
+     "worstAt": 34.9,
+     "predictedDb": 3.69
+    },
+    {
+     "cue": "foley.scuff.B.1",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 34.61,
+     "t1": 34.99,
+     "loudestA": 2.07,
+     "dCueDb": 3.84,
+     "dLoudestDb": 3.89,
+     "dWorstDb": 4,
+     "worstAt": 34.91,
+     "predictedDb": 3.59
+    },
+    {
+     "cue": "foley.moves.B.turn2",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 35,
+     "t1": 35.7,
+     "loudestA": 1.76,
+     "dCueDb": 4.23,
+     "dLoudestDb": 4.23,
+     "dWorstDb": 4.25,
+     "worstAt": 35.3,
+     "predictedDb": 4.13
+    },
+    {
+     "cue": "hard.door.passenger.swing-shut",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 35,
+     "t1": 35.6,
+     "loudestA": -0.39,
+     "dCueDb": 6.4,
+     "dLoudestDb": 6.38,
+     "dWorstDb": 6.5,
+     "worstAt": 35.3,
+     "predictedDb": 6.35
+    },
+    {
+     "cue": "foley.scuff.B.2",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 35.13,
+     "t1": 35.571,
+     "loudestA": 1.91,
+     "dCueDb": 4.05,
+     "dLoudestDb": 4.05,
+     "dWorstDb": 4.06,
+     "worstAt": 35.23,
+     "predictedDb": 4.02
+    },
+    {
+     "cue": "foley.feet.A.04",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 35.179,
+     "t1": 35.479,
+     "loudestA": 13.6,
+     "dCueDb": 0.38,
+     "dLoudestDb": 0.38,
+     "dWorstDb": 0.41,
+     "worstAt": 35.28,
+     "predictedDb": 0.37
+    },
+    {
+     "cue": "hard.door.passenger.latch",
+     "family": "door",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 35.6,
+     "t1": 35.85,
+     "loudestA": 6.98,
+     "dCueDb": 6.02,
+     "dLoudestDb": 6.02,
+     "dWorstDb": 6.02,
+     "worstAt": 35.6,
+     "predictedDb": 6.03
+    },
+    {
+     "cue": "foley.feet.A.05",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 35.675,
+     "t1": 35.975,
+     "loudestA": 13.64,
+     "dCueDb": 0.34,
+     "dLoudestDb": 0.35,
+     "dWorstDb": 0.35,
+     "worstAt": 35.68,
+     "predictedDb": 0.39
+    },
+    {
+     "cue": "foley.moves.B.walk2",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 35.7,
+     "t1": 37.8,
+     "loudestA": 1.32,
+     "dCueDb": 4.82,
+     "dLoudestDb": 4.67,
+     "dWorstDb": 5.34,
+     "worstAt": 37.7,
+     "predictedDb": 4.2
+    },
+    {
+     "cue": "foley.feet.A.06",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 36.172,
+     "t1": 36.472,
+     "loudestA": 13.57,
+     "dCueDb": 0.41,
+     "dLoudestDb": 0.41,
+     "dWorstDb": 0.41,
+     "worstAt": 36.17,
+     "predictedDb": 0.44
+    },
+    {
+     "cue": "hard.stop.car.rundown",
+     "family": "stop",
+     "shape": "continuous",
+     "shot": 5,
+     "t0": 36.2,
+     "t1": 36.6,
+     "loudestA": 6.52,
+     "dCueDb": 1.46,
+     "dLoudestDb": 1.48,
+     "dWorstDb": 1.48,
+     "worstAt": 36.2,
+     "predictedDb": 1.53
+    },
+    {
+     "cue": "foley.feet.B.04",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 36.228,
+     "t1": 36.528,
+     "loudestA": 9.44,
+     "dCueDb": 4.52,
+     "dLoudestDb": 4.52,
+     "dWorstDb": 4.53,
+     "worstAt": 36.33,
+     "predictedDb": 4.52
+    },
+    {
+     "cue": "foley.feet.A.07",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 36.668,
+     "t1": 36.968,
+     "loudestA": 13.88,
+     "dCueDb": 0.11,
+     "dLoudestDb": 0.11,
+     "dWorstDb": 0.11,
+     "worstAt": 36.67,
+     "predictedDb": 0.13
+    },
+    {
+     "cue": "foley.feet.B.05",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 36.785,
+     "t1": 37.085,
+     "loudestA": 9.26,
+     "dCueDb": 4.7,
+     "dLoudestDb": 4.7,
+     "dWorstDb": 4.7,
+     "worstAt": 36.78,
+     "predictedDb": 4.7
+    },
+    {
+     "cue": "foley.feet.A.08",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 37.164,
+     "t1": 37.464,
+     "loudestA": 13.46,
+     "dCueDb": 0.53,
+     "dLoudestDb": 0.53,
+     "dWorstDb": 0.53,
+     "worstAt": 37.16,
+     "predictedDb": 0.56
+    },
+    {
+     "cue": "foley.feet.B.06",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 37.286,
+     "t1": 37.586,
+     "loudestA": 8.81,
+     "dCueDb": 5.14,
+     "dLoudestDb": 5.14,
+     "dWorstDb": 5.14,
+     "worstAt": 37.29,
+     "predictedDb": 5.15
+    },
+    {
+     "cue": "foley.feet.B.07",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 37.665,
+     "t1": 37.965,
+     "loudestA": 8.82,
+     "dCueDb": 5.14,
+     "dLoudestDb": 5.14,
+     "dWorstDb": 5.14,
+     "worstAt": 37.66,
+     "predictedDb": 5.14
+    },
+    {
+     "cue": "foley.feet.A.09",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 37.678,
+     "t1": 37.978,
+     "loudestA": 12.96,
+     "dCueDb": 1.02,
+     "dLoudestDb": 1.03,
+     "dWorstDb": 1.03,
+     "worstAt": 37.68,
+     "predictedDb": 1.05
+    },
+    {
+     "cue": "hard.tick.car.01",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 37.7,
+     "t1": 37.76,
+     "loudestA": 3.42,
+     "dCueDb": 1,
+     "dLoudestDb": 1,
+     "dWorstDb": 1,
+     "worstAt": 37.7,
+     "predictedDb": 1.01
+    },
+    {
+     "cue": "foley.feet.A.10",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 38.171,
+     "t1": 38.471,
+     "loudestA": 12.44,
+     "dCueDb": 1.54,
+     "dLoudestDb": 1.54,
+     "dWorstDb": 1.54,
+     "worstAt": 38.17,
+     "predictedDb": 1.56
+    },
+    {
+     "cue": "foley.feet.A.11",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 38.655,
+     "t1": 38.955,
+     "loudestA": 11.64,
+     "dCueDb": 2.34,
+     "dLoudestDb": 2.34,
+     "dWorstDb": 2.34,
+     "worstAt": 38.66,
+     "predictedDb": 2.35
+    },
+    {
+     "cue": "hard.tick.car.02",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 38.93,
+     "t1": 38.99,
+     "loudestA": 3.54,
+     "dCueDb": 0.9,
+     "dLoudestDb": 0.9,
+     "dWorstDb": 0.9,
+     "worstAt": 38.93,
+     "predictedDb": 0.9
+    },
+    {
+     "cue": "foley.feet.A.12",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 39.14,
+     "t1": 39.291,
+     "loudestA": 10.99,
+     "dCueDb": 2.99,
+     "dLoudestDb": 2.99,
+     "dWorstDb": 2.99,
+     "worstAt": 39.14,
+     "predictedDb": 3
+    },
+    {
+     "cue": "foley.feet.A.13",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 39.291,
+     "t1": 39.591,
+     "loudestA": 10.35,
+     "dCueDb": 3.64,
+     "dLoudestDb": 3.64,
+     "dWorstDb": 3.64,
+     "worstAt": 39.29,
+     "predictedDb": 3.64
+    },
+    {
+     "cue": "foley.feet.A.14",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 5,
+     "t0": 39.733,
+     "t1": 40.033,
+     "loudestA": 9.72,
+     "dCueDb": 4.26,
+     "dLoudestDb": 4.26,
+     "dWorstDb": 4.26,
+     "worstAt": 39.73,
+     "predictedDb": 4.26
+    },
+    {
+     "cue": "foley.feet.A.15",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 40.097,
+     "t1": 40.397,
+     "loudestA": 7.35,
+     "dCueDb": 6.63,
+     "dLoudestDb": 6.63,
+     "dWorstDb": 6.63,
+     "worstAt": 40.2,
+     "predictedDb": 6.63
+    },
+    {
+     "cue": "foley.feet.A.16",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 40.479,
+     "t1": 40.779,
+     "loudestA": 7.09,
+     "dCueDb": 6.89,
+     "dLoudestDb": 6.89,
+     "dWorstDb": 6.89,
+     "worstAt": 40.48,
+     "predictedDb": 6.89
+    },
+    {
+     "cue": "foley.moves.A.turn2",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 6,
+     "t0": 40.6,
+     "t1": 41.6,
+     "loudestA": -0.99,
+     "dCueDb": 7.01,
+     "dLoudestDb": 6.98,
+     "dWorstDb": 7.05,
+     "worstAt": 41.5,
+     "predictedDb": 6.97
+    },
+    {
+     "cue": "foley.scuff.A.2",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 6,
+     "t0": 40.66,
+     "t1": 41.528,
+     "loudestA": -1.1,
+     "dCueDb": 7.05,
+     "dLoudestDb": 7.05,
+     "dWorstDb": 7.05,
+     "worstAt": 41.26,
+     "predictedDb": 7.05
+    },
+    {
+     "cue": "hard.tick.car.03",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 40.7,
+     "t1": 40.76,
+     "loudestA": -0.16,
+     "dCueDb": 4.52,
+     "dLoudestDb": 4.52,
+     "dWorstDb": 4.52,
+     "worstAt": 40.7,
+     "predictedDb": 4.52
+    },
+    {
+     "cue": "hard.tick.car.04",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 42.968,
+     "t1": 43.028,
+     "loudestA": -0.16,
+     "dCueDb": 4.52,
+     "dLoudestDb": 4.52,
+     "dWorstDb": 4.52,
+     "worstAt": 42.97,
+     "predictedDb": 4.52
+    },
+    {
+     "cue": "foley.moves.A.walk3",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 6,
+     "t0": 44.5,
+     "t1": 62,
+     "loudestA": 3.25,
+     "dCueDb": 5.06,
+     "dLoudestDb": 2.74,
+     "dWorstDb": 10.96,
+     "worstAt": 54,
+     "predictedDb": 7.05
+    },
+    {
+     "cue": "foley.moves.B.walk3",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 6,
+     "t0": 44.5,
+     "t1": 62,
+     "loudestA": 5.25,
+     "dCueDb": 4.39,
+     "dLoudestDb": 0.72,
+     "dWorstDb": 11.47,
+     "worstAt": 54,
+     "predictedDb": 7.64
+    },
+    {
+     "cue": "foley.feet.B.08",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 45.53,
+     "t1": 45.83,
+     "loudestA": 6.55,
+     "dCueDb": 7.4,
+     "dLoudestDb": 7.4,
+     "dWorstDb": 7.4,
+     "worstAt": 45.63,
+     "predictedDb": 7.4
+    },
+    {
+     "cue": "foley.feet.A.17",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 6,
+     "t0": 45.614,
+     "t1": 45.914,
+     "loudestA": 7.1,
+     "dCueDb": 6.88,
+     "dLoudestDb": 6.88,
+     "dWorstDb": 6.88,
+     "worstAt": 45.61,
+     "predictedDb": 6.88
+    },
+    {
+     "cue": "foley.feet.B.09",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 46.415,
+     "t1": 46.715,
+     "loudestA": 10.31,
+     "dCueDb": 3.65,
+     "dLoudestDb": 3.65,
+     "dWorstDb": 3.67,
+     "worstAt": 46.52,
+     "predictedDb": 3.65
+    },
+    {
+     "cue": "foley.feet.A.18",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 46.569,
+     "t1": 46.869,
+     "loudestA": 10.26,
+     "dCueDb": 3.72,
+     "dLoudestDb": 3.72,
+     "dWorstDb": 3.72,
+     "worstAt": 46.57,
+     "predictedDb": 3.72
+    },
+    {
+     "cue": "hard.tick.car.05",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 46.672,
+     "t1": 46.732,
+     "loudestA": 4.19,
+     "dCueDb": 0.2,
+     "dLoudestDb": 0.2,
+     "dWorstDb": 0.2,
+     "worstAt": 46.67,
+     "predictedDb": 0.2
+    },
+    {
+     "cue": "foley.feet.B.10",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 47.301,
+     "t1": 47.601,
+     "loudestA": 10.17,
+     "dCueDb": 3.79,
+     "dLoudestDb": 3.79,
+     "dWorstDb": 3.8,
+     "worstAt": 47.4,
+     "predictedDb": 3.78
+    },
+    {
+     "cue": "foley.feet.A.19",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 47.525,
+     "t1": 47.825,
+     "loudestA": 10.03,
+     "dCueDb": 3.95,
+     "dLoudestDb": 3.95,
+     "dWorstDb": 3.95,
+     "worstAt": 47.52,
+     "predictedDb": 3.95
+    },
+    {
+     "cue": "foley.feet.B.11",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 48.186,
+     "t1": 48.486,
+     "loudestA": 10.48,
+     "dCueDb": 3.49,
+     "dLoudestDb": 3.48,
+     "dWorstDb": 3.5,
+     "worstAt": 48.29,
+     "predictedDb": 3.48
+    },
+    {
+     "cue": "foley.feet.A.20",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 48.48,
+     "t1": 48.78,
+     "loudestA": 10.27,
+     "dCueDb": 3.71,
+     "dLoudestDb": 3.71,
+     "dWorstDb": 3.71,
+     "worstAt": 48.48,
+     "predictedDb": 3.71
+    },
+    {
+     "cue": "foley.feet.B.12",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 49.071,
+     "t1": 49.371,
+     "loudestA": 10.33,
+     "dCueDb": 3.62,
+     "dLoudestDb": 3.62,
+     "dWorstDb": 3.64,
+     "worstAt": 49.17,
+     "predictedDb": 3.62
+    },
+    {
+     "cue": "foley.feet.A.21",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 49.435,
+     "t1": 49.735,
+     "loudestA": 10.04,
+     "dCueDb": 3.93,
+     "dLoudestDb": 3.93,
+     "dWorstDb": 3.93,
+     "worstAt": 49.44,
+     "predictedDb": 3.94
+    },
+    {
+     "cue": "hard.tick.car.06",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 49.665,
+     "t1": 49.725,
+     "loudestA": 2.19,
+     "dCueDb": 0.28,
+     "dLoudestDb": 0.28,
+     "dWorstDb": 0.28,
+     "worstAt": 49.67,
+     "predictedDb": 0.28
+    },
+    {
+     "cue": "foley.feet.B.13",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 49.957,
+     "t1": 50.257,
+     "loudestA": 10.65,
+     "dCueDb": 3.31,
+     "dLoudestDb": 3.31,
+     "dWorstDb": 3.33,
+     "worstAt": 50.06,
+     "predictedDb": 3.31
+    },
+    {
+     "cue": "foley.feet.A.22",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 50.39,
+     "t1": 50.69,
+     "loudestA": 10.29,
+     "dCueDb": 3.69,
+     "dLoudestDb": 3.69,
+     "dWorstDb": 3.69,
+     "worstAt": 50.39,
+     "predictedDb": 3.69
+    },
+    {
+     "cue": "foley.feet.B.14",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 50.842,
+     "t1": 51.142,
+     "loudestA": 10.51,
+     "dCueDb": 3.45,
+     "dLoudestDb": 3.45,
+     "dWorstDb": 3.45,
+     "worstAt": 50.84,
+     "predictedDb": 3.45
+    },
+    {
+     "cue": "foley.feet.A.23",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 51.346,
+     "t1": 51.646,
+     "loudestA": 10.06,
+     "dCueDb": 3.92,
+     "dLoudestDb": 3.92,
+     "dWorstDb": 3.92,
+     "worstAt": 51.35,
+     "predictedDb": 3.92
+    },
+    {
+     "cue": "foley.feet.B.15",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 51.727,
+     "t1": 52.027,
+     "loudestA": 10.83,
+     "dCueDb": 3.14,
+     "dLoudestDb": 3.13,
+     "dWorstDb": 3.15,
+     "worstAt": 51.83,
+     "predictedDb": 3.13
+    },
+    {
+     "cue": "foley.feet.A.24",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 52.301,
+     "t1": 52.601,
+     "loudestA": 10.3,
+     "dCueDb": 3.68,
+     "dLoudestDb": 3.68,
+     "dWorstDb": 3.68,
+     "worstAt": 52.3,
+     "predictedDb": 3.68
+    },
+    {
+     "cue": "foley.feet.B.16",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 52.613,
+     "t1": 52.913,
+     "loudestA": 10.68,
+     "dCueDb": 3.28,
+     "dLoudestDb": 3.28,
+     "dWorstDb": 3.3,
+     "worstAt": 52.71,
+     "predictedDb": 3.27
+    },
+    {
+     "cue": "hard.tick.car.07",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 52.924,
+     "t1": 52.984,
+     "loudestA": 0.4,
+     "dCueDb": 0.24,
+     "dLoudestDb": 0.24,
+     "dWorstDb": 0.24,
+     "worstAt": 52.92,
+     "predictedDb": 0.24
+    },
+    {
+     "cue": "foley.feet.A.25",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 53.256,
+     "t1": 53.556,
+     "loudestA": 10.07,
+     "dCueDb": 3.91,
+     "dLoudestDb": 3.91,
+     "dWorstDb": 3.91,
+     "worstAt": 53.26,
+     "predictedDb": 3.91
+    },
+    {
+     "cue": "foley.feet.B.17",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 7,
+     "t0": 53.498,
+     "t1": 53.798,
+     "loudestA": 11.01,
+     "dCueDb": 2.95,
+     "dLoudestDb": 2.95,
+     "dWorstDb": 2.95,
+     "worstAt": 53.5,
+     "predictedDb": 2.95
+    },
+    {
+     "cue": "foley.feet.A.26",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 54.2,
+     "t1": 54.5,
+     "loudestA": 3.03,
+     "dCueDb": 10.93,
+     "dLoudestDb": 10.93,
+     "dWorstDb": 10.93,
+     "worstAt": 54.2,
+     "predictedDb": 10.93
+    },
+    {
+     "cue": "foley.feet.B.18",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 54.295,
+     "t1": 54.595,
+     "loudestA": 2.54,
+     "dCueDb": 11.39,
+     "dLoudestDb": 11.39,
+     "dWorstDb": 11.39,
+     "worstAt": 54.3,
+     "predictedDb": 11.39
+    },
+    {
+     "cue": "foley.feet.B.19",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 54.977,
+     "t1": 55.277,
+     "loudestA": 2.73,
+     "dCueDb": 11.2,
+     "dLoudestDb": 11.2,
+     "dWorstDb": 11.2,
+     "worstAt": 55.08,
+     "predictedDb": 11.2
+    },
+    {
+     "cue": "foley.feet.A.27",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 55.102,
+     "t1": 55.402,
+     "loudestA": 3.28,
+     "dCueDb": 10.69,
+     "dLoudestDb": 10.69,
+     "dWorstDb": 10.69,
+     "worstAt": 55.1,
+     "predictedDb": 10.69
+    },
+    {
+     "cue": "foley.feet.B.20",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 55.658,
+     "t1": 55.958,
+     "loudestA": 2.96,
+     "dCueDb": 10.98,
+     "dLoudestDb": 10.98,
+     "dWorstDb": 10.98,
+     "worstAt": 55.66,
+     "predictedDb": 10.98
+    },
+    {
+     "cue": "foley.feet.A.28",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 55.871,
+     "t1": 56.171,
+     "loudestA": 3.5,
+     "dCueDb": 10.48,
+     "dLoudestDb": 10.48,
+     "dWorstDb": 10.48,
+     "worstAt": 55.97,
+     "predictedDb": 10.48
+    },
+    {
+     "cue": "hard.tick.car.08",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 56.307,
+     "t1": 56.367,
+     "loudestA": -6.67,
+     "dCueDb": 5.16,
+     "dLoudestDb": 5.16,
+     "dWorstDb": 5.16,
+     "worstAt": 56.31,
+     "predictedDb": 5.16
+    },
+    {
+     "cue": "foley.feet.B.21",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 56.34,
+     "t1": 56.64,
+     "loudestA": 3.19,
+     "dCueDb": 10.75,
+     "dLoudestDb": 10.75,
+     "dWorstDb": 10.75,
+     "worstAt": 56.44,
+     "predictedDb": 10.75
+    },
+    {
+     "cue": "foley.feet.A.29",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 56.344,
+     "t1": 56.644,
+     "loudestA": 3.78,
+     "dCueDb": 10.21,
+     "dLoudestDb": 10.21,
+     "dWorstDb": 10.21,
+     "worstAt": 56.34,
+     "predictedDb": 10.21
+    },
+    {
+     "cue": "foley.feet.A.30",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 56.906,
+     "t1": 57.206,
+     "loudestA": 3.8,
+     "dCueDb": 10.18,
+     "dLoudestDb": 10.18,
+     "dWorstDb": 10.18,
+     "worstAt": 57.01,
+     "predictedDb": 10.18
+    },
+    {
+     "cue": "foley.feet.B.22",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 56.928,
+     "t1": 57.228,
+     "loudestA": 3.33,
+     "dCueDb": 10.61,
+     "dLoudestDb": 10.61,
+     "dWorstDb": 10.61,
+     "worstAt": 56.93,
+     "predictedDb": 10.61
+    },
+    {
+     "cue": "foley.feet.B.23",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 57.43,
+     "t1": 57.73,
+     "loudestA": 3.67,
+     "dCueDb": 10.3,
+     "dLoudestDb": 10.3,
+     "dWorstDb": 10.3,
+     "worstAt": 57.43,
+     "predictedDb": 10.3
+    },
+    {
+     "cue": "foley.feet.A.31",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 57.808,
+     "t1": 58.108,
+     "loudestA": 4.07,
+     "dCueDb": 9.92,
+     "dLoudestDb": 9.92,
+     "dWorstDb": 9.92,
+     "worstAt": 57.91,
+     "predictedDb": 9.92
+    },
+    {
+     "cue": "foley.feet.B.24",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 57.834,
+     "t1": 58.134,
+     "loudestA": 3.67,
+     "dCueDb": 10.3,
+     "dLoudestDb": 10.3,
+     "dWorstDb": 10.3,
+     "worstAt": 57.93,
+     "predictedDb": 10.3
+    },
+    {
+     "cue": "foley.feet.A.32",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 58.711,
+     "t1": 59.011,
+     "loudestA": 4.37,
+     "dCueDb": 9.62,
+     "dLoudestDb": 9.62,
+     "dWorstDb": 9.62,
+     "worstAt": 58.81,
+     "predictedDb": 9.62
+    },
+    {
+     "cue": "foley.feet.B.25",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 59.381,
+     "t1": 59.681,
+     "loudestA": 3.92,
+     "dCueDb": 10.05,
+     "dLoudestDb": 10.05,
+     "dWorstDb": 10.05,
+     "worstAt": 59.48,
+     "predictedDb": 10.05
+    },
+    {
+     "cue": "foley.feet.A.33",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 8,
+     "t0": 59.627,
+     "t1": 59.927,
+     "loudestA": 4.67,
+     "dCueDb": 9.31,
+     "dLoudestDb": 9.31,
+     "dWorstDb": 9.31,
+     "worstAt": 59.63,
+     "predictedDb": 9.31
+    },
+    {
+     "cue": "foley.feet.B.26",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 60.404,
+     "t1": 60.704,
+     "loudestA": 13.45,
+     "dCueDb": 0.53,
+     "dLoudestDb": 0.53,
+     "dWorstDb": 0.53,
+     "worstAt": 60.4,
+     "predictedDb": 0.53
+    },
+    {
+     "cue": "foley.feet.A.34",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 60.725,
+     "t1": 61.025,
+     "loudestA": 11,
+     "dCueDb": 2.99,
+     "dLoudestDb": 2.99,
+     "dWorstDb": 2.99,
+     "worstAt": 60.83,
+     "predictedDb": 2.99
+    },
+    {
+     "cue": "foley.feet.B.27",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 61.076,
+     "t1": 61.376,
+     "loudestA": 12.37,
+     "dCueDb": 1.61,
+     "dLoudestDb": 1.61,
+     "dWorstDb": 1.61,
+     "worstAt": 61.08,
+     "predictedDb": 1.62
+    },
+    {
+     "cue": "hard.tick.car.09",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 61.101,
+     "t1": 61.161,
+     "loudestA": -6.34,
+     "dCueDb": 1.25,
+     "dLoudestDb": 1.25,
+     "dWorstDb": 1.25,
+     "worstAt": 61.1,
+     "predictedDb": 1.25
+    },
+    {
+     "cue": "foley.feet.A.35",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 61.691,
+     "t1": 61.991,
+     "loudestA": 10.49,
+     "dCueDb": 3.5,
+     "dLoudestDb": 3.5,
+     "dWorstDb": 3.5,
+     "worstAt": 61.79,
+     "predictedDb": 3.5
+    },
+    {
+     "cue": "foley.feet.B.28",
+     "family": "feet",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 61.724,
+     "t1": 62.024,
+     "loudestA": 11.68,
+     "dCueDb": 2.3,
+     "dLoudestDb": 2.3,
+     "dWorstDb": 2.3,
+     "worstAt": 61.72,
+     "predictedDb": 2.3
+    },
+    {
+     "cue": "foley.moves.A.lean",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 9,
+     "t0": 62,
+     "t1": 63.5,
+     "loudestA": 2.69,
+     "dCueDb": 3.29,
+     "dLoudestDb": 3.3,
+     "dWorstDb": 3.31,
+     "worstAt": 63.4,
+     "predictedDb": 3.27
+    },
+    {
+     "cue": "foley.moves.B.lean",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 9,
+     "t0": 62,
+     "t1": 63.5,
+     "loudestA": 4.03,
+     "dCueDb": 1.95,
+     "dLoudestDb": 1.96,
+     "dWorstDb": 1.97,
+     "worstAt": 62,
+     "predictedDb": 1.98
+    },
+    {
+     "cue": "foley.moves.A.rest",
+     "family": "moves",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 63.448,
+     "t1": 63.698,
+     "loudestA": 3.16,
+     "dCueDb": 3.83,
+     "dLoudestDb": 3.83,
+     "dWorstDb": 3.83,
+     "worstAt": 63.45,
+     "predictedDb": 3.83
+    },
+    {
+     "cue": "foley.moves.B.rest",
+     "family": "moves",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 63.451,
+     "t1": 63.701,
+     "loudestA": 4.3,
+     "dCueDb": 2.68,
+     "dLoudestDb": 2.68,
+     "dWorstDb": 2.68,
+     "worstAt": 63.45,
+     "predictedDb": 2.68
+    },
+    {
+     "cue": "hard.tick.car.10",
+     "family": "tick",
+     "shape": "oneshot",
+     "shot": 9,
+     "t0": 65.655,
+     "t1": 65.715,
+     "loudestA": -6.02,
+     "dCueDb": 0.74,
+     "dLoudestDb": 0.74,
+     "dWorstDb": 0.74,
+     "worstAt": 65.65,
+     "predictedDb": 0.74
+    },
+    {
+     "cue": "foley.moves.A.turn3",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 77.5,
+     "t1": 78.5,
+     "loudestA": 4.38,
+     "dCueDb": 1.61,
+     "dLoudestDb": 1.61,
+     "dWorstDb": 1.61,
+     "worstAt": 77.9,
+     "predictedDb": 1.61
+    },
+    {
+     "cue": "foley.scuff.A.3",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 77.611,
+     "t1": 78.389,
+     "loudestA": 3.85,
+     "dCueDb": 2.11,
+     "dLoudestDb": 2.11,
+     "dWorstDb": 2.11,
+     "worstAt": 78.31,
+     "predictedDb": 2.11
+    },
+    {
+     "cue": "foley.moves.A.cup",
+     "family": "moves",
+     "shape": "oneshot",
+     "shot": 11,
+     "t0": 78.069,
+     "t1": 78.319,
+     "loudestA": 5.94,
+     "dCueDb": 1.06,
+     "dLoudestDb": 1.06,
+     "dWorstDb": 1.06,
+     "worstAt": 78.07,
+     "predictedDb": 1.06
+    },
+    {
+     "cue": "foley.lighter.A.strike",
+     "family": "lighter",
+     "shape": "oneshot",
+     "shot": 11,
+     "t0": 78.53,
+     "t1": 78.6,
+     "loudestA": 8.65,
+     "dCueDb": 1.06,
+     "dLoudestDb": 1.06,
+     "dWorstDb": 1.06,
+     "worstAt": 78.53,
+     "predictedDb": 1.06
+    },
+    {
+     "cue": "foley.lighter.A.flame",
+     "family": "lighter",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 78.6,
+     "t1": 80.1,
+     "loudestA": 2.77,
+     "dCueDb": 1.06,
+     "dLoudestDb": 1.06,
+     "dWorstDb": 1.06,
+     "worstAt": 79.6,
+     "predictedDb": 1.06
+    },
+    {
+     "cue": "foley.lighter.A.release",
+     "family": "lighter",
+     "shape": "oneshot",
+     "shot": 11,
+     "t0": 80.1,
+     "t1": 80.2,
+     "loudestA": 8.66,
+     "dCueDb": 1.06,
+     "dLoudestDb": 1.06,
+     "dWorstDb": 1.06,
+     "worstAt": 80.1,
+     "predictedDb": 1.06
+    },
+    {
+     "cue": "foley.drag.A.1",
+     "family": "drag",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 80.2,
+     "t1": 81,
+     "loudestA": 8.32,
+     "dCueDb": 1.06,
+     "dLoudestDb": 1.06,
+     "dWorstDb": 1.06,
+     "worstAt": 80.8,
+     "predictedDb": 1.06
+    },
+    {
+     "cue": "foley.moves.A.turn4",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 82,
+     "t1": 84,
+     "loudestA": 4.38,
+     "dCueDb": 1.61,
+     "dLoudestDb": 1.61,
+     "dWorstDb": 1.61,
+     "worstAt": 82,
+     "predictedDb": 1.61
+    },
+    {
+     "cue": "foley.scuff.A.4",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 11,
+     "t0": 82.538,
+     "t1": 83.462,
+     "loudestA": 3.81,
+     "dCueDb": 2.15,
+     "dLoudestDb": 2.15,
+     "dWorstDb": 2.15,
+     "worstAt": 82.64,
+     "predictedDb": 2.15
+    },
+    {
+     "cue": "foley.drag.A.2",
+     "family": "drag",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 89.2,
+     "t1": 90,
+     "loudestA": 2.81,
+     "dCueDb": 6.55,
+     "dLoudestDb": 6.55,
+     "dWorstDb": 6.55,
+     "worstAt": 89.3,
+     "predictedDb": 6.55
+    },
+    {
+     "cue": "foley.breath.A.exhale2",
+     "family": "breath",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 90,
+     "t1": 92.8,
+     "loudestA": 3.19,
+     "dCueDb": 6.28,
+     "dLoudestDb": 6.23,
+     "dWorstDb": 6.45,
+     "worstAt": 90.1,
+     "predictedDb": 6.46
+    },
+    {
+     "cue": "foley.moves.A.shift1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 94.2,
+     "t1": 95.8,
+     "loudestA": 0.16,
+     "dCueDb": 5.78,
+     "dLoudestDb": 5.83,
+     "dWorstDb": 5.87,
+     "worstAt": 94.2,
+     "predictedDb": 5.88
+    },
+    {
+     "cue": "foley.moves.B.shift1",
+     "family": "moves",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 94.2,
+     "t1": 95.8,
+     "loudestA": 0.62,
+     "dCueDb": 5.36,
+     "dLoudestDb": 5.36,
+     "dWorstDb": 5.38,
+     "worstAt": 94.2,
+     "predictedDb": 5.39
+    },
+    {
+     "cue": "foley.scuff.A.5",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 94.454,
+     "t1": 95.547,
+     "loudestA": 0.03,
+     "dCueDb": 5.93,
+     "dLoudestDb": 5.92,
+     "dWorstDb": 5.97,
+     "worstAt": 94.45,
+     "predictedDb": 5.97
+    },
+    {
+     "cue": "foley.scuff.B.3",
+     "family": "scuff",
+     "shape": "continuous",
+     "shot": 13,
+     "t0": 94.454,
+     "t1": 95.547,
+     "loudestA": 0.49,
+     "dCueDb": 5.48,
+     "dLoudestDb": 5.46,
+     "dWorstDb": 5.51,
+     "worstAt": 94.45,
+     "predictedDb": 5.51
+    },
+    {
+     "cue": "foley.drag.A.3",
+     "family": "drag",
+     "shape": "continuous",
+     "shot": 14,
+     "t0": 97,
+     "t1": 97.8,
+     "loudestA": 8.68,
+     "dCueDb": 0.7,
+     "dLoudestDb": 0.7,
+     "dWorstDb": 0.7,
+     "worstAt": 97.3,
+     "predictedDb": 0.7
+    }
+   ],
+   "moments": {
+    "listener": {
+     "t0": 52.7917,
+     "t1": 59.7917,
+     "what": "the 7 s where the levels move the most (19 onsets whose loudest 100 ms moves by 1 dB or more)",
+     "mix": {
+      "listener": {
+       "dLevelDb": 6.37,
+       "dBalanceDb": -0.4
+      }
+     },
+     "aAgainstDefault": {
+      "dLevelDb": -3.15,
+      "dBalanceDb": 0,
+      "mostDb": 3.15,
+      "todaysLimiter": {
+       "windows": 700,
+       "overOneDb": 0,
+       "overThreeDb": 0,
+       "worstDb": 0
+      },
+      "jointWouldTake": {
+       "windows": 700,
+       "overOneDb": 2,
+       "overThreeDb": 0,
+       "worstDb": -1.34
+      }
+     }
+    }
+   },
+   "clips": [
+    {
+     "file": "review/round-05/decisions/listener-a.mp4",
+     "sidecar": "review/round-05/decisions/listener-a.mp4.json",
+     "wav": "out/round-05/options/a-listener.wav",
+     "bytes": 870821,
+     "seconds": 7,
+     "audioSeconds": 7
+    },
+    {
+     "file": "review/round-05/decisions/listener-b.mp4",
+     "sidecar": "review/round-05/decisions/listener-b.mp4.json",
+     "wav": "out/round-05/options/listener.wav",
+     "bytes": 871477,
+     "seconds": 7,
+     "audioSeconds": 7
+    }
+   ],
+   "call": "ask the director",
+   "placeholder": {
+    "can": "every level change the model makes, cue by cue and at the moment the people appear",
+    "cannot": "the balance those levels make with real sounds (SOUND-PLAN 4.4: balance is reported at Sound 2, not judged)"
+   }
+  },
+  {
+   "id": "styleFrame",
+   "question": "ROADMAP gate 2, question 2: the style-frame scene to design first in Sound 4",
+   "definition": "Runs of whole shots, up to 32 s (the default's 24 s and a third: a scene the director hears before the rest), chosen by rule from the cues; each with its facts from the cues and the storyboard's density and voices checks",
+   "scenes": [
+    {
+     "name": "default",
+     "shots": "shots 4 to 6",
+     "t0": 22,
+     "t1": 46,
+     "seconds": 24,
+     "why": "ROADMAP Sound gate 2: every category, the densest moment and the hush after the engine dies (SOUND-PLAN 3.17)",
+     "families": 15,
+     "filmFamilies": 19,
+     "missing": [
+      "breath",
+      "drag",
+      "lighter",
+      "water"
+     ],
+     "categories": [
+      "bg",
+      "foley",
+      "hard"
+     ],
+     "cuesSounding": 74,
+     "cuesStarting": 66,
+     "peakBodies": 3,
+     "peakVoices": 12,
+     "peakVoicesAt": 33.312,
+     "places": [
+      "street"
+     ],
+     "hush": {
+      "engineDies": true,
+      "engineDiesAt": 36.6,
+      "longestBedOnly": 1.472,
+      "longestBedOnlyFrom": 43.028,
+      "bedOnlyWindows": []
+     },
+     "densest": {
+      "voicesPeak": 12,
+      "voicesPeakAt": 33.312,
+      "holdsVoicesPeak": true,
+      "bodiesPeak": 3,
+      "holdsBodiesPeak": true
+     }
+    },
+    {
+     "name": "most families, shortest",
+     "shots": "shots 4 to 5",
+     "t0": 22,
+     "t1": 40,
+     "seconds": 18,
+     "why": "the shortest run of whole shots up to 32 s with the most families",
+     "families": 15,
+     "filmFamilies": 19,
+     "missing": [
+      "breath",
+      "drag",
+      "lighter",
+      "water"
+     ],
+     "categories": [
+      "bg",
+      "foley",
+      "hard"
+     ],
+     "cuesSounding": 64,
+     "cuesStarting": 56,
+     "peakBodies": 3,
+     "peakVoices": 12,
+     "peakVoicesAt": 33.312,
+     "places": [
+      "street"
+     ],
+     "hush": {
+      "engineDies": true,
+      "engineDiesAt": 36.6,
+      "longestBedOnly": 0,
+      "longestBedOnlyFrom": null,
+      "bedOnlyWindows": []
+     },
+     "densest": {
+      "voicesPeak": 12,
+      "voicesPeakAt": 33.312,
+      "holdsVoicesPeak": true,
+      "bodiesPeak": 3,
+      "holdsBodiesPeak": true
+     }
+    },
+    {
+     "name": "both places",
+     "shots": "shots 5 to 8",
+     "t0": 29,
+     "t1": 60,
+     "seconds": 31,
+     "why": "the shortest run up to 32 s with the most families that reaches the street and the bridge",
+     "families": 14,
+     "filmFamilies": 19,
+     "missing": [
+      "brake",
+      "breath",
+      "drag",
+      "lighter",
+      "tyres"
+     ],
+     "categories": [
+      "bg",
+      "foley",
+      "hard"
+     ],
+     "cuesSounding": 108,
+     "cuesStarting": 105,
+     "peakBodies": 3,
+     "peakVoices": 12,
+     "peakVoicesAt": 33.312,
+     "places": [
+      "street",
+      "bridge"
+     ],
+     "hush": {
+      "engineDies": true,
+      "engineDiesAt": 36.6,
+      "longestBedOnly": 1.472,
+      "longestBedOnlyFrom": 43.028,
+      "bedOnlyWindows": []
+     },
+     "densest": {
+      "voicesPeak": 12,
+      "voicesPeakAt": 33.312,
+      "holdsVoicesPeak": true,
+      "bodiesPeak": 3,
+      "holdsBodiesPeak": true
+     }
+    },
+    {
+     "name": "what the default leaves out",
+     "shots": "shots 11 to 13",
+     "t0": 76,
+     "t1": 96,
+     "seconds": 20,
+     "why": "the shortest run up to 32 s holding every family the default has none of (water, lighter, drag, breath)",
+     "families": 9,
+     "filmFamilies": 19,
+     "missing": [
+      "brake",
+      "cabin",
+      "door",
+      "engine",
+      "feet",
+      "settle",
+      "stop",
+      "tick",
+      "tyres",
+      "unload"
+     ],
+     "categories": [
+      "bg",
+      "foley"
+     ],
+     "cuesSounding": 19,
+     "cuesStarting": 15,
+     "peakBodies": 2,
+     "peakVoices": 11,
+     "peakVoicesAt": 94.454,
+     "places": [
+      "bridge"
+     ],
+     "hush": {
+      "engineDies": false,
+      "engineDiesAt": 36.6,
+      "longestBedOnly": 5.2,
+      "longestBedOnlyFrom": 84,
+      "bedOnlyWindows": [
+       "B looks (shot 12)"
+      ]
+     },
+     "densest": {
+      "voicesPeak": 12,
+      "voicesPeakAt": 33.312,
+      "holdsVoicesPeak": false,
+      "bodiesPeak": 3,
+      "holdsBodiesPeak": false
+     }
+    }
+   ],
+   "call": "ask the director",
+   "placeholder": {
+    "can": "which cues, families, places and quiet each scene holds",
+    "cannot": "which scene sets the style best: that is heard, at Sound 4"
+   }
+  }
+ ]
+}

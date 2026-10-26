@@ -60,6 +60,33 @@ Characters and props from pure functions of t; derived details computed once fro
 from the rig's landings, tyre tracks from the car path) so they follow any later change; particles; the playback UI;
 `npm run export` and `npm run verify`. Self-review a frame every 2 seconds from the MP4 at phone size. Gate 4.
 
+## Stage 5.5: Sound
+
+> **Superseded, 2026-10-24.** This one-pass method skipped the storyboard and the blockout. Sound now runs through
+> gated stages like the picture (plan, storyboard, blockout, revisions, design, mix, final): see
+> `films/snow-lamp-bridge/SOUND-PLAN.md` and the Sound stages in its `ROADMAP.md`. This section is rewritten from what
+> works once that film's sound reaches Sound 6.
+
+A film has a soundtrack unless the brief asks for silence. It is made the way the picture is: synthesized in code
+(`src/audio/`), seeded, rendered in one pass over the whole film, timed by the same data that times the picture and
+heard from each shot's camera. Snow, Lamp, Bridge is the worked example (its `SOUND.md`, `src/audio/layers/`,
+`tests/sound-layers.test.mjs`).
+
+1. `SOUND.md`: the feel in a paragraph, then a cue sheet built from `world.js` (every event, its time, the function it
+   comes from, the layer that plays it), where each source sits, and the score as a table of times, chords and notes.
+2. One layer per kind of sound in `src/audio/layers/`, each with its own block in `config.audio`, so builders never
+   touch the same lines. Positions come from the functions the picture uses (`carAt`, a rig's joints, the prints);
+   one-shots go through `src/audio/events.js`.
+3. Measure every stem before mixing (`scripts/lib/audio-analysis.mjs`): short-term loudness per window against the
+   bed, window peaks, octave bands, the spectrogram (`npm run sound -- --spectrogram`), onsets against the cue sheet,
+   stereo balance against the pan the camera predicts.
+4. Write the brief's balance as tests (the loud thing over the bed by so many LU, the score under it on entry), then
+   set bus and layer gains to pass them. The master: -16 LUFS integrated, true peak at or under -1.5 dBTP (ffmpeg's
+   ebur128 is the reference meter).
+5. `npm run export` renders `out/sound.wav` and muxes it as AAC; `npm run verify` checks that the WAV is today's
+   render and that the MP4's audio is in sync with it. The player renders the same samples in a worker.
+6. Gate: the director listens to the 1080p MP4. Measurements say the sound is correct; only ears say it is good.
+
 ## Stage 6: Polish rounds
 
 Notes become a numbered list with the file each touches; fix, re-run every check, a fresh review round
@@ -67,7 +94,8 @@ Notes become a numbered list with the file each touches; fix, re-run every check
 
 ## Stage 7: Final
 
-1. `npm run export` once from a clean build; the 4K capture and `npm run finals` from that same build.
+1. `npm run export` once from a clean build (it renders the sound first); the 4K capture
+   (`node scripts/capture.js --profile 4k --audio out/sound.wav`) and `npm run finals` from that same build.
 2. `npm run verify` and `node scripts/verify.js --profile 4k`.
 3. Thumbnails: three candidates from the strongest frames, each checked at 320 px wide; then a titled thumbnail
    (`scripts/title-thumbnail.py`) saved to `packaging/thumbnail.jpg`, checked at 320 px. Every video gets one.

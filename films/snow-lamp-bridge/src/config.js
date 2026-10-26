@@ -48,6 +48,57 @@ export const CONFIG = {
   // Tyre tracks (src/fx/tracks.js, look stage): the road's snow pressed down to wet asphalt.
   tracks: { color: '#3a3f48', opacity: 0.85 },
 
+  // The soundtrack (src/audio/, Stage 8). Rendered in one pass at `sr`, then normalized to its stage's `targetLufs`
+  // integrated with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades
+  // match the picture's (seconds). The reverb is a Freeverb standing in for the PS1 SPU's reverb unit.
+  audio: {
+    // The sound's stage (SOUND-PLAN 4.4), as `stage` is the picture's: 'blockout' (placeholders at the cue times,
+    // src/audio/layers/blockout/, Sound 2 and 3) or 'design' (the first-pass layers below, kept as they are until
+    // Sound 4). `parked` names layers kept in the code and out of every render: the score, until its own plan (3.1).
+    stage: 'blockout',
+    parked: ['score'],
+    sr: 48000,
+    // The integrated loudness each stage is normalized to (src/audio/loudness.js targetOf). The design stage keeps the
+    // first pass's -16 LUFS, so its render stays byte identical; the blockout's is chosen by measurement (Sound 2.6:
+    // scripts/sound-review.js, the 'target' entry of review/round-05/measure.json): the loudest target, in 0.5 dB
+    // steps down from -16, at which the limiter takes no more than 1 dB off any 400 ms window. Measured: -23 (its worst
+    // window 0.63 dB, the car arriving in shot 4; -22.5 loses 1.06 dB there). SOUND-PLAN 3.18: at or under -16.
+    targetLufs: { blockout: -23, design: -16 },
+    ceilingDb: -2.0,
+    masterHighpassHz: 35,
+    fadeIn: 3,
+    fadeOut: 1.5,
+    buses: { amb: -9, fx: 0, music: -3 },
+    reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
+    ambience: { windGain: 0.5, bridgeWindBoost: 0.35, cityGain: 0.06, humGain: 0.02, riverGain: 0.9 },
+
+    // Sound 2.12's options, each an A/B against today's mix that the blockout's voices and the spatializer read
+    // (ROADMAP Sound 2.12, SOUND-PLAN 3.4, 3.6, 3.7, 3.13). Every switch is off here, and off renders today's bytes;
+    // scripts/sound-options.js turns one on at a time, renders it and measures it. The values beside each switch are
+    // starting values, with the reason for each in review/round-05/notes-options.md.
+    options: {
+      // A muffle on a hidden source, the PS1 way (the SPU has no per-voice filter): mode 'volume' drops the voice's
+      // volume by dropDb while the picture hides it; 'swap' crossfades it to a copy of itself through a fixed
+      // lowpass at lowpassHz (two 2-pole sections), the pre-filtered sample a PS1 bank would hold; either moves over
+      // rampSec. 'off' does neither. The hidden state is the picture's, handed in by the options script only.
+      muffle: { mode: 'off', dropDb: 6, lowpassHz: 900, rampSec: 0.05 },
+      // A narrower pan for sync foley: the pan times widthRatio for the cues of the kinds named (a family, or a
+      // family and its meta.kind): the steps, the scuffs and the hands' contacts.
+      syncPan: { on: false, widthRatio: 0.5, kinds: ['feet', 'scuff', 'moves.rest', 'moves.cup'] },
+      // Who hears the level: 'camera' (today) or 'characters' (src/audio/listeners.js); the pan is the camera's either way.
+      listener: 'camera',
+    },
+
+    // the car layer (src/audio/layers/car.js): each part's gain
+    car: { level: 1.6, exhaustGain: 1, intakeGain: 1.6, tyreGain: 1, brakeGain: 2.2, settleGain: 0.16, doorGain: 0.16, keyGain: 0.16, tickGain: 0.04 },
+
+    // the foley layer (src/audio/layers/foley.js): the layer's level and each part's gain
+    foley: { level: 1, stepsBy: 'AB', stepGain: 0.8, rustleGain: 0.25, lighterGain: 0.35, dragGain: 0.2, breathGain: 0.9 },
+
+    // the score (src/audio/layers/score.js): the layer's level and each instrument's gain
+    score: { level: 0.8, padGain: 1, subGain: 0.35, bellGain: 1 },
+  },
+
   // Stage 7 deliverables (scripts/finals.js). stills: shot number to the time of its best frame (a shot not listed
   // uses its middle). thumbs: 1280x720 candidates, each the frame at t upscaled `scale` times (3 or 4, nearest)
   // and cropped around (cx, cy), fractions of the frame from the top left; no text, room left for a title.

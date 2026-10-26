@@ -1,0 +1,817 @@
+1
+00:00:00,000 --> 00:00:14,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed"></font>street: city, wind · the lamp hums
+
+2
+00:00:14,000 --> 00:00:16,500
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.rise"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car rises out of the quiet <font color="#7ae07a">(new)</font>
+
+3
+00:00:16,500 --> 00:00:17,470
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+
+4
+00:00:17,470 --> 00:00:19,038
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <font color="#7ae07a">(new)</font>
+
+5
+00:00:19,038 --> 00:00:20,601
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell"></font><font id=" hard.brake.car.pads1"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <font color="#7ae07a">(new)</font> · brakes <font color="#7ae07a">(new)</font>
+
+6
+00:00:20,601 --> 00:00:21,987
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <font color="#7ae07a">(new)</font>
+
+7
+00:00:21,987 --> 00:00:28,381
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell"></font><font id=" hard.brake.car.pads2"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <font color="#7ae07a">(new)</font> · brakes <font color="#7ae07a">(new)</font>
+
+8
+00:00:28,381 --> 00:00:29,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.engine.car.exhaust"></font><font id=" hard.engine.car.intake hard.tyres.car.front+hard.tyres.car.rear | hard.arrival.car.swell"></font><font id=" hard.brake.car.pads2 hard.brake.car.creak"></font>street: city, wind · the lamp hums · the exhaust burbles · the engine drives · tyres in the snow
+the car swells as it comes in <font color="#7ae07a">(new)</font> · brakes <font color="#7ae07a">(new)</font> · brakes creak
+
+9
+00:00:29,000 --> 00:00:29,215
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip | hard.brake.car.creak"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font>street: city, wind · the lamp hums · the car settles on its springs
+brakes creak · <i>the exhaust idles</i> · <i>the engine idles</i>
+
+10
+00:00:29,215 --> 00:00:29,350
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font>street: city, wind · the lamp hums · the car settles on its springs
+<i>the exhaust idles</i> · <i>the engine idles</i>
+
+11
+00:00:29,350 --> 00:00:29,700
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip"></font><font id=" hard.settle.car.rebound | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font>street: city, wind · the lamp hums · the car settles on its springs · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i>
+
+12
+00:00:29,700 --> 00:00:29,833
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.dip"></font><font id=" hard.settle.car.rebound | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" hard.cabin.car.handbrake"></font>street: city, wind · the lamp hums · the car settles on its springs · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+
+13
+00:00:29,833 --> 00:00:30,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.rebound |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake"></font>street: city, wind · the lamp hums · the springs rebound
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+
+14
+00:00:30,000 --> 00:00:30,183
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.settle.car.rebound hard.cabin.A.belt"></font><font id=" | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake"></font>street: city, wind · the lamp hums · the springs rebound   <font color="#ffb454">A: seat belt comes off <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+
+15
+00:00:30,183 --> 00:00:30,440
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: seat belt comes off <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+
+16
+00:00:30,440 --> 00:00:30,500
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch"></font><font id=" | hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.cabin.car.handbrake"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: seat belt comes off <font color="#7ae07a">(new)</font> · <i>driver door unlatches</i></font>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+
+17
+00:00:30,500 --> 00:00:30,533
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch"></font><font id=" hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" hard.cabin.car.handbrake | hard.engine.car.door-open"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: seat belt comes off <font color="#7ae07a">(new)</font> · <i>driver door unlatches</i> · <i>driver door swings open</i></font>
+<i>the exhaust idles</i> · <i>the engine idles</i> · handbrake, inside the car <font color="#7ae07a">(new)</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>
+
+18
+00:00:30,533 --> 00:00:30,833
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.cabin.A.belt hard.door.driver.unlatch"></font><font id=" hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: seat belt comes off <font color="#7ae07a">(new)</font> · <i>driver door unlatches</i> · <i>driver door swings open</i></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>
+
+19
+00:00:30,833 --> 00:00:30,900
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch"></font><font id=" hard.door.driver.swing-open | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>driver door unlatches</i> · <i>driver door swings open</i></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>
+
+20
+00:00:30,900 --> 00:00:31,100
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch"></font><font id=" hard.door.driver.swing-open hard.unload.A.slide | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle | hard.engine.car.door-open"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>driver door unlatches</i> · <i>driver door swings open</i> · slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>
+
+21
+00:00:31,100 --> 00:00:31,273
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.unlatch"></font><font id=" hard.door.driver.swing-open hard.unload.A.slide | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle | hard.engine.car.door-open hard.door.driver.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>driver door unlatches</i> · <i>driver door swings open</i> · slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>
+
+22
+00:00:31,273 --> 00:00:31,333
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.door.driver.swing-open"></font><font id=" hard.unload.A.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open hard.door.driver.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>driver door swings open</i> · slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>
+
+23
+00:00:31,333 --> 00:00:31,500
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" hard.door.driver.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>
+
+24
+00:00:31,500 --> 00:00:31,756
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" hard.door.driver.stop hard.cabin.B.belt"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font></font>
+
+25
+00:00:31,756 --> 00:00:31,800
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.unload.A.slide foley.feet.A.01"></font><font id="+foley.feet.A.02 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open hard.door.driver.stop hard.cabin.B.belt"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: slides off the seat <font color="#7ae07a">(new)</font> · steps, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font></font>
+
+26
+00:00:31,800 --> 00:00:31,933
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise |"></font><font id=" hard.engine.car.door-open hard.door.driver.stop hard.cabin.B.belt"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>driver door stops, open</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font></font>
+
+27
+00:00:31,933 --> 00:00:31,940
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise |"></font><font id=" hard.engine.car.door-open hard.cabin.B.belt"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font></font>
+
+28
+00:00:31,940 --> 00:00:32,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise |"></font><font id=" hard.engine.car.door-open hard.cabin.B.belt hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font> · passenger door unlatches</font>
+
+29
+00:00:32,000 --> 00:00:32,200
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise"></font><font id=" hard.door.passenger.swing-open | hard.engine.car.door-open hard.cabin.B.belt"></font><font id=" hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font> · passenger door unlatches</font>
+
+30
+00:00:32,200 --> 00:00:32,333
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02"></font><font id=" hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open hard.cabin.B.belt"></font><font id=" hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: seat belt comes off <font color="#7ae07a">(new)</font> · passenger door unlatches</font>
+
+31
+00:00:32,333 --> 00:00:32,400
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02"></font><font id=" hard.unload.B.slide | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" hard.unload.A.rise hard.door.passenger.swing-open | hard.engine.car.door-open"></font><font id=" hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road</font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door unlatches</font>
+
+32
+00:00:32,400 --> 00:00:32,589
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.A.01+foley.feet.A.02"></font><font id=" foley.moves.A.walk1 hard.unload.B.slide | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle hard.unload.A.rise hard.door.passenger.swing-open |"></font><font id=" hard.engine.car.door-open hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: steps, road · <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door unlatches</font>
+
+33
+00:00:32,589 --> 00:00:32,600
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise"></font><font id=" hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door unlatches</font>
+
+34
+00:00:32,600 --> 00:00:32,633
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.A.rise"></font><font id=" hard.door.passenger.swing-open | hard.engine.car.door-open hard.door.passenger.unlatch"></font><font id=" hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: the seat springs back as A rises <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door unlatches · passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+35
+00:00:32,633 --> 00:00:32,773
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.door.passenger.swing-open |"></font><font id=" hard.engine.car.door-open hard.door.passenger.unlatch hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door unlatches · passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+36
+00:00:32,773 --> 00:00:32,833
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.door.passenger.swing-open |"></font><font id=" hard.engine.car.door-open hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#6fd3ff">B: passenger door swings open</font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+37
+00:00:32,833 --> 00:00:33,019
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+38
+00:00:33,019 --> 00:00:33,200
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 hard.unload.B.slide |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" foley.feet.A.03 hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: slides off the seat <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+39
+00:00:33,200 --> 00:00:33,224
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+40
+00:00:33,224 --> 00:00:33,233
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+41
+00:00:33,233 --> 00:00:33,312
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise | hard.engine.car.door-open"></font><font id=" foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop"></font>street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+42
+00:00:33,312 --> 00:00:33,433
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1 hard.door.passenger.stop"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door stops, open <font color="#7ae07a">(new)</font></font>
+
+43
+00:00:33,433 --> 00:00:33,800
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>
+
+44
+00:00:33,800 --> 00:00:33,852
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.feet.A.03 foley.moves.A.turn1"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road · jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road · <i>turns</i> <font color="#7ae07a">(new)</font></font>
+
+45
+00:00:33,852 --> 00:00:33,900
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.moves.A.turn1"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road · jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>turns</i> <font color="#7ae07a">(new)</font></font>
+
+46
+00:00:33,900 --> 00:00:34,033
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 hard.unload.B.rise |"></font><font id=" hard.engine.car.door-open foley.moves.A.turn1 hard.door.driver.swing-shut"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road · jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: the seat springs back as B rises <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: <i>turns</i> <font color="#7ae07a">(new)</font> · driver door swings shut <font color="#7ae07a">(new)</font></font>
+
+47
+00:00:34,033 --> 00:00:34,057
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.scuff.A.1 |"></font><font id=" hard.engine.car.door-open hard.door.driver.swing-shut"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road · jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font></font>
+
+48
+00:00:34,057 --> 00:00:34,146
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.01 foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" hard.door.driver.swing-shut"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: lands on both boots, road · jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font></font>
+
+49
+00:00:34,146 --> 00:00:34,499
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle | hard.engine.car.door-open"></font><font id=" hard.door.driver.swing-shut"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font></font>
+
+50
+00:00:34,499 --> 00:00:34,500
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02"></font><font id="+foley.feet.B.03 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open hard.door.driver.swing-shut"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font></font>
+
+51
+00:00:34,500 --> 00:00:34,600
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02"></font><font id="+foley.feet.B.03 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle |"></font><font id=" hard.engine.car.door-open hard.door.driver.swing-shut hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, road</font>
+<i>the exhaust idles</i> · <i>the engine idles</i>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font> · driver door shuts</font>
+
+52
+00:00:34,600 --> 00:00:34,610
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02"></font><font id="+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 | hard.engine.car.door-open hard.door.driver.swing-shut"></font><font id=" hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, road · turns <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font> · driver door shuts</font>
+
+53
+00:00:34,610 --> 00:00:34,633
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.walk1 foley.feet.B.02"></font><font id="+foley.feet.B.03 foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.swing-shut"></font><font id=" hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, road · turns <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font> · driver door shuts</font>
+
+54
+00:00:34,633 --> 00:00:34,733
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03"></font><font id=" foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.swing-shut"></font><font id=" hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: walks, road · turns <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door swings shut <font color="#7ae07a">(new)</font> · driver door shuts</font>
+
+55
+00:00:34,733 --> 00:00:35,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03"></font><font id=" foley.moves.B.turn1 | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: walks, road · turns <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door shuts</font>
+
+56
+00:00:35,000 --> 00:00:35,130
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03"></font><font id=" foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 |"></font><font id=" hard.engine.car.door-open hard.door.driver.latch"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: walks, road · turns <font color="#7ae07a">(new)</font> · turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door shuts</font>
+
+57
+00:00:35,130 --> 00:00:35,179
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03"></font><font id=" foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 |"></font><font id=" hard.engine.car.door-open hard.door.driver.latch foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: walks, road · turns <font color="#7ae07a">(new)</font> · turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door shuts</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+58
+00:00:35,179 --> 00:00:35,333
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.feet.B.02+foley.feet.B.03"></font><font id=" foley.moves.B.turn1 foley.moves.B.turn2 hard.door.passenger.swing-shut |"></font><font id=" hard.engine.car.exhaust-idle hard.engine.car.intake-idle foley.moves.A.walk2 foley.scuff.B.1 |"></font><font id=" hard.engine.car.door-open hard.door.driver.latch foley.feet.A.04+foley.feet.A.05"></font><font id="+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11"></font><font id="+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: walks, road · turns <font color="#7ae07a">(new)</font> · turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: driver door shuts · walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+59
+00:00:35,333 --> 00:00:35,433
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn1 foley.moves.B.turn2"></font><font id=" hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05"></font><font id="+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11"></font><font id="+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: turns <font color="#7ae07a">(new)</font> · turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+60
+00:00:35,433 --> 00:00:35,443
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2"></font><font id=" hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 foley.scuff.B.1 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05"></font><font id="+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11"></font><font id="+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+61
+00:00:35,443 --> 00:00:35,600
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2"></font><font id=" hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 | hard.engine.car.door-open foley.feet.A.04+foley.feet.A.05+foley.feet.A.06"></font><font id="+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12"></font><font id="+foley.feet.A.13 foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<i>the idle, louder through an open door</i> <font color="#ff8fd0">(offered)</font>   <font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+62
+00:00:35,600 --> 00:00:35,700
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2"></font><font id=" hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06"></font><font id="+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12"></font><font id="+foley.feet.A.13 foley.scuff.B.2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts</font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+63
+00:00:35,700 --> 00:00:35,833
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.B.turn2"></font><font id=" hard.door.passenger.swing-shut | hard.engine.car.exhaust-idle hard.engine.car.intake-idle"></font><font id=" foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06"></font><font id="+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12"></font><font id="+foley.feet.A.13 foley.scuff.B.2 foley.moves.B.walk2"></font>street: city, wind · the lamp hums   <font color="#6fd3ff">B: turns <font color="#7ae07a">(new)</font> · passenger door swings shut <font color="#7ae07a">(new)</font></font>
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts</font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font> · <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+64
+00:00:35,833 --> 00:00:35,963
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04"></font><font id="+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10"></font><font id="+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.scuff.B.2 foley.moves.B.walk2"></font>street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts</font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font> · <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+65
+00:00:35,963 --> 00:00:36,200
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | hard.engine.car.exhaust-idle"></font><font id=" hard.engine.car.intake-idle foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04"></font><font id="+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10"></font><font id="+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2"></font>street: city, wind · the lamp hums
+<i>the exhaust idles</i> · <i>the engine idles</i>   <font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts</font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+66
+00:00:36,200 --> 00:00:36,228
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown |"></font><font id=" foley.moves.A.walk2 hard.door.passenger.latch | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06"></font><font id="+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12"></font><font id="+foley.feet.A.13 foley.moves.B.walk2"></font>street: city, wind · the lamp hums · the engine runs down
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts</font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+67
+00:00:36,228 --> 00:00:36,433
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown |"></font><font id=" foley.moves.A.walk2 hard.door.passenger.latch foley.feet.B.04+foley.feet.B.05+foley.feet.B.06"></font><font id="+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07"></font><font id="+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13"></font><font id=" foley.moves.B.walk2"></font>street: city, wind · the lamp hums · the engine runs down
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: passenger door shuts · <i>walks, sidewalk</i></font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+68
+00:00:36,433 --> 00:00:37,033
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.stop.car.rundown |"></font><font id=" foley.moves.A.walk2 foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 |"></font><font id=" foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09"></font><font id="+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2"></font>street: city, wind · the lamp hums · the engine runs down
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: <i>walks, sidewalk</i></font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+69
+00:00:37,033 --> 00:00:37,700
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 foley.feet.B.04"></font><font id="+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04+foley.feet.A.05"></font><font id="+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10+foley.feet.A.11"></font><font id="+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: <i>walks, sidewalk</i></font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+70
+00:00:37,700 --> 00:00:37,800
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2"></font><font id=" foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04"></font><font id="+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10"></font><font id="+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13 foley.moves.B.walk2"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: <i>walks, sidewalk</i></font>
+<font color="#ffb454">A: walks, road</font>   <font color="#6fd3ff">B: <i>jacket swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+71
+00:00:37,800 --> 00:00:37,965
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2"></font><font id=" foley.feet.B.04+foley.feet.B.05+foley.feet.B.06+foley.feet.B.07 | foley.feet.A.04"></font><font id="+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10"></font><font id="+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: <i>walks, sidewalk</i></font>
+<font color="#ffb454">A: walks, road</font>
+
+72
+00:00:37,965 --> 00:00:38,533
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.01 | foley.moves.A.walk2 |"></font><font id=" foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09"></font><font id="+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<font color="#ffb454">A: walks, road</font>
+
+73
+00:00:38,533 --> 00:00:38,930
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 | foley.feet.A.04"></font><font id="+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09+foley.feet.A.10"></font><font id="+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<font color="#ffb454">A: walks, road</font>
+
+74
+00:00:38,930 --> 00:00:39,591
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2 |"></font><font id=" foley.feet.A.04+foley.feet.A.05+foley.feet.A.06+foley.feet.A.07+foley.feet.A.08+foley.feet.A.09"></font><font id="+foley.feet.A.10+foley.feet.A.11+foley.feet.A.12+foley.feet.A.13"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+<font color="#ffb454">A: walks, road</font>
+
+75
+00:00:39,591 --> 00:00:39,733
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font></font>
+
+76
+00:00:39,733 --> 00:00:39,764
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.02 | foley.moves.A.walk2"></font><font id=" foley.feet.A.14+foley.feet.A.15+foley.feet.A.16"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+77
+00:00:39,764 --> 00:00:40,600
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.walk2 foley.feet.A.14"></font><font id="+foley.feet.A.15+foley.feet.A.16"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: <i>coat swishes with the walk</i> <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+78
+00:00:40,600 --> 00:00:40,660
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.feet.A.14+foley.feet.A.15"></font><font id="+foley.feet.A.16 foley.moves.A.turn2"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: walks, sidewalk · turns <font color="#7ae07a">(new)</font></font>
+
+79
+00:00:40,660 --> 00:00:40,700
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.feet.A.14+foley.feet.A.15"></font><font id="+foley.feet.A.16 foley.moves.A.turn2 foley.scuff.A.2"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: walks, sidewalk · turns <font color="#7ae07a">(new)</font> · boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+80
+00:00:40,700 --> 00:00:40,779
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.feet.A.14"></font><font id="+foley.feet.A.15+foley.feet.A.16 foley.moves.A.turn2 foley.scuff.A.2"></font>street: city, wind · the lamp hums · hot metal ticks
+<font color="#ffb454">A: walks, sidewalk · turns <font color="#7ae07a">(new)</font> · boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+81
+00:00:40,779 --> 00:00:41,528
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.moves.A.turn2"></font><font id=" foley.scuff.A.2"></font>street: city, wind · the lamp hums · hot metal ticks
+<font color="#ffb454">A: turns <font color="#7ae07a">(new)</font> · boots scuff the snow <font color="#7ae07a">(new)</font></font>
+
+82
+00:00:41,528 --> 00:00:41,534
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.03 | foley.moves.A.turn2"></font>street: city, wind · the lamp hums · hot metal ticks
+<font color="#ffb454">A: turns <font color="#7ae07a">(new)</font></font>
+
+83
+00:00:41,534 --> 00:00:41,600
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed | foley.moves.A.turn2"></font>street: city, wind · the lamp hums
+<font color="#ffb454">A: turns <font color="#7ae07a">(new)</font></font>
+
+84
+00:00:41,600 --> 00:00:42,968
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed"></font>street: city, wind · the lamp hums
+
+85
+00:00:42,968 --> 00:00:43,801
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.04"></font>street: city, wind · the lamp hums · hot metal ticks
+
+86
+00:00:43,801 --> 00:00:44,500
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed"></font>street: city, wind · the lamp hums
+
+87
+00:00:44,500 --> 00:00:45,530
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 | foley.moves.B.walk3"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+
+88
+00:00:45,530 --> 00:00:45,614
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 | foley.moves.B.walk3"></font><font id=" foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13"></font><font id="+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19"></font><font id="+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+89
+00:00:45,614 --> 00:00:46,672
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17"></font><font id="+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23"></font><font id="+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3"></font><font id=" foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13"></font><font id="+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19"></font><font id="+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+90
+00:00:46,672 --> 00:00:47,505
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.05 foley.moves.A.walk3"></font><font id=" foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22"></font><font id="+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 |"></font><font id=" foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11"></font><font id="+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17"></font><font id="+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+91
+00:00:47,505 --> 00:00:49,665
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17"></font><font id="+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23"></font><font id="+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3"></font><font id=" foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13"></font><font id="+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19"></font><font id="+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+92
+00:00:49,665 --> 00:00:50,498
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.06 foley.moves.A.walk3"></font><font id=" foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22"></font><font id="+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 |"></font><font id=" foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11"></font><font id="+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17"></font><font id="+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+93
+00:00:50,498 --> 00:00:52,924
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17"></font><font id="+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23"></font><font id="+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3"></font><font id=" foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13"></font><font id="+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19"></font><font id="+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+94
+00:00:52,924 --> 00:00:53,757
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed hard.tick.car.07 foley.moves.A.walk3"></font><font id=" foley.feet.A.17+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22"></font><font id="+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 |"></font><font id=" foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11"></font><font id="+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17"></font><font id="+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums · <i>hot metal ticks</i>   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+95
+00:00:53,757 --> 00:00:54,000
+{\an7}<font id="bg.city.street.bed+bg.wind.street.bed bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17"></font><font id="+foley.feet.A.18+foley.feet.A.19+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23"></font><font id="+foley.feet.A.24+foley.feet.A.25+foley.feet.A.26+foley.feet.A.27 | foley.moves.B.walk3"></font><font id=" foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13"></font><font id="+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19"></font><font id="+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>street: city, wind · the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+<font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+96
+00:00:54,000 --> 00:00:55,402
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.17+foley.feet.A.18+foley.feet.A.19"></font><font id="+foley.feet.A.20+foley.feet.A.21+foley.feet.A.22+foley.feet.A.23+foley.feet.A.24+foley.feet.A.25"></font><font id="+foley.feet.A.26+foley.feet.A.27 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11"></font><font id="+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17"></font><font id="+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+97
+00:00:55,402 --> 00:00:55,871
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10+foley.feet.B.11"></font><font id="+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16+foley.feet.B.17"></font><font id="+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+98
+00:00:55,871 --> 00:00:56,307
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30"></font><font id="+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10"></font><font id="+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16"></font><font id="+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+99
+00:00:56,307 --> 00:00:57,140
+{\an7}<font id="bg.hum.lamp.bed hard.tick.car.08 foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29"></font><font id="+foley.feet.A.30+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed"></font><font id="+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09"></font><font id="+foley.feet.B.10+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15"></font><font id="+foley.feet.B.16+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21"></font><font id="+foley.feet.B.22"></font>the lamp hums · hot metal ticks   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+100
+00:00:57,140 --> 00:00:57,228
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30"></font><font id="+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.08+foley.feet.B.09+foley.feet.B.10"></font><font id="+foley.feet.B.11+foley.feet.B.12+foley.feet.B.13+foley.feet.B.14+foley.feet.B.15+foley.feet.B.16"></font><font id="+foley.feet.B.17+foley.feet.B.18+foley.feet.B.19+foley.feet.B.20+foley.feet.B.21+foley.feet.B.22"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, sidewalk</font>
+
+101
+00:00:57,228 --> 00:00:57,430
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30"></font><font id="+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.B.walk3"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+
+102
+00:00:57,430 --> 00:00:59,681
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30"></font><font id="+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.23+foley.feet.B.24+foley.feet.B.25"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+
+103
+00:00:59,681 --> 00:00:59,927
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.28+foley.feet.A.29+foley.feet.A.30"></font><font id="+foley.feet.A.31+foley.feet.A.32+foley.feet.A.33 | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.B.walk3"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · walks, deck</font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+
+104
+00:00:59,927 --> 00:01:00,404
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.B.walk3"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font></font>
+
+105
+00:01:00,404 --> 00:01:00,725
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+
+106
+00:01:00,725 --> 00:01:01,101
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 | bg.city.bridge.bed"></font><font id="+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27"></font><font id="+foley.feet.B.28"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+
+107
+00:01:01,101 --> 00:01:01,935
+{\an7}<font id="bg.hum.lamp.bed hard.tick.car.09 foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 |"></font><font id=" bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26"></font><font id="+foley.feet.B.27+foley.feet.B.28"></font>the lamp hums · <i>hot metal ticks</i>   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+
+108
+00:01:01,935 --> 00:01:01,991
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 foley.feet.A.34+foley.feet.A.35 | bg.city.bridge.bed"></font><font id="+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27"></font><font id="+foley.feet.B.28"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+
+109
+00:01:01,991 --> 00:01:02,000
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.walk3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.B.walk3 foley.feet.B.26+foley.feet.B.27+foley.feet.B.28"></font>the lamp hums   <font color="#ffb454">A: coat swishes with the walk <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#6fd3ff">B: jacket swishes with the walk <font color="#7ae07a">(new)</font> · <i>walks, deck</i></font>
+
+110
+00:01:02,000 --> 00:01:02,024
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean"></font><font id=" foley.feet.B.26+foley.feet.B.27+foley.feet.B.28 foley.moves.B.lean"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: leans on the parapet</font>   <font color="#6fd3ff">B: <i>walks, deck</i> · leans on the parapet</font>
+
+111
+00:01:02,024 --> 00:01:03,448
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.lean"></font><font id=" foley.moves.B.lean"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: leans on the parapet</font>   <font color="#6fd3ff">B: leans on the parapet</font>
+
+112
+00:01:03,448 --> 00:01:03,451
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.A.lean foley.moves.B.lean"></font>the lamp hums   <font color="#ffb454">A: forearms come to rest on the stone</font>
+bridge: city, water, wind   <font color="#ffb454">A: leans on the parapet</font>   <font color="#6fd3ff">B: leans on the parapet</font>
+
+113
+00:01:03,451 --> 00:01:03,500
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.rest foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed foley.moves.A.lean foley.moves.B.lean"></font>the lamp hums   <font color="#ffb454">A: forearms come to rest on the stone</font>   <font color="#6fd3ff">B: forearms come to rest on the stone</font>
+bridge: city, water, wind   <font color="#ffb454">A: leans on the parapet</font>   <font color="#6fd3ff">B: leans on the parapet</font>
+
+114
+00:01:03,500 --> 00:01:04,282
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.rest foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: forearms come to rest on the stone</font>   <font color="#6fd3ff">B: forearms come to rest on the stone</font>
+bridge: city, water, wind
+
+115
+00:01:04,282 --> 00:01:04,284
+{\an7}<font id="bg.hum.lamp.bed foley.moves.B.rest | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums   <font color="#6fd3ff">B: forearms come to rest on the stone</font>
+bridge: city, water, wind
+
+116
+00:01:04,284 --> 00:01:05,655
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+117
+00:01:05,655 --> 00:01:06,488
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed hard.tick.car.10"></font>the lamp hums
+bridge: city, water, wind · <i>hot metal ticks</i>
+
+118
+00:01:06,488 --> 00:01:08,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+119
+00:01:08,000 --> 00:01:16,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" bg.ambience.wind.ease"></font>the lamp hums
+bridge: city, water, wind · the wind eases
+
+120
+00:01:16,000 --> 00:01:17,500
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+121
+00:01:17,500 --> 00:01:17,611
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: turns into the lee</font>
+
+122
+00:01:17,611 --> 00:01:18,069
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn3"></font><font id=" foley.scuff.A.3"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: turns into the lee · <i>boots scuff the snow</i> <font color="#7ae07a">(new)</font></font>
+
+123
+00:01:18,069 --> 00:01:18,444
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.A.turn3 foley.scuff.A.3"></font>the lamp hums   <font color="#ffb454">A: cups both hands round the lighter <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#ffb454">A: turns into the lee · <i>boots scuff the snow</i> <font color="#7ae07a">(new)</font></font>
+
+124
+00:01:18,444 --> 00:01:18,500
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.A.turn3"></font>the lamp hums   <font color="#ffb454">A: cups both hands round the lighter <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#ffb454">A: turns into the lee</font>
+
+125
+00:01:18,500 --> 00:01:18,530
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.cup | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: cups both hands round the lighter <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind
+
+126
+00:01:18,530 --> 00:01:18,600
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.cup foley.lighter.A.strike | bg.city.bridge.bed"></font><font id="+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: cups both hands round the lighter <font color="#7ae07a">(new)</font> · the lighter's wheel strikes</font>
+bridge: city, water, wind
+
+127
+00:01:18,600 --> 00:01:18,903
+{\an7}<font id="bg.hum.lamp.bed foley.moves.A.cup foley.lighter.A.strike foley.lighter.A.flame |"></font><font id=" bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: cups both hands round the lighter <font color="#7ae07a">(new)</font> · the lighter's wheel strikes · the flame flutters</font>
+bridge: city, water, wind
+
+128
+00:01:18,903 --> 00:01:19,363
+{\an7}<font id="bg.hum.lamp.bed foley.lighter.A.strike foley.lighter.A.flame | bg.city.bridge.bed"></font><font id="+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: the lighter's wheel strikes · the flame flutters</font>
+bridge: city, water, wind
+
+129
+00:01:19,363 --> 00:01:20,100
+{\an7}<font id="bg.hum.lamp.bed foley.lighter.A.flame | bg.city.bridge.bed+bg.water.bridge.bed"></font><font id="+bg.wind.bridge.bed"></font>the lamp hums   <font color="#ffb454">A: the flame flutters</font>
+bridge: city, water, wind
+
+130
+00:01:20,100 --> 00:01:20,200
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.lighter.A.release"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: the lighter clicks shut</font>
+
+131
+00:01:20,200 --> 00:01:20,933
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.lighter.A.release foley.drag.A.1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: the lighter clicks shut · draws on the cigarette</font>
+
+132
+00:01:20,933 --> 00:01:21,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette</font>
+
+133
+00:01:21,000 --> 00:01:21,033
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.1"></font><font id=" foley.breath.A.exhale1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette · exhales <font color="#ff8fd0">(offered)</font></font>
+
+134
+00:01:21,033 --> 00:01:22,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font></font>
+
+135
+00:01:22,000 --> 00:01:22,538
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale1 foley.moves.A.turn4"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font> · turns out of the lee</font>
+
+136
+00:01:22,538 --> 00:01:23,462
+{\an7}<font id="bg.hum.lamp.bed foley.scuff.A.4 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale1 foley.moves.A.turn4"></font>the lamp hums   <font color="#ffb454">A: <i>boots scuff the snow</i> <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font> · turns out of the lee</font>
+
+137
+00:01:23,462 --> 00:01:23,800
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale1 foley.moves.A.turn4"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font> · turns out of the lee</font>
+
+138
+00:01:23,800 --> 00:01:24,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.turn4"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: turns out of the lee</font>
+
+139
+00:01:24,000 --> 00:01:29,200
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+140
+00:01:29,200 --> 00:01:30,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.2"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette</font>
+
+141
+00:01:30,000 --> 00:01:30,033
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.2"></font><font id=" foley.breath.A.exhale2"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette · exhales</font>
+
+142
+00:01:30,033 --> 00:01:32,800
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale2"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: exhales</font>
+
+143
+00:01:32,800 --> 00:01:34,200
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+144
+00:01:34,200 --> 00:01:34,454
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.shift1"></font><font id=" foley.moves.B.shift1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: shifts closer <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: shifts closer <font color="#7ae07a">(new)</font></font>
+
+145
+00:01:34,454 --> 00:01:35,547
+{\an7}<font id="bg.hum.lamp.bed foley.scuff.B.3 | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.moves.A.shift1 foley.scuff.A.5 foley.moves.B.shift1"></font>the lamp hums   <font color="#6fd3ff">B: boots scuff the snow <font color="#7ae07a">(new)</font></font>
+bridge: city, water, wind   <font color="#ffb454">A: shifts closer <font color="#7ae07a">(new)</font> · boots scuff the snow <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: shifts closer <font color="#7ae07a">(new)</font></font>
+
+146
+00:01:35,547 --> 00:01:35,800
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.moves.A.shift1"></font><font id=" foley.moves.B.shift1"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: shifts closer <font color="#7ae07a">(new)</font></font>   <font color="#6fd3ff">B: shifts closer <font color="#7ae07a">(new)</font></font>
+
+147
+00:01:35,800 --> 00:01:37,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind
+
+148
+00:01:37,000 --> 00:01:37,800
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.3"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette</font>
+
+149
+00:01:37,800 --> 00:01:37,833
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed foley.drag.A.3"></font><font id=" foley.breath.A.exhale3"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: draws on the cigarette · exhales <font color="#ff8fd0">(offered)</font></font>
+
+150
+00:01:37,833 --> 00:01:40,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" foley.breath.A.exhale3"></font>the lamp hums
+bridge: city, water, wind   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font></font>
+
+151
+00:01:40,000 --> 00:01:40,600
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" bg.ambience.night.open foley.breath.A.exhale3"></font>the lamp hums
+bridge: city, water, wind · the night opens   <font color="#ffb454">A: exhales <font color="#ff8fd0">(offered)</font></font>
+
+152
+00:01:40,600 --> 00:01:48,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font><font id=" bg.ambience.night.open"></font>the lamp hums
+bridge: city, water, wind · the night opens
+
+153
+00:01:48,000 --> 00:01:52,000
+{\an7}<font id="bg.hum.lamp.bed | bg.city.bridge.bed+bg.water.bridge.bed+bg.wind.bridge.bed"></font>the lamp hums
+bridge: city, water, wind

@@ -1,10 +1,12 @@
 # Snow, Lamp, Bridge
 
-A silent 112-second night scene in a PlayStation 1 style, built in three.js: a street lamp in falling snow, a car
+A 112-second night scene in a PlayStation 1 style, built in three.js: a street lamp in falling snow, a car
 that arrives and parks, two people who walk onto a bridge, lean on the railing, light a cigarette and watch a
 crescent moon rise over the river. It ends on the two of them under the lamp.
 
-**Watch it: https://youtu.be/F02fKQvjlJQ**
+**Watch it: https://youtu.be/F02fKQvjlJQ** (the first cut, silent). Stage 8 added a soundtrack made the same way as the
+picture: synthesized in code from the same timing data, seeded, placed in stereo by each shot's camera. Its design and
+cue sheet are in `SOUND.md`.
 
 Made with Claude Code between 2026-10-21 and 2026-10-23, first in a private workbench repo (the paths in PLAN.md and
 the early review rounds still say `_workbench/snowy-bridge/`), then moved here as the first film of agent-cutscene-studio.
@@ -17,8 +19,9 @@ the HTML player show the same frames, and any frame can be rendered on its own.
 
 | File | What it is |
 |---|---|
-| `out/snowy-bridge.mp4` | 1920x1080, 24 fps, 112 s, H.264 `yuv420p`, BT.709 tags, faststart, no audio |
-| `out/snowy-bridge-4k.mp4` | the same frames at 3840x2160 (upload this one to YouTube: 4K uploads get a better encode) |
+| `out/snowy-bridge.mp4` | 1920x1080, 24 fps, 112 s, H.264 `yuv420p`, BT.709 tags, faststart; AAC-LC 48 kHz stereo 320 kb/s at -16 LUFS |
+| `out/snowy-bridge-4k.mp4` | the same frames and sound at 3840x2160 (upload this one to YouTube: 4K uploads get a better encode) |
+| `out/sound.wav`, `out/sound.png` | the soundtrack, 48 kHz 16-bit stereo, with its report (`.json`) and a spectrogram |
 | `out/*.mp4.json`, `out/*.mp4.verify.json` | the capture's record (ffmpeg command, probe) and the verify report |
 | `dist/index.html` | the scene as one self-contained HTML file with playback controls |
 | `out/stills/shot-NN.png` | one 1920x1080 still per shot, at the time set in `CONFIG.finals.stills` |
@@ -36,25 +39,41 @@ it; set `CHROMIUM_PATH` if it does not).
 npm ci
 npm test                 # unit and browser checks
 npm run check            # forbidden clocks and dashes, build, determinism, cameras
-npm run export           # build once, capture out/snowy-bridge.mp4
-npm run verify           # probe, frame match against fresh renders, seeks, timing
+npm run export           # build once, render out/sound.wav, capture out/snowy-bridge.mp4 with the sound
+npm run verify           # probe, frame match against fresh renders, seeks, timing, sound sync and loudness
 npm run finals           # out/stills and out/thumbnails from the same build
-node scripts/capture.js --profile 4k   # out/snowy-bridge-4k.mp4 from the same build
+node scripts/capture.js --profile 4k --audio out/sound.wav   # out/snowy-bridge-4k.mp4 from the same build
 node scripts/verify.js --profile 4k
 ```
+
+**While the sound is in its blockout (Sound 2 and 3), do not re-export.** `config.audio.stage` defaults to
+`'blockout'`: `npm run export`, `npm run sound` and the player all render the placeholder beeps at -23 LUFS, and an
+export would overwrite `out/sound.wav` and `out/snowy-bridge.mp4`, the S8.3 listening copy (the first mix, with the
+score). To render that mix again: `node scripts/sound.js --stage design --parked ''` (sha256 `f80b1542...`). The
+blockout's own review set is `node scripts/sound-review.js --round 05 --measure --stills --sheet` and the preview in
+`review/round-05/` (its notes say how it was captured).
 
 `npm run export:4k` also works but rebuilds first; capture both from one build when they must match exactly.
 `npm run preview` captures a quick 480x270 MP4 with the shot overlay burned in. `npm run storyboard` redraws the
 contact sheet in `storyboard/`.
 
+`npm run sound` renders the soundtrack alone (about 11 s): `--only car,foley` renders stems, `--raw` skips the
+normalization, `--spectrogram` writes `out/sound.png`. A new mix for finished exports needs no new frames:
+`npm run sound`, then `node scripts/mux.js --file out/snowy-bridge.mp4` (and the 4K), then verify. The video stream
+is copied bit for bit (checked by its MD5).
+
 The verify bar: every matched frame within a mean error of 2.5 levels and 36 dB PSNR of a fresh render, and closer to
-its own render than to either neighbour's. The 4:2:0 YUV round trip of a dithered image sets a floor near 38 dB at any
+its own render than to either neighbour's. The sound: the WAV is what the code renders today, byte for byte, and the
+MP4's audio matches it within a millisecond in three windows, within 0.3 LU, with a true peak at or under -1 dBTP. The 4:2:0 YUV round trip of a dithered image sets a floor near 38 dB at any
 crf, so 36 dB leaves margin; the identity test is what proves the right frame is in the right place (BUILD_LOG.md).
 
 ## Playback
 
 Open `dist/index.html` (or `npm run dev`). Space or K plays and pauses; Left and Right step one frame (Shift: one
-second); [ and ] jump to the previous and next shot; Home goes to the start; D toggles the overlay (shot, time, lens).
+second); [ and ] jump to the previous and next shot; Home goes to the start; D toggles the overlay (shot, time, lens);
+M (or the Sound button) turns the sound on. The page renders the soundtrack in a worker as it opens (the button shows
+the progress, about 10 to 30 s), and browsers start audio only from a click or a key. While the sound plays, the
+picture follows the audio clock.
 The strip at the bottom has a scrub bar and a shot list. `?t=79` starts at 79 s, `?overlay=1` turns the overlay on,
 `?capture=1` is the capture mode the scripts use (no clock, no controls).
 
@@ -79,6 +98,7 @@ The strip at the bottom has a scrub bar and a shot list. `?t=79` starts at 79 s,
 | `tracks` | colour and opacity of the tyre tracks |
 | `finals` | the thumbnail lift, the time of each shot's still, and the three thumbnail candidates (time, scale, crop centre) |
 | `snow` | the falling snow: flake count, the box it wraps in around the camera, fall speeds, flake sizes in pixels |
+| `audio` | the soundtrack: sample rate, loudness target and true-peak ceiling, master highpass, fades, bus levels, reverb, and each layer's gains (`ambience`, `car`, `foley`, `score`) |
 
 The set's layout lives in `src/set.js` (meters, north is -Z, east is +X); people, car and moon timing in
 `src/world.js`; the cameras in `src/shots.js`.
@@ -111,6 +131,9 @@ The set's layout lives in `src/set.js` (meters, north is -Z, east is +X); people
   `src/actors/car.js` and `src/actors/people.js` the car and the two rigs; `src/fx/` the lights, snow, glows, smoke,
   footprints and tyre tracks. Footprints and tracks are found by sampling the rigs and the car path once at build, so
   they follow any change to the animation.
-- `scripts/capture.js` streams frames into ffmpeg; `scripts/verify.js`, `scripts/finals.js`, `scripts/stills.js` and
+- `src/audio/` the soundtrack: DSP primitives, a spatializer that hears each sound from the shot's camera, the mixer,
+  loudness and the true-peak limiter, and four layers (ambience, car, foley, score). `src/audio/worker.js` renders it
+  in the player; `scripts/sound.js` writes it for the export. `SOUND.md` has the cue sheet.
+- `scripts/capture.js` streams frames into ffmpeg (and muxes the soundtrack); `scripts/verify.js`, `scripts/finals.js`, `scripts/stills.js` and
   the `check-*` scripts work from the built file. `BUILD_LOG.md` records every step, what was measured and what was
   wrong along the way; `PLAN.md` and `ROADMAP.md` hold the plan.

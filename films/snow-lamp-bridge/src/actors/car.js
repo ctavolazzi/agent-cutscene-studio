@@ -9,7 +9,7 @@ const D2R = Math.PI / 180;
 const clamp01 = (u) => Math.min(1, Math.max(0, u));
 const smooth = (u) => { u = clamp01(u); return u * u * (3 - 2 * u); };
 
-const SHAPE = {
+export const SHAPE = {
   body: { y0: 0.25, y1: 0.9 },
   cabin: { length: 2.4, width: 1.6, y0: 0.9, y1: CAR.height, back: 0.3 },
   wheel: { radius: 0.33, width: 0.22, forward: 1.45, side: 0.82, segments: 12 },
@@ -21,11 +21,11 @@ const SHAPE = {
 };
 
 // Door times (eased in and out) come from carTimes.doors in world.js, beside the people's keys that step clear of them.
-const DOOR_SIDE = { driver: -1, passenger: 1 }; // the driver sits on the left, which is -X
-const STEER_MAX_DEG = 30; // right turn
-const SETTLE = { dur: 0.7, pitchDeg: 1.5 };
+export const DOOR_SIDE = { driver: -1, passenger: 1 }; // the driver sits on the left, which is -X
+export const STEER_MAX_DEG = 30; // right turn
+export const SETTLE = { dur: 0.7, pitchDeg: 1.5 };
 // Idle shake in meters. Non-integer frequencies well clear of multiples of 24 Hz, so 24 fps sampling never freezes it.
-const IDLE = [
+export const IDLE = [
   { amp: 0.0016, hz: 13.7, phase: 0.0 },
   { amp: 0.0011, hz: 19.3, phase: 1.1 },
   { amp: 0.0007, hz: 31.1, phase: 2.3 },
@@ -79,12 +79,12 @@ function blobGeometry(THREE, s) {
 }
 
 // 0 closed, 1 fully open
-function doorOpen(d, t) {
+export function doorOpen(d, t) {
   return smooth((t - d.open0) / (d.open1 - d.open0)) * (1 - smooth((t - d.close0) / (d.close1 - d.close0)));
 }
 
 // Degrees to the right. Eases in and out inside the turn and is exactly zero outside it.
-function steerDeg(t) {
+export function steerDeg(t) {
   const { turn0, turn1 } = carTimes;
   if (t <= turn0 || t >= turn1) return 0;
   const u = (t - turn0) / (turn1 - turn0);
@@ -92,7 +92,7 @@ function steerDeg(t) {
 }
 
 // Radians about local X; negative is nose down.
-function settlePitch(t) {
+export function settlePitch(t) {
   const u = (t - carTimes.stop) / SETTLE.dur;
   if (u <= 0 || u >= 1) return 0;
   const s = Math.sin(Math.PI * u);
@@ -100,7 +100,7 @@ function settlePitch(t) {
 }
 
 // Engine runs from the start until the shut-off beat; the shake fades out with the headlights.
-function idleLift(t) {
+export function idleLift(t) {
   if (t < carTimes.start) return 0;
   const env = 1 - smooth((t - carTimes.lightsOff0) / (carTimes.lightsOff1 - carTimes.lightsOff0));
   if (env <= 0) return 0;

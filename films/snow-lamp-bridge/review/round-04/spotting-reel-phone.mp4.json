@@ -1,0 +1,92 @@
+{
+ "file": "out/round-04-reel/spotting-reel-phone.mp4",
+ "source": "out/snowy-bridge.mp4",
+ "burned": "out/round-04-reel/captions/review.ass",
+ "ffmpeg": [
+  "ffmpeg",
+  "-i",
+  "out/snowy-bridge.mp4",
+  "-map",
+  "0:v:0",
+  "-vf",
+  "scale=480:270:flags=neighbor,ass=out/round-04-reel/captions/review.ass",
+  "-c:v",
+  "libx264",
+  "-preset",
+  "veryfast",
+  "-crf",
+  "20",
+  "-pix_fmt",
+  "yuv420p",
+  "-an",
+  "-movflags",
+  "+faststart",
+  "-colorspace",
+  "bt709",
+  "-color_primaries",
+  "bt709",
+  "-color_trc",
+  "bt709",
+  "-color_range",
+  "tv",
+  "out/round-04-reel/spotting-reel-phone.mp4"
+ ],
+ "bottomBand": {
+  "rows": [
+   240,
+   270
+  ],
+  "scaled": "MD5=d9fda7470ea4873495895bb95b01f4d8",
+  "burned": "MD5=d9fda7470ea4873495895bb95b01f4d8",
+  "equal": true
+ },
+ "ffprobe": {
+  "file": "out/round-04-reel/spotting-reel-phone.mp4",
+  "format": "mov,mp4,m4a,3gp,3g2,mj2",
+  "duration": 112,
+  "width": 480,
+  "height": 270,
+  "r_frame_rate": "24/1",
+  "avg_frame_rate": "24/1",
+  "frames": 2688,
+  "codec": "h264",
+  "profile": "High",
+  "pix_fmt": "yuv420p",
+  "color_space": "bt709",
+  "color_primaries": "bt709",
+  "color_transfer": "bt709",
+  "color_range": "tv",
+  "videoStreams": 1,
+  "audioStreams": 0,
+  "audioCodec": null,
+  "audioRate": null,
+  "audioChannels": null,
+  "audioDuration": null,
+  "bitRate": 640003,
+  "size": 8960052,
+  "moovFirst": true
+ },
+ "counts": {
+  "captions": 95,
+  "slices": 153,
+  "ticks": 63,
+  "cues": 149,
+  "offScreen": 22,
+  "new": 36,
+  "offered": 3,
+  "maxLines": 3,
+  "densest": {
+   "at": 35179,
+   "captions": 14
+  },
+  "condensed": [
+   {
+    "from": 28381,
+    "to": 40600,
+    "captions": 40,
+    "scale": 0.9
+   }
+  ],
+  "sdh": 9
+ }
+}

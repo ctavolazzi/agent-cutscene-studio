@@ -27,6 +27,22 @@ export const CONFIG = {
   // Falling snow (src/scene.js): flake count, the box it wraps in around the lamp (meters), fall speeds (m/s), pixels.
   snow: { count: 700, box: [14, 7, 14], fall: [0.5, 0.9], sizePx: 2 },
 
+  // The soundtrack (src/audio/, SOUND in the ROADMAP). Rendered in one pass at `sr`, then normalized to `targetLufs`
+  // integrated with its true peak (4x oversampled) under `ceilingDb`. Bus levels in dB before normalization. The fades
+  // match the picture's (seconds: world.js fadeIn is 2 s). The reverb is a Freeverb standing in for the PS1 SPU's.
+  // Each layer reads its own block below (src/audio/layers/<name>.js).
+  audio: {
+    sr: 48000,
+    targetLufs: -16,
+    ceilingDb: -2.0,
+    masterHighpassHz: 35,
+    fadeIn: 2,
+    fadeOut: 1.5,
+    buses: { amb: 0, fx: 0, music: -3 },
+    reverb: { room: 0.8, damp: 0.5, width: 1, predelayMs: 25, returnDb: -4 },
+    ambience: { windGain: 0.5, humGain: 0.03 },
+  },
+
   // Final deliverables (scripts/finals.js). lift: a curves spec applied to the thumbnails only. stills: shot number to
   // the time of its best frame (a shot not listed uses its middle). thumbs: 1280x720 candidates, the frame at t
   // upscaled `scale` times (3 or 4, nearest) and cropped around (cx, cy), fractions of the frame from the top left.

@@ -11,7 +11,10 @@ import { tmpdir } from 'node:os';
 import { delimiter, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { openScene, ROOT } from '../scripts/lib/browser.mjs';
-import { BT709_SCALE, BT709_TAGS, PHONE, encodeArgs, ffprobe, moovFirst, profileSize, rgbToPng, runFfmpeg, upscaleFactor, videoFilter } from '../scripts/lib/ffmpeg.mjs';
+import { AUDIO, BT709_SCALE, BT709_TAGS, PHONE, alignment, decodeAudio, encodeArgs, ffprobe, moovFirst, profileSize, rgbToPng, runFfmpeg, upscaleFactor, videoFilter } from '../scripts/lib/ffmpeg.mjs';
+import { encodeWav } from '../src/audio/wav.js';
+import { mulberry32 } from '../src/prng.js';
+import { T_TOTAL } from '../src/world.js';
 import { DEFAULT_OUT } from '../scripts/capture.js';
 import { contactSheetHtml, shotTimes, stillDisplay } from '../scripts/blockout-review.js';
 import { renderStills, stillName } from '../scripts/stills.js';
@@ -541,4 +544,246 @@ test('no em or en dashes in the capture files', () => {
   for (const f of ['scripts/lib/ffmpeg.mjs', 'scripts/stills.js', 'scripts/capture.js', 'scripts/blockout-review.js', 'tests/capture.test.mjs']) {
     assert.ok(!dash.test(readFileSync(resolve(ROOT, f), 'utf8')), f);
   }
+});
+
+test('ffmpeg.mjs: the soundtrack muxes as AAC 48 kHz stereo, trimmed to the frames; no audio input means -an', () => {
+  const has = (args, seq) => args.some((_, i) => seq.every((v, j) => args[i + j] === v));
+  const a = encodeArgs('full', { w: 480, h: 270 }, { output: 'x.mp4', audio: { file: 's.wav', from: 10, to: 12 } });
+  assert.ok(has(a, ['-i', 'pipe:0', '-ss', '10', '-to', '12', '-i', 's.wav']), a.join(' '));
+  assert.ok(has(a, ['-map', '0:v:0', '-map', '1:a:0', '-c:a', 'aac', '-b:a', AUDIO.bitrate, '-ar', '48000', '-ac', '2']), a.join(' '));
+  assert.ok(!a.includes('-an') && a.at(-1) === 'x.mp4');
+  assert.ok(encodeArgs('full', { w: 480, h: 270 }).includes('-an'), 'control: without a soundtrack the file stays silent');
+});
+
+test('capture.js --audio: the clip carries the soundtrack from its own start, to the millisecond', async () => {
+  // a test soundtrack the length of the film: quiet noise, with loud 2 ms clicks at 10.5 s and 11.25 s
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr), rng = mulberry32(5);
+  const l = new Float32Array(n).map(() => (rng() - 0.5) * 0.002), r = Float32Array.from(l);
+  const clicks = [10.5, 11.25];
+  for (const t of clicks) for (let i = 0; i < sr / 500; i++) { l[Math.round(t * sr) + i] = 0.9 * (i % 2 ? -1 : 1); r[Math.round(t * sr) + i] = 0.9 * (i % 2 ? -1 : 1); }
+  const wav = resolve(fresh('audio'), 'clicks.wav');
+  writeFileSync(wav, encodeWav(l, r, sr, mulberry32(1)));
+  const file = resolve(OUT, 'audio', 'preview-audio.mp4');
+  const res = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '12', '--out', file, '--audio', wav]);
+  assert.equal(res.code, 0, res.err + res.out);
+  const p = await ffprobe(file);
+  assert.deepEqual([p.audioStreams, p.audioCodec, p.audioRate, p.audioChannels, p.frames], [1, 'aac', 48000, 2, 48]);
+  assert.ok(Math.abs(p.audioDuration - 2) <= 1 / FPS, `audio ${p.audioDuration} s`);
+  const d = decodeAudio(file);
+  const first = (from) => { for (let i = Math.round(from * sr); i < d.left.length; i++) if (Math.abs(d.left[i]) > 0.3) return i / sr; return null; };
+  const got = [first(0), first(1)];
+  for (let k = 0; k < clicks.length; k++) assert.ok(Math.abs(got[k] - (clicks[k] - 10)) <= 0.001, `click ${k} at ${got[k]}, want ${clicks[k] - 10}`);
+  // the alignment helper agrees: the clip against the soundtrack from 10 s is lag 0, and a planted 5 ms shift is found
+  const ref = { left: l.subarray(10 * sr, 12 * sr), right: r.subarray(10 * sr, 12 * sr) };
+  assert.ok(Math.abs(alignment(ref, d, { i0: 0.2 * sr, i1: 1.8 * sr }).lag) <= 2);
+  const late = { left: new Float32Array(d.left.length), right: new Float32Array(d.left.length) };
+  late.left.set(d.left.subarray(0, d.left.length - 240), 240); late.right.set(d.right.subarray(0, d.right.length - 240), 240);
+  assert.ok(Math.abs(alignment(ref, late, { i0: 0.2 * sr, i1: 1.8 * sr }).lag - 240) <= 2, 'control');
+  // and a missing soundtrack is refused before any frame is drawn
+  const miss = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '11', '--out', resolve(OUT, 'audio', 'none.mp4'), '--audio', resolve(OUT, 'audio', 'nope.wav')]);
+  assert.notEqual(miss.code, 0);
+  assert.match(miss.err, /no soundtrack at/);
+});
+
+test('mux.js: a new soundtrack goes into an exported MP4 with the picture untouched, trimmed to its frames', async () => {
+  const { mux, videoHash } = await import('../scripts/mux.js');
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr);
+  const l = new Float32Array(n), r = new Float32Array(n);
+  for (let i = 0; i < sr / 500; i++) { l[Math.round(11.5 * sr) + i] = 0.9 * (i % 2 ? -1 : 1); r[Math.round(11.5 * sr) + i] = l[Math.round(11.5 * sr) + i]; }
+  const d = fresh('mux');
+  const wav = resolve(d, 'click.wav');
+  writeFileSync(wav, encodeWav(l, r, sr, mulberry32(2)));
+  const file = resolve(d, 'silent.mp4');
+  const c = node('scripts/capture.js', ['--profile', 'preview', '--from', '10', '--to', '12', '--out', file]);
+  assert.equal(c.code, 0, c.err + c.out);
+  const before = videoHash(file);
+  assert.equal((await ffprobe(file)).audioStreams, 0);
+  await mux({ file, audio: wav, log: () => {} });
+  const p = await ffprobe(file);
+  assert.deepEqual([p.audioStreams, p.audioCodec, p.frames], [1, 'aac', 48]);
+  assert.equal(videoHash(file), before, 'the video stream is the same bytes');
+  // the sidecar says the clip starts at 10 s, so the click at 11.5 s lands 1.5 s in
+  const a = decodeAudio(file);
+  let at = null;
+  for (let i = 0; i < a.left.length && at === null; i++) if (Math.abs(a.left[i]) > 0.3) at = i / sr;
+  assert.ok(Math.abs(at - 1.5) <= 0.001, `click at ${at}`);
+  assert.ok(JSON.parse(readFileSync(`${file}.json`, 'utf8')).mux.from === 10);
+  // a missing soundtrack is refused and the file is left as it was
+  await assert.rejects(mux({ file, audio: resolve(d, 'nope.wav'), log: () => {} }), /no soundtrack at/);
+  assert.equal(videoHash(file), before);
+});
+
+// ---------- captions (ROADMAP Sound 1.10 and 2.8): --captions and --burn-captions ----------
+const captionsLib = () => import('../scripts/lib/captions.js');
+// these two tests write to a folder of this process's own, so parallel runs of the suite never share files; it is
+// removed afterwards unless $CAPTURE_TEST_OUT asks to keep the outputs
+const CAP_OUT = process.env.CAPTURE_TEST_OUT ? resolve(process.env.CAPTURE_TEST_OUT, 'captions') : join(tmpdir(), `snowy-bridge-capture-captions-${process.pid}`);
+after(() => { if (!process.env.CAPTURE_TEST_OUT) rmSync(CAP_OUT, { recursive: true, force: true }); });
+const freshCap = (name) => { const d = resolve(CAP_OUT, name); rmSync(d, { recursive: true, force: true }); mkdirSync(d, { recursive: true }); return d; };
+// every frame of a video as RGB, top row first
+function frames(file) {
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 1 << 30 });
+  assert.equal(r.status, 0, `decode ${file}: ${r.stderr}`);
+  return r.stdout;
+}
+// the largest difference in each row of a w x h picture, over every frame
+function rowDiff(a, b, w, h) {
+  assert.equal(a.length, b.length, 'the same number of frames');
+  const out = new Array(h).fill(0);
+  for (let i = 0; i < a.length; i++) { const y = Math.floor(i / (w * 3)) % h, d = Math.abs(a[i] - b[i]); if (d > out[y]) out[y] = d; }
+  return out;
+}
+// An ffmpeg first on PATH that changes capture's encode (the one call with -c:s mov_text) and runs the real one: drop
+// removes an argument pair, suffix replaces an argument ending in a suffix with a path, append adds text to the file an
+// argument ending in a suffix names, before the encode reads it
+function plantedFfmpeg(dir) {
+  const real = spawnSync('sh', ['-c', 'command -v ffmpeg'], { encoding: 'utf8' }).stdout.trim();
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(resolve(dir, 'plant.cjs'), `const { spawnSync } = require('node:child_process');
+const { appendFileSync } = require('node:fs');
+const p = JSON.parse(process.env.PLANT || '{}');
+let a = process.argv.slice(2);
+if (a.includes('mov_text')) {
+  for (const [x, y] of p.drop ?? []) { const i = a.findIndex((v, k) => v === x && a[k + 1] === y); if (i >= 0) a.splice(i, 2); }
+  for (const [s, path] of p.suffix ?? []) a = a.map((v) => (v.endsWith(s) ? v.slice(0, -s.length) + path : v));
+  for (const [s, text] of p.append ?? []) for (const v of a.filter((x) => x.endsWith(s))) appendFileSync(v, text);
+}
+process.exit(spawnSync(process.env.PLANT_REAL, a, { stdio: 'inherit' }).status ?? 1);
+`);
+  writeFileSync(resolve(dir, 'ffmpeg'), `#!/bin/sh\nexec "${process.execPath}" "${resolve(dir, 'plant.cjs')}" "$@"\n`);
+  chmodSync(resolve(dir, 'ffmpeg'), 0o755);
+  return (plant) => ({ ...process.env, PATH: `${dir}${delimiter}${process.env.PATH}`, PLANT_REAL: real, PLANT: JSON.stringify(plant) });
+}
+
+test('capture.js --captions: the review track as one mov_text stream over exactly the captured frames, top left, sized not to wrap, with or without a soundtrack', async () => {
+  const { reviewTrack, toVtt, probeSubtitles, subtitleText, subtitleStyle, movTextEntries } = await captionsLib();
+  const d = freshCap('captions');
+  const vtt = resolve(d, 'review.vtt');
+  writeFileSync(vtt, toVtt(reviewTrack()));
+  const page = plantedPage(resolve(d, 'flat.html'));
+  // 13 to 15 s: the street's bed, then at 14.000 the car's first light
+  const file = resolve(d, 'soft.mp4');
+  const r = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', file, '--file', page, '--captions', vtt]);
+  assert.equal(r.code, 0, r.err + r.out);
+  const s = probeSubtitles(file), p = await ffprobe(file);
+  assert.deepEqual([s.streams, s.codec, s.start, p.videoStreams, p.audioStreams, p.frames], [1, 'mov_text', 0, 1, 0, 48]);
+  assert.ok(Math.abs(s.duration - 2) <= 1 / FPS, `captions last ${s.duration} s, the clip 2 s`);
+  const text = subtitleText(file);
+  assert.match(text, /^1\n00:00:00,000 --> 00:00:01,000\n[^\n]*street: city, wind/);
+  assert.match(text, /\n2\n00:00:01,000 --> 00:00:02,000\n(?:[^\n]+\n)*?[^\n]*the car rises out of the quiet \(new\)/);
+  const side = JSON.parse(readFileSync(`${file}.json`, 'utf8'));
+  assert.deepEqual(side.problems, []);
+  assert.deepEqual([side.captions.file, side.captions.burned, side.captions.subtitles.streams], [vtt, false, 1]);
+  // top left, and the size fitted to the clip's lines over the captured 480x270 frame, in every style record
+  const st = subtitleStyle(file);
+  assert.deepEqual([st.alignment, st.size, st.sizeOverrides], [7, side.captions.soft.size, 0]);
+  assert.deepEqual(side.captions.soft.frame, [W, H]);
+  assert.deepEqual(movTextEntries(file), [{ justification: [0, 0], size: st.size }]);
+  assert.ok(readdirSync(d).every((f) => !f.includes('.captions.')), 'the clip\'s caption files are cleaned up');
+
+  // with a soundtrack (Sound 2.8): video, AAC and the captions, each its own stream
+  const sr = AUDIO.sampleRate, n = Math.round(T_TOTAL * sr), silent = new Float32Array(n);
+  const wav = resolve(d, 'silent.wav');
+  writeFileSync(wav, encodeWav(silent, silent, sr, mulberry32(3)));
+  const both = resolve(d, 'both.mp4');
+  const r2 = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', both, '--file', page, '--captions', vtt, '--audio', wav]);
+  assert.equal(r2.code, 0, r2.err + r2.out);
+  const p2 = await ffprobe(both), s2 = probeSubtitles(both);
+  assert.deepEqual([p2.videoStreams, p2.audioStreams, p2.audioCodec, s2.streams, s2.codec, p2.frames], [1, 1, 'aac', 1, 'mov_text', 48]);
+  assert.ok(Math.abs(s2.duration - 2) <= 1 / FPS && Math.abs(p2.audioDuration - 2) <= 1 / FPS);
+
+  // controls: without --captions no subtitle stream; a track that ends 1 s into the clip gives a stream of 1 s, so the
+  // duration measured above is the track's; --burn-captions alone and a missing track are refused
+  const none = resolve(d, 'none.mp4');
+  assert.equal(node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', none, '--file', page]).code, 0);
+  assert.equal(probeSubtitles(none).streams, 0);
+  const shortVtt = resolve(d, 'short.vtt');
+  writeFileSync(shortVtt, 'WEBVTT\n\n1\n00:00:00.000 --> 00:00:14.000\nthe street\n');
+  const short = resolve(d, 'short.mp4');
+  assert.equal(node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '15', '--out', short, '--file', page, '--captions', shortVtt]).code, 0);
+  assert.ok(Math.abs(probeSubtitles(short).duration - 1) <= 1 / FPS, `a 1 s track, got ${probeSubtitles(short).duration}`);
+  const lone = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '14', '--out', resolve(d, 'x.mp4'), '--file', page, '--burn-captions']);
+  assert.notEqual(lone.code, 0);
+  assert.match(lone.err, /--burn-captions burns the --captions track/);
+  const gone = node('scripts/capture.js', ['--profile', 'preview', '--from', '13', '--to', '14', '--out', resolve(d, 'y.mp4'), '--file', page, '--captions', resolve(d, 'nope.vtt')]);
+  assert.notEqual(gone.code, 0);
+  assert.match(gone.err, /no captions at/);
+});
+
+test('capture.js --captions: the probe refuses a missing subtitle stream, one that outlasts the clip, or one at the wrong size (planted, F3)', () => {
+  const d = freshCap('captions-plants');
+  const vtt = resolve(d, 'review.vtt');
+  return captionsLib().then(({ reviewTrack, toVtt }) => {
+    writeFileSync(vtt, toVtt(reviewTrack()));
+    const page = plantedPage(resolve(d, 'flat.html')), envFor = plantedFfmpeg(resolve(d, 'bin'));
+    // 31 to 33 s: long lines, so the fitted size is below ffmpeg's default
+    const run = (name, plant) => node('scripts/capture.js', ['--profile', 'preview', '--from', '31', '--to', '33', '--out', resolve(d, `${name}.mp4`), '--file', page, '--captions', vtt], envFor(plant));
+    const good = run('good', {});
+    assert.equal(good.code, 0, `the wrapper alone changes nothing: ${good.err}`);
+    const cases = [
+      ['nosubs', { drop: [['-map', '1:s:0']] }, /subtitle streams 0, want 1/],
+      ['late', { append: [['.captions.soft.ass', 'Dialogue: 0,0:00:09.00,0:00:10.00,Default,,0,0,0,,late\n']] }, /subtitle duration is 10, want up to 2/],
+      ['default-size', { suffix: [['.captions.soft.ass', '.captions.vtt']] }, /the soft font size is 16, want \d+/],
+    ];
+    for (const [name, plant, msg] of cases) {
+      const r = run(name, plant);
+      assert.notEqual(r.code, 0, `${name} must fail`);
+      assert.match(r.err, msg, name);
+      assert.ok(!existsSync(resolve(d, `${name}.mp4`)), `${name}: nothing at the output`);
+    }
+  });
+});
+
+test('capture.js --burn-captions: only the caption band changes, never the HUD strip or the bottom; planted bands fail the same checks', async () => {
+  const { reviewTrack, toVtt, toAss, parseVtt, burnFilter, STRIP, LANE, SAFE } = await captionsLib();
+  const d = freshCap('burn');
+  const vtt = resolve(d, 'review.vtt');
+  writeFileSync(vtt, toVtt(reviewTrack()));
+  const page = plantedPage(resolve(d, 'flat.html'));
+  // 33 to 35 s: three lines and steps in the lane, on a flat picture so any change is the burn's
+  const run = (name, extra) => {
+    const f = resolve(d, `${name}.mp4`);
+    const r = node('scripts/capture.js', ['--profile', 'preview', '--from', '33', '--to', '35', '--out', f, '--file', page, '--captions', vtt, ...extra]);
+    assert.equal(r.code, 0, r.err + r.out);
+    return f;
+  };
+  const soft = run('soft', []), burned = run('burned', ['--burn-captions']);
+  assert.equal(JSON.parse(readFileSync(`${burned}.json`, 'utf8')).captions.burned, true);
+  // burned, the soft copy is not the default text track (a player would draw both); soft alone, it is
+  const isDefault = (f) => JSON.parse(spawnSync('ffprobe', ['-v', 'error', '-select_streams', 's', '-show_entries', 'stream_disposition=default', '-of', 'json', f], { encoding: 'utf8' }).stdout).streams[0].disposition.default;
+  assert.deepEqual([isDefault(soft), isDefault(burned)], [1, 0]);
+  // the encoder works in 16 px macroblocks and its deblocking filter reaches 3 px across a block edge, so a change in
+  // the band may touch the rows of the blocks that hold it and 3 more (measured: rows 64 and 65 by 5 levels, then 0)
+  const MB = 16, DEBLOCK = 3, blocks = Math.ceil(LANE.bottom / MB) * MB + DEBLOCK;
+  const check = (other) => {
+    const rows = rowDiff(frames(soft), frames(other), W, H);
+    return { inBand: Math.max(...rows.slice(STRIP, LANE.bottom)), below: Math.max(...rows.slice(blocks)), bottom: Math.max(...rows.slice(H - SAFE)) };
+  };
+  const got = check(burned);
+  // a control: the same burn moved into the bottom band, drawn over the soft capture with the same encoder settings
+  const ass = toAss(parseVtt(readFileSync(vtt, 'utf8')), { from: 33, to: 35, strip: false });
+  const plantedAss = resolve(d, 'planted.ass');
+  writeFileSync(plantedAss, ass.replace(new RegExp(`\\\\pos\\((\\d+),${STRIP}\\)`, 'g'), `\\pos($1,${H - SAFE + 4})`));
+  const planted = resolve(d, 'planted.mp4');
+  const args = encodeArgs('preview', { w: W, h: H });
+  const codec = args.slice(args.indexOf('-c:v'), args.indexOf('-pix_fmt', args.indexOf('-c:v')));
+  assert.equal(spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', soft, '-map', '0:v:0', '-vf', burnFilter(plantedAss), ...codec, '-pix_fmt', 'yuv420p', ...BT709_TAGS, planted]).status, 0);
+  const bad = check(planted);
+  console.log(`  burn against the soft capture, largest change: in the band ${got.inBand}, below its macroblocks ${got.below}, bottom ${SAFE} rows ${got.bottom}; planted at the bottom: bottom rows ${bad.bottom}`);
+  assert.ok(got.inBand > 100, 'the captions are drawn in the band');
+  assert.ok(got.below <= 2 && got.bottom <= 2, 'nothing else changes (starting value: 2 levels of encoder rounding; measured 0)');
+  assert.ok(bad.bottom > 100, 'control: a line burned into the bottom band shows in the same check');
+  // the HUD strip's rows, before the encode (the band shares the strip's macroblock row, so the encoded rows cannot
+  // tell): the capture's own burn over the soft capture's frames leaves rows 0 to 10 exactly as they were; a burn
+  // planted at y 0 does not (F7 of the review)
+  const strip = (vf) => {
+    const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', soft, '-vf', `${vf ? `${vf},` : ''}crop=${W}:${STRIP}:0:0`, '-f', 'md5', '-'], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout.trim();
+  };
+  const own = resolve(d, 'own.ass'), atTop = resolve(d, 'top.ass');
+  writeFileSync(own, ass);
+  writeFileSync(atTop, ass.replace(new RegExp(`\\\\pos\\((\\d+),${STRIP}\\)`, 'g'), '\\pos($1,0)'));
+  assert.equal(strip(burnFilter(own)), strip(null), 'the burn leaves the HUD strip alone');
+  assert.notEqual(strip(burnFilter(atTop)), strip(null), 'control: a caption burned at y 0 changes the strip');
 });
