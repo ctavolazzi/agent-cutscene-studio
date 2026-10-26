@@ -1177,3 +1177,8 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   at export), `review/round-05/preview.mp4` (the gate preview), and a new `out/round-05/snowy-bridge-blockout-1080p.mp4`
   (not committed): the published picture's video stream copied (identical MD5), the blockout WAV as AAC 320 kbps,
   0 samples of lag in three windows, -23.06 LUFS.
+- Wrote `playbook/prompts/sound-blockout.md`, a paste-ready prompt that takes any film's sound effects from plan to
+  this blockout render in a new session. Three critics checked it against the repo (facts, a cold start on a template
+  film, the lessons of Sound 0 to 2) and it was revised: start from this branch until PR #1 merges, port the newer
+  engine into the film first, never point mux.js at the export, rounds and windows set per film, the level plan set
+  against the lead sound, sync from the first drawn frame, placeholder bands clear and phone-audible, the co-author line.
