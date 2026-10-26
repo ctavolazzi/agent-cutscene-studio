@@ -1173,3 +1173,7 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
 - Gate page (Sound 2.13): a private Artifact, the preview first, then the questions with their clips, the known items and
   the evidence; answers saved to its store (`answers/<question>`), read back with the Artifact tool. Gate: 274 tests, 271
   pass, 0 fail, 3 skipped; check pass; the design stage still sha256 f80b1542.
+- Sent the director the MP4s with sound: `out/snowy-bridge.mp4` (1080p, the S8.3 first mix with the score, as verified
+  at export), `review/round-05/preview.mp4` (the gate preview), and a new `out/round-05/snowy-bridge-blockout-1080p.mp4`
+  (not committed): the published picture's video stream copied (identical MD5), the blockout WAV as AAC 320 kbps,
+  0 samples of lag in three windows, -23.06 LUFS.
