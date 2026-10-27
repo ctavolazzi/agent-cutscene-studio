@@ -1182,3 +1182,48 @@ at Sound 0 and runs through the picture's gated stages (ROADMAP.md, Sound stages
   film, the lessons of Sound 0 to 2) and it was revised: start from this branch until PR #1 merges, port the newer
   engine into the film first, never point mux.js at the export, rounds and windows set per film, the level plan set
   against the lead sound, sync from the first drawn frame, placeholder bands clear and phone-audible, the co-author line.
+
+#### lead: the blockout film with sound, rebuilt in a fresh clone (before)
+- Why: the director asked for the blockout MP4 with sound. `out/round-05/snowy-bridge-blockout-1080p.mp4` was made in
+  the last session's container and `out/` is not in git, so it went with that container; no GitHub release holds it.
+- Plan, in a fresh clone with no `out/`, on branch `claude/sound-effects-blockout-7oqfll` started from
+  `claude/snow-lamp-bridge-sound` (fdecfa7): npm ci, npm test, npm run check. Then the listening copy first, never
+  `npm run export` (the stage switch makes it render the blockout under the export's name): `node scripts/sound.js
+  --stage design --parked ''` (held to sha256 f80b1542), one build, `node scripts/capture.js --profile full --audio
+  out/sound.wav`, `npm run verify`, and the video stream MD5 recorded here. Then `node scripts/sound.js --out
+  out/round-05/blockout.wav` (default stage blockout, -23 LUFS), the export and its sidecar copied to
+  `out/round-05/snowy-bridge-blockout-1080p.mp4`, `node scripts/mux.js` on the copy, `node scripts/verify.js` on the
+  copy with that WAV. The thumbnail `packaging/thumbnail.jpg` checked again at 320 px.
+
+#### lead: the blockout film with sound, rebuilt in a fresh clone (after)
+- Chromium: this container has Chromium 153.0.8010.12 at `/opt/pw-browsers/chromium`, and playwright-core 1.64.1
+  looks for a build it does not have, so the first `npm test` failed 29 browser tests and `npm run check` failed at
+  launch. With `CHROMIUM_PATH=/opt/pw-browsers/chromium` (the README's own switch) everything ran. The film's PNGs and
+  the earlier exports were made on 141.0.7390.37.
+- Baseline before the export: npm test exit 0 (274 tests, 266 pass, 0 fail, 8 skipped: the parked score 3, the stills'
+  raster check on another Chromium 1, the reel's 4 with no export yet); npm run check exit 0 (forbidden 0 hits,
+  determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+- `node scripts/sound.js --stage design --parked ''`: out/sound.wav sha256 f80b1542f97013ccb37b9e9cd36e940bea524efcd9a2a47da9bbb55bf8c611da,
+  the S8.3 bytes; -16.003 LUFS.
+- `npm run build`, then `node scripts/capture.js --profile full --audio out/sound.wav`: 2688 frames in 257.9 s (95.9 ms
+  a frame), 1920x1080, 24 fps, 112 s, H.264 yuv420p BT.709, one AAC stream, faststart. `npm run verify` exit 0: 32
+  frames matched, worst frame 570 at mean error 2.497 and 37.93 dB, the same frame and numbers as the Stage 7 export
+  (2.497, 37.9 dB), so the picture draws the same on this Chromium; five seeks pass; sound made at the design stage,
+  parked none, current, 0 samples of lag in three windows, -16 LUFS, true peak -1.7 dBTP. Video stream MD5
+  1412f8adefe0d7ae3eeb237e6a38df50 (the first one recorded; the last session's copy cannot be compared, it is gone).
+- `node scripts/sound.js --out out/round-05/blockout.wav`: stage blockout, parked score, -23.015 LUFS, peak -2.02 dBFS,
+  3270 samples limited (at most 3.13 dB, shot 5 at 30.4 s), sha256
+  449d70b8ba92b34a94a8fac024a743fb2a542a1e75c05ae4ae5e970b55806af6, the bytes round 05 recorded (DEC-01).
+- The export and its sidecar copied to `out/round-05/snowy-bridge-blockout-1080p.mp4`; `node scripts/mux.js` exit 0
+  (video copied, MD5 1412f8ad... unchanged, AAC 48 kHz stereo 320 kbps, 0 to 112 s); `node scripts/verify.js --file
+  out/round-05/snowy-bridge-blockout-1080p.mp4 --audio out/round-05/blockout.wav` exit 0: the same frame match and
+  seeks, sound made at the blockout stage, parked score, current, 0 samples of lag in three windows (correlation 1.000,
+  0.999, 0.998), -23.1 LUFS, true peak -2 dBTP. 48.8 MB, not committed (`out/` is ignored).
+- Looked at two frames of it (0:28.6 the car's arrival, 1:20 the lighter): right shots, nothing drawn over them.
+- Thumbnail: `packaging/thumbnail.jpg` (1280x720, sha256 01eb9b3e...) checked again at 320 px: the title, the moon, the
+  lamp and both people read. The blockout film is a review copy and uses it.
+- Gate with the export present: npm test exit 0 (274 tests, 270 pass, 0 fail, 4 skipped: the parked score 3, the
+  stills' raster check on Chromium 153 1; the reel's four now run and pass, the soft copy bit for bit against this
+  export); npm run check exit 0 (forbidden 0 hits, determinism 0 of 62 differ, cameras 191 comparisons, worst 2.00e-15).
+- Sent the director `out/round-05/snowy-bridge-blockout-1080p.mp4` and the thumbnail. Still waiting at Sound gate 2:
+  the gate page's answers store was empty when read (2026-10-26).
